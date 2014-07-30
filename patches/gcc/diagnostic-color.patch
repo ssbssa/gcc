@@ -1,0 +1,31 @@
+--- gcc/diagnostic-color.c	2014-04-27 21:18:04.234375000 +0200
++++ gcc/diagnostic-color.c	2014-05-05 18:53:04.343750000 +0200
+@@ -264,12 +264,19 @@
+ }
+ 
+ #if defined(_WIN32)
+-bool
+-colorize_init (diagnostic_color_rule_t)
++#define WIN32_LEAN_AND_MEAN
++#include <windows.h>
++
++static int
++cyg_isatty (int)
+ {
+-  return false;
++  HANDLE in = GetStdHandle (STD_OUTPUT_HANDLE);
++  DWORD flags;
++  return (!GetConsoleMode (in, &flags) &&
++	  GetNamedPipeInfo (in, &flags, NULL, NULL, NULL));
+ }
+-#else
++#define isatty cyg_isatty
++#endif
+ 
+ /* Return true if we should use color when in auto mode, false otherwise. */
+ static bool
+@@ -298,4 +305,3 @@
+       gcc_unreachable ();
+     }
+ }
+-#endif

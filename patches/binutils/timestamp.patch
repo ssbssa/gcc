@@ -1,0 +1,11 @@
+--- bfd/peXXigen.c	2013-11-26 12:37:33.000000000 +0100
++++ bfd/peXXigen.c	2014-07-22 19:49:59.093750000 +0200
+@@ -795,6 +795,8 @@
+   /* Only use a real timestamp if the option was chosen.  */
+   if ((pe_data (abfd)->insert_timestamp))
+     H_PUT_32 (abfd, time(0), filehdr_out->f_timdat);
++  else
++    H_PUT_32 (abfd, 0, filehdr_out->f_timdat);
+ 
+   PUT_FILEHDR_SYMPTR (abfd, filehdr_in->f_symptr,
+ 		      filehdr_out->f_symptr);

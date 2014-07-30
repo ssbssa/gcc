@@ -1,0 +1,44 @@
+diff -r 2afd49da2aa8 libiberty/make-relative-prefix.c
+--- a/libiberty/make-relative-prefix.c	Mon Apr 16 13:59:58 2012 -0600
++++ b/libiberty/make-relative-prefix.c	Mon Apr 16 14:00:18 2012 -0600
+@@ -214,6 +214,22 @@
+     }
+ }
+ 
++#ifdef _WIN32
++static int
++win32_is_exe (const char *path)
++{
++  int is_exe = 0;
++  FILE *f = fopen (path, "rb");
++  if (f)
++  {
++    if (fgetc (f) == 'M' && fgetc (f) == 'Z')
++      is_exe = 1;
++    fclose (f);
++  }
++  return is_exe;
++}
++#endif
++
+ /* Given three strings PROGNAME, BIN_PREFIX, PREFIX, return a string that gets
+    to PREFIX starting with the directory portion of PROGNAME and a relative
+    pathname of the difference between BIN_PREFIX and PREFIX.
+@@ -281,11 +297,17 @@
+ 			nstore[endp - startp] = 0;
+ 		    }
+ 		  strcat (nstore, progname);
++#ifdef _WIN32
++		  if (win32_is_exe (nstore)
++		      || win32_is_exe (strcat (nstore, HOST_EXECUTABLE_SUFFIX))
++		     )
++#else
+ 		  if (! access (nstore, X_OK)
+ #ifdef HAVE_HOST_EXECUTABLE_SUFFIX
+                       || ! access (strcat (nstore, HOST_EXECUTABLE_SUFFIX), X_OK)
+ #endif
+ 		      )
++#endif
+ 		    {
+ #if defined (HAVE_SYS_STAT_H) && defined (S_ISREG)
+ 		      struct stat st;

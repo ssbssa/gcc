@@ -1,0 +1,49 @@
+diff -r ec786bf3b6fe libstdc++-v3/config/io/basic_file_stdio.cc
+--- a/libstdc++-v3/config/io/basic_file_stdio.cc	Wed Apr 14 20:01:29 2010 -0600
++++ b/libstdc++-v3/config/io/basic_file_stdio.cc	Mon Apr 19 15:56:11 2010 -0600
+@@ -233,7 +233,7 @@
+     const char* __c_mode = fopen_mode(__mode);
+     if (__c_mode && !this->is_open())
+       {
+-#ifdef _GLIBCXX_USE_LFS
++#if defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
+ 	if ((_M_cfile = fopen64(__name, __c_mode)))
+ #else
+ 	if ((_M_cfile = fopen(__name, __c_mode)))
+@@ -317,7 +317,7 @@
+   streamoff
+   __basic_file<char>::seekoff(streamoff __off, ios_base::seekdir __way) throw ()
+   {
+-#ifdef _GLIBCXX_USE_LFS
++#if defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
+     return lseek64(this->fd(), __off, __way);
+ #else
+     if (__off > numeric_limits<off_t>::max()
+@@ -366,6 +366,15 @@
+ 							   ios_base::cur);
+ 	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
+       }
++#elif defined(__MINGW32__)
++    struct _stati64 __buffer;
++    const int __err = _fstati64(this->fd(), &__buffer);
++    if (!__err && _GLIBCXX_ISREG(__buffer.st_mode))
++      {
++	const streamoff __off = __buffer.st_size - lseek64(this->fd(), 0,
++							   ios_base::cur);
++	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
++      }
+ #else
+     struct stat __buffer;
+     const int __err = fstat(this->fd(), &__buffer);
+diff -r ec786bf3b6fe libstdc++-v3/include/ext/stdio_sync_filebuf.h
+--- a/libstdc++-v3/include/ext/stdio_sync_filebuf.h	Wed Apr 14 20:01:29 2010 -0600
++++ b/libstdc++-v3/include/ext/stdio_sync_filebuf.h	Mon Apr 19 15:56:11 2010 -0600
+@@ -171,7 +171,7 @@
+ 	  __whence = SEEK_CUR;
+ 	else
+ 	  __whence = SEEK_END;
+-#ifdef _GLIBCXX_USE_LFS
++#if defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
+ 	if (!fseeko64(_M_file, __off, __whence))
+ 	  __ret = std::streampos(ftello64(_M_file));
+ #else

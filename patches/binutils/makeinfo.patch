@@ -1,0 +1,11 @@
+--- bfd/doc/Makefile.in	2013-03-25 10:08:08 +0100
++++ bfd/doc/Makefile.in	2013-04-26 15:30:05 +0200
+@@ -417,7 +417,7 @@
+ clean-libtool:
+ 	-rm -rf .libs _libs
+ 
+-bfd.info: bfd.texinfo $(bfd_TEXINFOS)
++bfd.info: bfd.texinfo | $(bfd_TEXINFOS)
+ 	restore=: && backupdir="$(am__leading_dot)am$$$$" && \
+ 	rm -rf $$backupdir && mkdir $$backupdir && \
+ 	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \

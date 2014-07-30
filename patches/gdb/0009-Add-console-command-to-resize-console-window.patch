@@ -1,0 +1,254 @@
+From 237338e450ded7fbd4ce0a04523dbe7612aaf6f7 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 9 Mar 2014 17:22:35 +0100
+Subject: [PATCH 09/14] Add console command to resize console window
+
+---
+ gdb/tui/tui-win.c |   3 +-
+ gdb/tui/tui.c     |  32 ++++++++++++++
+ gdb/windows-nat.c | 123 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 157 insertions(+), 1 deletion(-)
+
+diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
+index 7ea0fec..428c0fb 100644
+--- a/gdb/tui/tui-win.c
++++ b/gdb/tui/tui-win.c
+@@ -676,7 +676,6 @@ tui_resize_all (void)
+       /* Turn keypad off while we resize.  */
+       if (win_with_focus != TUI_CMD_WIN)
+ 	keypad (TUI_CMD_WIN->generic.handle, FALSE);
+-      tui_update_gdb_sizes ();
+       tui_set_term_height_to (screenheight);
+       tui_set_term_width_to (screenwidth);
+       if (cur_layout == SRC_DISASSEM_COMMAND 
+@@ -810,6 +809,8 @@ tui_resize_all (void)
+ 	 window.  */
+       if (win_with_focus != TUI_CMD_WIN)
+ 	keypad (TUI_CMD_WIN->generic.handle, TRUE);
++
++      tui_update_gdb_sizes ();
+     }
+ }
+ 
+diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
+index f1296b0..a5b83bd 100644
+--- a/gdb/tui/tui.c
++++ b/gdb/tui/tui.c
+@@ -436,6 +436,8 @@ tui_enable (void)
+         Curses will restore this state when endwin() is called.  */
+      def_shell_mode ();
+      clearok (stdscr, TRUE);
++
++     tui_set_win_resized_to (TRUE);
+    }
+ 
+   /* Install the TUI specific hooks.  */
+@@ -457,6 +459,14 @@ tui_enable (void)
+   /* Update gdb's knowledge of its terminal.  */
+   target_terminal_save_ours ();
+   tui_update_gdb_sizes ();
++
++  if (tui_win_resized ())
++    {
++      rl_reset_screen_size ();
++      tui_resize_all ();
++      tui_refresh_all_win ();
++      tui_set_win_resized_to (FALSE);
++    }
+ }
+ 
+ /* Leave the tui mode.
+@@ -466,6 +476,10 @@ tui_enable (void)
+ void
+ tui_disable (void)
+ {
++#ifdef _WIN32
++  int tui_w, tui_h;
++#endif
++
+   if (!tui_active)
+     return;
+ 
+@@ -480,6 +494,19 @@ tui_disable (void)
+   /* Leave curses and restore previous gdb terminal setting.  */
+   endwin ();
+ 
++#ifdef _WIN32
++  tui_w = tui_term_width ();
++  tui_h = tui_term_height ();
++    {
++      int w, h;
++      char cmd[50];
++      rl_reset_screen_size ();
++      rl_get_screen_size (&h, &w);
++      tui_set_term_width_to (w);
++      tui_set_term_height_to (h);
++    }
++#endif
++
+   /* gdb terminal has changed, update gdb internal copy of it
+      so that terminal management with the inferior works.  */
+   tui_setup_io (0);
+@@ -489,6 +516,11 @@ tui_disable (void)
+ 
+   tui_active = 0;
+   tui_update_gdb_sizes ();
++
++#ifdef _WIN32
++  tui_set_term_width_to (tui_w);
++  tui_set_term_height_to (tui_h);
++#endif
+ }
+ 
+ void
+diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
+index 700eab4..90e56bc 100644
+--- a/gdb/windows-nat.c
++++ b/gdb/windows-nat.c
+@@ -68,6 +68,11 @@
+ #include "i386-nat.h"
+ #include "complaints.h"
+ 
++#ifdef TUI
++#include "tui/tui-win.h"
++#include "readline/readline.h"
++#endif
++
+ #define AdjustTokenPrivileges		dyn_AdjustTokenPrivileges
+ #define DebugActiveProcessStop		dyn_DebugActiveProcessStop
+ #define DebugBreakProcess		dyn_DebugBreakProcess
+@@ -1043,6 +1048,121 @@ jit_uninstall_command (char *args, int from_tty)
+     error (_("Error deleting 'Debugger' registry value."));
+ }
+ 
++static void
++console_resize (int *wp, int *hp, int bh)
++{
++  HANDLE hStdout;
++  CONSOLE_SCREEN_BUFFER_INFO csbi;
++  COORD c;
++  int w, h, bottom;
++  SMALL_RECT sr;
++
++  if (!wp || !hp) return;
++
++  w = *wp;
++  h = *hp;
++
++  hStdout = GetStdHandle (STD_OUTPUT_HANDLE);
++  GetConsoleScreenBufferInfo (hStdout, &csbi);
++
++  if (w < 0 || h < 0)
++    {
++      COORD coord = GetLargestConsoleWindowSize (hStdout);
++      if (w < 0) w = coord.X;
++      if (h < 0) h = coord.Y;
++    }
++
++  if (w <= 0) w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
++  if (h <= 0) h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
++  if (bh <= 0) bh = csbi.dwSize.Y;
++
++  if (bh < h) bh = h;
++  c = csbi.dwSize;
++  if (w > c.X || bh > c.Y)
++    {
++      if (w > c.X) c.X = w;
++      if (bh > c.Y) c.Y = bh;
++      SetConsoleScreenBufferSize (hStdout, c);
++    }
++
++  bottom = csbi.srWindow.Top + h - 1;
++  if (bottom >= c.Y) bottom = c.Y - 1;
++
++  sr.Left = 0;
++  sr.Top = bottom - (h - 1);
++  sr.Right = w - 1;
++  sr.Bottom = bottom;
++  SetConsoleWindowInfo (hStdout, TRUE, &sr);
++
++  if( w<c.X || bh<c.Y )
++    {
++      c.X = w;
++      c.Y = bh;
++      SetConsoleScreenBufferSize (hStdout, c);
++    }
++
++  *wp = w;
++  *hp = h;
++}
++
++static void
++console_resize_command (char *args, int from_tty)
++{
++  char **argv;
++  struct cleanup *cleanups;
++
++  dont_repeat ();
++
++  if (args == NULL) return;
++
++  argv = gdb_buildargv (args);
++  cleanups = make_cleanup_freeargv (argv);
++
++  if (argv[0])
++    {
++      int w, h, hb;
++      w = atoi (argv[0]);
++      h = hb = 0;
++      if (argv[1])
++	{
++	  h = atoi (argv[1]);
++	  if (atoi(argv[2]))
++	    hb = atoi (argv[2]);
++	}
++      if (strcmp (argv[0], "full") == 0)
++	{
++	  if (w == 0) w = -1;
++	  if (h == 0) h = -1;
++	}
++
++#ifdef TUI
++      if (tui_active)
++	{
++	  if (w <= 0) w = tui_term_width ();
++	  if (h <= 0) h = tui_term_height ();
++	  resize_term (h, w);
++
++	  rl_reset_screen_size ();
++	  tui_resize_all ();
++	  tui_refresh_all_win ();
++	}
++      else
++#endif
++	{
++	  char cmd[50];
++
++	  console_resize (&w, &h, hb);
++
++	  xsnprintf (cmd, sizeof (cmd), "set width %d", w);
++	  execute_command (cmd, 0);
++	  xsnprintf (cmd, sizeof (cmd), "set height %d", h);
++	  execute_command (cmd, 0);
++	}
++    }
++
++  do_cleanups (cleanups);
++}
++
+ /* Handle DEBUG_STRING output from child process.
+    Cygwin prepends its messages with a "cygwin:".  Interpret this as
+    a Cygwin signal.  Otherwise just print the string as a warning.  */
+@@ -2767,6 +2887,9 @@ _initialize_windows_nat (void)
+   c = add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
+ 	       _("Uninstall JIT debugger."));
+ 
++  c = add_com ("console", class_obscure, console_resize_command,
++	       _("Resize console."));
++
+   c = add_com ("dll-symbols", class_files, dll_symbol_command,
+ 	       _("Load dll library symbols from FILE."));
+   set_cmd_completer (c, filename_completer);
+-- 
+1.8.5.2.msysgit.0
+

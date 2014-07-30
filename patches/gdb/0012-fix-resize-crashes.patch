@@ -1,0 +1,47 @@
+From 7ba1330a8b7718137fe4d5d0a131ea4f49cf8345 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Tue, 11 Mar 2014 19:50:44 +0100
+Subject: [PATCH 12/14] fix resize crashes
+
+---
+ gdb/tui/tui-win.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
+index 428c0fb..cef673d 100644
+--- a/gdb/tui/tui-win.c
++++ b/gdb/tui/tui-win.c
+@@ -685,12 +685,7 @@ tui_resize_all (void)
+       split_diff = height_diff / num_wins_displayed;
+       cmd_split_diff = split_diff;
+       if (height_diff % num_wins_displayed)
+-	{
+-	  if (height_diff < 0)
+-	    cmd_split_diff--;
+-	  else
+-           cmd_split_diff++;
+-       }
++	cmd_split_diff += height_diff % num_wins_displayed;
+       /* Now adjust each window.  */
+       /* erase + clearok are used instead of a straightforward clear as
+          AIX 5.3 does not define clear.  */
+@@ -781,6 +776,7 @@ tui_resize_all (void)
+ 
+ 	  /* Change the command window's height/width.  */
+ 	  TUI_CMD_WIN->generic.origin.y = locator->origin.y + 1;
++	  TUI_CMD_WIN->generic.width += width_diff;
+ 	  make_invisible_and_set_new_height (TUI_CMD_WIN,
+ 					     TUI_CMD_WIN->generic.height
+ 					     + cmd_split_diff);
+@@ -805,6 +801,8 @@ tui_resize_all (void)
+ 	      tui_win_list[win_type] = (struct tui_win_info *) NULL;
+ 	    }
+ 	}
++      if (!locator->content)
++	tui_show_frame_info (0);
+       /* Turn keypad back on, unless focus is in the command
+ 	 window.  */
+       if (win_with_focus != TUI_CMD_WIN)
+-- 
+1.8.5.2.msysgit.0
+

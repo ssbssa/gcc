@@ -1,0 +1,96 @@
+From 4ac420750b5b86c83f0fb6740095b09780d6ef1a Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Tue, 4 Mar 2014 20:24:19 +0100
+Subject: [PATCH 08/14] Move to end of line when hitting return
+
+---
+ gdb/tui/tui-data.c |  4 ++++
+ gdb/tui/tui-data.h |  2 ++
+ gdb/tui/tui-io.c   | 15 +++++++++++++--
+ 3 files changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/gdb/tui/tui-data.c b/gdb/tui/tui-data.c
+index 1ceb80f..31fbc79 100644
+--- a/gdb/tui/tui-data.c
++++ b/gdb/tui/tui-data.c
+@@ -218,6 +218,8 @@ tui_clear_win_detail (struct tui_win_info *win_info)
+ 	case CMD_WIN:
+ 	  win_info->detail.command_info.cur_line =
+ 	    win_info->detail.command_info.curch = 0;
++	  win_info->detail.command_info.end_line =
++	    win_info->detail.command_info.end_pos = 0;
+ 	  break;
+ 	case DATA_WIN:
+ 	  win_info->detail.data_display_info.data_content =
+@@ -557,6 +559,8 @@ init_win_info (struct tui_win_info *win_info)
+     case CMD_WIN:
+       win_info->detail.command_info.cur_line = 0;
+       win_info->detail.command_info.curch = 0;
++      win_info->detail.command_info.end_line = 0;
++      win_info->detail.command_info.end_pos = 0;
+       break;
+     default:
+       win_info->detail.opaque = NULL;
+diff --git a/gdb/tui/tui-data.h b/gdb/tui/tui-data.h
+index a758463..23819d8 100644
+--- a/gdb/tui/tui-data.h
++++ b/gdb/tui/tui-data.h
+@@ -285,6 +285,8 @@ struct tui_command_info
+   int cur_line;			/* The current line position.  */
+   int curch;			/* The current cursor position.  */
+   int start_line;
++  int end_line;
++  int end_pos;
+ };
+ 
+ 
+diff --git a/gdb/tui/tui-io.c b/gdb/tui/tui-io.c
+index 761d203..021d53f 100644
+--- a/gdb/tui/tui-io.c
++++ b/gdb/tui/tui-io.c
+@@ -186,6 +186,8 @@ tui_puts (const char *string)
+     }
+   getyx (w, TUI_CMD_WIN->detail.command_info.cur_line,
+          TUI_CMD_WIN->detail.command_info.curch);
++  getyx (w, TUI_CMD_WIN->detail.command_info.end_line,
++	 TUI_CMD_WIN->detail.command_info.end_pos);
+   TUI_CMD_WIN->detail.command_info.start_line
+     = TUI_CMD_WIN->detail.command_info.cur_line;
+ 
+@@ -239,6 +241,7 @@ tui_redisplay_readline (void)
+         height++;
+       prev_col = col;
+     }
++  line = -1;
+   for (in = 0; in < rl_end; in++)
+     {
+       unsigned char c;
+@@ -271,6 +274,14 @@ tui_redisplay_readline (void)
+   wclrtobot (w);
+   getyx (w, TUI_CMD_WIN->detail.command_info.start_line,
+          TUI_CMD_WIN->detail.command_info.curch);
++  if (line >= 0)
++    {
++      TUI_CMD_WIN->detail.command_info.end_line = line;
++      TUI_CMD_WIN->detail.command_info.end_pos = col;
++    }
++  else
++    getyx (w, TUI_CMD_WIN->detail.command_info.end_line,
++	   TUI_CMD_WIN->detail.command_info.end_pos);
+   if (c_line >= 0)
+     {
+       wmove (w, c_line, c_pos);
+@@ -681,8 +692,8 @@ tui_getc (FILE *fp)
+         }
+       else
+         {
+-          wmove (w, TUI_CMD_WIN->detail.command_info.cur_line,
+-                 TUI_CMD_WIN->detail.command_info.curch);
++	  wmove (w, TUI_CMD_WIN->detail.command_info.end_line,
++		 TUI_CMD_WIN->detail.command_info.end_pos);
+           waddch (w, ch);
+         }
+     }
+-- 
+1.8.5.2.msysgit.0
+

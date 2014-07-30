@@ -1,0 +1,60 @@
+From 2341d76bcdaa1f6e3e09c82e4431fc59aa2e730c Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Tue, 4 Mar 2014 20:11:21 +0100
+Subject: [PATCH 06/14] Clear symbols if executable can't be attached
+
+---
+ gdb/exec.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/gdb/exec.c b/gdb/exec.c
+index 2d2949f..4ff46b1 100644
+--- a/gdb/exec.c
++++ b/gdb/exec.c
+@@ -143,6 +143,12 @@ exec_file_clear (int from_tty)
+     printf_unfiltered (_("No executable file now.\n"));
+ }
+ 
++static void
++symbol_file_clear_cleanup (void *ignore)
++{
++  symbol_file_clear (0);
++}
++
+ /* Set FILENAME as the new exec file.
+ 
+    This function is intended to be behave essentially the same
+@@ -189,6 +195,11 @@ exec_file_attach (char *filename, int from_tty)
+       int scratch_chan;
+       struct target_section *sections = NULL, *sections_end = NULL;
+       char **matching;
++      struct cleanup *symbol_cleanup;
++      struct cleanup *cleanups_free;
++
++      /* Clear symbols if executable can't be attached.  */
++      symbol_cleanup = make_cleanup (symbol_file_clear_cleanup, 0);
+ 
+       scratch_chan = openp (getenv ("PATH"), OPF_TRY_CWD_FIRST, filename,
+ 		   write_files ? O_RDWR | O_BINARY : O_RDONLY | O_BINARY,
+@@ -207,7 +218,7 @@ exec_file_attach (char *filename, int from_tty)
+       if (scratch_chan < 0)
+ 	perror_with_name (filename);
+ 
+-      make_cleanup (xfree, scratch_pathname);
++      cleanups_free = make_cleanup (xfree, scratch_pathname);
+ 
+       /* gdb_bfd_open (and its variants) prefers canonicalized pathname for
+ 	 better BFD caching.  */
+@@ -263,6 +274,9 @@
+       /* Tell display code (if any) about the changed file name.  */
+       if (deprecated_exec_file_display_hook)
+ 	(*deprecated_exec_file_display_hook) (filename);
++
++      do_cleanups (cleanups_free);
++      discard_cleanups (symbol_cleanup);
+     }
+ 
+   do_cleanups (cleanups);
+-- 
+1.8.5.2.msysgit.0
+

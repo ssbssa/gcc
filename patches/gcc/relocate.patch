@@ -1,0 +1,37 @@
+# HG changeset patch
+# Parent 7e29bbecfc6b58a9a6719cd4958c829f6c09d20f
+
+diff -r 7e29bbecfc6b gcc/config/i386/mingw32.h
+--- a/gcc/config/i386/mingw32.h	Mon Aug 13 22:02:44 2012 -0600
++++ b/gcc/config/i386/mingw32.h	Tue Aug 14 18:33:24 2012 -0600
+@@ -79,7 +79,7 @@
+ #endif
+ 
+ #undef NATIVE_SYSTEM_HEADER_COMPONENT
+-#define NATIVE_SYSTEM_HEADER_COMPONENT "MINGW"
++#undef NATIVE_SYSTEM_HEADER_DIR
+ 
+ #undef CPP_SPEC
+ #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
+@@ -144,7 +144,7 @@
+ 
+ /* Override startfile prefix defaults.  */
+ #ifndef STANDARD_STARTFILE_PREFIX_1
+-#define STANDARD_STARTFILE_PREFIX_1 "/mingw/lib/"
++#define STANDARD_STARTFILE_PREFIX_1 ""
+ #endif
+ #ifndef STANDARD_STARTFILE_PREFIX_2
+ #define STANDARD_STARTFILE_PREFIX_2 ""
+diff -r 7e29bbecfc6b gcc/incpath.c
+--- a/gcc/incpath.c	Mon Aug 13 22:02:44 2012 -0600
++++ b/gcc/incpath.c	Tue Aug 14 18:33:24 2012 -0600
+@@ -175,8 +175,7 @@
+ 	      str = concat (sysroot_no_trailing_dir_separator, p->fname, NULL);
+ 	      free (sysroot_no_trailing_dir_separator);
+ 	    }
+-	  else if (!p->add_sysroot && relocated
+-		   && !filename_ncmp (p->fname, cpp_PREFIX, cpp_PREFIX_len))
++	  if (relocated && !filename_ncmp (p->fname, cpp_PREFIX, cpp_PREFIX_len))
+ 	    {
+  	      static const char *relocated_prefix;
+ 	      /* If this path starts with the configure-time prefix,

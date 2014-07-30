@@ -1,0 +1,97 @@
+From 6acd513f529bbd998433adfc2c5ab4d1dbe54890 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=D0=A0=D1=83=D1=81=D0=BB=D0=B0=D0=BD=20=D0=98=D0=B6=D0=B1=D1?=
+ =?UTF-8?q?=83=D0=BB=D0=B0=D1=82=D0=BE=D0=B2?= <lrn1986@gmail.com>
+Date: Sat, 29 Sep 2012 18:16:16 +0400
+Subject: [PATCH 01/14] Make gdb JIT-capable (MS-Windows)
+
+Adds the signal-event command (MS-Windows-only) that signals
+an event with user-provided ID. Used to resume crashing
+process when attached to it via MS-Windows JIT debugging (AeDebug).
+
+PR gdb/14529
+---
+ gdb/doc/gdb.texinfo | 27 +++++++++++++++++++++++++++
+ gdb/windows-nat.c   | 22 ++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
+
+diff --git a/gdb/doc/gdb.texinfo b/gdb/doc/gdb.texinfo
+index 74ddcf5..6cccf05 100644
+--- a/gdb/doc/gdb.texinfo
++++ b/gdb/doc/gdb.texinfo
+@@ -19827,6 +19827,33 @@ This is a Cygwin-specific alias of @code{info shared}.
+ This command loads symbols from a dll similarly to
+ add-sym command but without the need to specify a base address.
+ 
++@kindex signal-event
++@item signal-event @var{id}
++This command signals an event with user-provided @var{id}.  Used to resume
++crashing process when attached to it using MS-Windows JIT debugging (AeDebug).
++
++To use it, create or edit the following keys in
++@code{HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug} and/or
++@code{HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\AeDebug}
++(for x86_64 versions):
++
++@itemize @minus
++@item
++@code{Debugger} (REG_SZ) --- a command to launch the debugger.  Suggested
++command is: @code{@var{fully-qualified-path-to-gdb.exe} -ex "attach %ld"
++-ex "signal-event %ld" -ex "continue"}
++
++First @code{%ld} will be replaced by process ID, second @code{%ld} will be
++replaced by ID of the event that blocks the crashing process, waiting for
++debugger to attach.
++
++@item
++@code{Auto} (REG_SZ) --- either @code{1} or @code{0}. @code{1} will make the
++system run debugger specified by Debugger key automatically, @code{0} will
++cause a dialog box with ``OK'' and ``Cancel'' buttons to appear, which allows
++the user to either terminate crashing process (OK) or debug it (Cancel).
++@end itemize
++
+ @kindex set cygwin-exceptions
+ @cindex debugging the Cygwin DLL
+ @cindex Cygwin DLL, debugging
+diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
+index 4fa07bd..a0db993 100644
+--- a/gdb/windows-nat.c
++++ b/gdb/windows-nat.c
+@@ -963,6 +963,25 @@ dll_symbol_command (char *args, int from_tty)
+   safe_symbol_file_add (args, from_tty, NULL, 0, OBJF_SHARED | OBJF_USERLOADED);
+ }
+ 
++static void
++signal_event_command (char *args, int from_tty)
++{
++  uintptr_t event_id = 0;
++  char *endargs = NULL;
++
++  if (args == NULL)
++    error (_("signal-event requires an argument (integer event id)"));
++
++  event_id = strtoumax (args, &endargs, 10);
++
++  if ((errno == ERANGE) || (event_id == 0) || (event_id > UINTPTR_MAX) ||
++      ((HANDLE) event_id == INVALID_HANDLE_VALUE))
++    error (_("Failed to convert `%s' to event id"), args);
++
++  SetEvent ((HANDLE) event_id);
++  CloseHandle ((HANDLE) event_id);
++}
++
+ /* Handle DEBUG_STRING output from child process.
+    Cygwin prepends its messages with a "cygwin:".  Interpret this as
+    a Cygwin signal.  Otherwise just print the string as a warning.  */
+@@ -2680,6 +2699,9 @@ _initialize_windows_nat (void)
+   cygwin_internal (CW_SET_DOS_FILE_WARNING, 0);
+ #endif
+ 
++  c = add_com ("signal-event", class_run, signal_event_command,
++	       _("Signal an object with ID."));
++
+   c = add_com ("dll-symbols", class_files, dll_symbol_command,
+ 	       _("Load dll library symbols from FILE."));
+   set_cmd_completer (c, filename_completer);
+-- 
+1.8.5.2.msysgit.0
+
