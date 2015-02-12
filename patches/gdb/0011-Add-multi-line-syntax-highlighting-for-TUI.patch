@@ -1,7 +1,7 @@
-From 6a6ae75c5c5fdd3ed190004c523591daa90c204a Mon Sep 17 00:00:00 2001
+From de500070616f001df5cf7397b105b5c9acc98211 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 19:47:12 +0100
-Subject: [PATCH 11/14] Add multi-line syntax highlighting for TUI
+Subject: [PATCH 11/15] Add multi-line syntax highlighting for TUI
 
 ---
  gdb/source.c         | 113 +++++++++++++++++++++++++++++++++++++++++++++++++--
@@ -9,10 +9,10 @@ Subject: [PATCH 11/14] Add multi-line syntax highlighting for TUI
  2 files changed, 150 insertions(+), 5 deletions(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index c112765..589ddbb 100644
+index 14b1f71..f9e1c32 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
-@@ -1165,6 +1165,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
+@@ -1173,6 +1173,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
      internal_error (__FILE__, __LINE__, _("invalid filename_display_string"));
  }
  
@@ -111,7 +111,7 @@ index c112765..589ddbb 100644
  /* Create and initialize the table S->line_charpos that records
     the positions of the lines in the source file, which is assumed
     to be open on descriptor DESC.
-@@ -1230,13 +1322,28 @@ find_source_lines (struct symtab *s, int desc)
+@@ -1238,13 +1330,28 @@ find_source_lines (struct symtab *s, int desc)
  	    line_charpos[nlines++] = p - data;
  	  }
        }
@@ -212,5 +212,5 @@ index 6c374f1..c57455b 100644
  			      src_line[threshold-SYNTAX_HIGHLIGHT_EXTRA] = 0;
  
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

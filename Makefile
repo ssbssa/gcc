@@ -26,7 +26,7 @@ else
 endif
 
 
-BINUTILS_VER=2.24
+BINUTILS_VER=2.25
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.bz2
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -34,19 +34,23 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --disable-multilib --with-sysroot=$(BINUTILS_DIR) \
 	      --prefix=$(BINUTILS_DIR) --enable-targets=$(MYTARGET) \
 	      --disable-werror \
-	      --disable-install-libbfd --disable-install-libiberty
+	      --disable-install-libbfd --disable-install-libiberty \
+	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/mingw-w64/mingw-w64-headers/configure \
+MINGW_W64_VER=3.3.0
+MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
+MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
+MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
 		       --build=$(MYBUILD) --host=$(MYTARGET) \
 		       --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
-MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/mingw-w64/mingw-w64-crt/configure \
+MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configure \
 		   --build=$(MYBUILD) --host=$(MYTARGET) \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=4.9.1
+GCC_VER=4.9.2
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.bz2
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -102,7 +106,7 @@ ICONV_CONF=$(SOURCE_DIR_ABS)/$(ICONV_SRC_DIR)/configure \
 	   --build=$(MYBUILD) --host=$(MYTARGET) \
 	   --enable-static --disable-shared --prefix=$(GDB_LIBS)
 
-GDB_VER=7.8
+GDB_VER=7.8.2
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -121,7 +125,7 @@ all: $(BUILD_DIR)/binutils-06-prefix.done
 all: $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 all: $(BUILD_DIR)/gcc-05-make-install-gcc.done
 all: $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
-all: $(BUILD_DIR)/gcc-09-combine.done
+all: $(BUILD_DIR)/gcc-10-combine.done
 endif
 all: $(BUILD_DIR)/expat-05-make-install.done
 all: $(BUILD_DIR)/pdcurses-04-make-install.done
@@ -152,7 +156,11 @@ $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done: | $(SOURCE_DIR)/binutils-02-p
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/timestamp.patch
 	@touch $@
 
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done
+$(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done: | $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <dll-syment-name.patch
+	@touch $@
+
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -182,11 +190,12 @@ endif
 
 # mingw-w64 headers
 
-$(SOURCE_DIR)/mingw-w64-01-extract.done: | $(SOURCE_DIR)/mingw-w64 $(SOURCE_DIR)/binutils-01-extract.done
+$(SOURCE_DIR)/mingw-w64-01-extract.done: | pkg/$(MINGW_W64_FILE) $(SOURCE_DIR)/binutils-01-extract.done
+	tar -C $(SOURCE_DIR) -xjf pkg/$(MINGW_W64_FILE)
 	@touch $@
 
 $(SOURCE_DIR)/mingw-w64-02-patch.done: | $(SOURCE_DIR)/mingw-w64-01-extract.done
-	patch -d $(SOURCE_DIR)/mingw-w64 -p0 <patches/mingw-w64.patch
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p0 <patches/mingw-w64.patch
 	@touch $@
 
 $(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch.done
@@ -307,7 +316,12 @@ $(BUILD_DIR)/gcc-08-remove-prefix.done: | $(BUILD_DIR)/gcc-07-make-install.done
 
 endif
 
-$(BUILD_DIR)/gcc-09-combine.done: | $(BUILD_DIR)/gcc-08-remove-prefix.done
+$(BUILD_DIR)/gcc-09-lto-plugin.done: | $(BUILD_DIR)/gcc-08-remove-prefix.done
+	@mkdir -p $(GCC_DIR)/mingw/lib/bfd-plugins
+	cp -f $(GCC_DIR)/mingw/libexec/gcc/$(MYTARGET)/$(GCC_VER)/liblto_plugin-0.dll $(GCC_DIR)/mingw/lib/bfd-plugins/
+	@touch $@
+
+$(BUILD_DIR)/gcc-10-combine.done: | $(BUILD_DIR)/gcc-09-lto-plugin.done
 	cp -Rf $(BINUTILS_DIR) $(GCC_ALL_DIR)
 	cp -Rf $(GCC_DIR)/mingw/* $(GCC_ALL_DIR)
 	@touch $@
@@ -323,7 +337,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-01-extract-05-isl.done \
   $(SOURCE_DIR)/gcc-01-extract-06-cloog.done \
   $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done \
-  $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
+  $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done \
   $(SOURCE_DIR)/mingw-w64-02-patch.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
@@ -333,7 +347,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
-  $(BUILD_DIR)/gcc-09-combine.done: \
+  $(BUILD_DIR)/gcc-10-combine.done: \
   | $(SOURCE_DIR) $(BUILD_DIR)
 	@touch $@
 
@@ -346,7 +360,7 @@ $(SOURCE_DIR)/expat-01-extract.done: | pkg/$(EXPAT_FILE) $(SOURCE_DIR)/gcc-01-ex
 	tar -C $(SOURCE_DIR) -xzf pkg/$(EXPAT_FILE)
 	@touch $@
 
-$(BUILD_DIR)/expat-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-combine.done $(SOURCE_DIR)/expat-01-extract.done
+$(BUILD_DIR)/expat-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(SOURCE_DIR)/expat-01-extract.done
 	@mkdir -p $(BUILD_DIR)/expat
 	$(GCC_PATH) cd $(BUILD_DIR)/expat && $(EXPAT_CONF)
 	@touch $@
@@ -382,7 +396,23 @@ $(SOURCE_DIR)/pdcurses-02-patch-04-debug.done: | $(SOURCE_DIR)/pdcurses-02-patch
 	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0004-add-debug-information-in-release-build.patch
 	@touch $@
 
-$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-combine.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-04-debug.done
+$(SOURCE_DIR)/pdcurses-02-patch-05-no-keypad.done: | $(SOURCE_DIR)/pdcurses-02-patch-04-debug.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0005-no-keypad.patch
+	@touch $@
+
+$(SOURCE_DIR)/pdcurses-02-patch-06-ctrl-left-right.done: | $(SOURCE_DIR)/pdcurses-02-patch-05-no-keypad.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0006-ctrl-left-right.patch
+	@touch $@
+
+$(SOURCE_DIR)/pdcurses-02-patch-07-clear-page.done: | $(SOURCE_DIR)/pdcurses-02-patch-06-ctrl-left-right.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0007-clear-page.patch
+	@touch $@
+
+$(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done: | $(SOURCE_DIR)/pdcurses-02-patch-07-clear-page.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0008-line-up.patch
+	@touch $@
+
+$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done
 	@mkdir -p $(BUILD_DIR)/pdcurses
 	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/pdcurses -f $(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR)/win32/gccwin32.mak PDCURSES_SRCDIR=$(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR) pdcurses.a
 	@touch $@
@@ -400,7 +430,7 @@ $(SOURCE_DIR)/iconv-01-extract.done: | pkg/$(ICONV_FILE) $(SOURCE_DIR)/pdcurses-
 	tar -C $(SOURCE_DIR) -xzf pkg/$(ICONV_FILE)
 	@touch $@
 
-$(BUILD_DIR)/iconv-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-combine.done $(BUILD_DIR)/expat-03-configure.done $(BUILD_DIR)/pdcurses-04-make-install.done $(SOURCE_DIR)/iconv-01-extract.done
+$(BUILD_DIR)/iconv-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-03-configure.done $(BUILD_DIR)/pdcurses-04-make-install.done $(SOURCE_DIR)/iconv-01-extract.done
 	@mkdir -p $(BUILD_DIR)/iconv
 	$(GCC_PATH) cd $(BUILD_DIR)/iconv && $(ICONV_CONF)
 	@touch $@
@@ -472,11 +502,35 @@ $(SOURCE_DIR)/gdb-02-patch-13-tui-search.done: | $(SOURCE_DIR)/gdb-02-patch-12-r
 	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0013-fix-search-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-14-pr-16120.done: | $(SOURCE_DIR)/gdb-02-patch-13-tui-search.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Fix-PR-gdb-16120.patch
+$(SOURCE_DIR)/gdb-02-patch-14-userprofile-home.done: | $(SOURCE_DIR)/gdb-02-patch-13-tui-search.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Use-USERPROFILE-as-alternative-to-HOME-for-.gdbinit.patch
 	@touch $@
 
-$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-combine.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-14-pr-16120.done
+$(SOURCE_DIR)/gdb-02-patch-15-access-violation.done: | $(SOURCE_DIR)/gdb-02-patch-14-userprofile-home.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0015-Show-details-for-access-violation.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-16-ctrl-left-right.done: | $(SOURCE_DIR)/gdb-02-patch-15-access-violation.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0016-ctrl-left-right.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-17-moving-cursor.done: | $(SOURCE_DIR)/gdb-02-patch-16-ctrl-left-right.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0017-moving-cursor.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-18-exec-point-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-17-moving-cursor.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0018-exec-point-highlight.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-19-no-warn-debuglink.done: | $(SOURCE_DIR)/gdb-02-patch-18-exec-point-highlight.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-no-warn-debuglink.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done: | $(SOURCE_DIR)/gdb-02-patch-19-no-warn-debuglink.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0020-no-source-color.patch
+	@touch $@
+
+$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done
 	@mkdir -p $(BUILD_DIR)/gdb
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF)
 	@touch $@
@@ -506,27 +560,52 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
+  $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done \
   $(SOURCE_DIR)/mingw-w64-02-patch.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
-  $(SOURCE_DIR)/pdcurses-02-patch-04-debug.done \
-  $(SOURCE_DIR)/gdb-02-patch-14-pr-16120.done \
+  $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done \
+  $(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done
 build-mingw-w64-headers: | $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 build-gcc: | $(BUILD_DIR)/gcc-05-make-install-gcc.done
 build-mingw-w64-crt: | $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
-build-gcc-full: | $(BUILD_DIR)/gcc-09-combine.done
+build-gcc-full: | $(BUILD_DIR)/gcc-10-combine.done
 build-expat: | $(BUILD_DIR)/expat-05-make-install.done
 build-pdcurses: | $(BUILD_DIR)/pdcurses-04-make-install.done
 build-iconv: | $(BUILD_DIR)/iconv-05-make-install.done
 build-gdb: | $(BUILD_DIR)/gdb-05-make-install.done
 
 
+binutils$(BUILD_BITS).7z: | build-binutils
+	@rm -f $@
+	cd $(BINUTILS_DIR) && 7z a -mx=9 ../$@ *
+
+gcc$(BUILD_BITS).7z: | build-gcc-full
+	@rm -f $@
+	cd $(GCC_DIR)/mingw && 7z a -mx=9 ../../$@ *
+
+gdb$(BUILD_BITS).7z: | build-gdb
+	@rm -f $@
+	cd $(GDB_DIR) && 7z a -mx=9 ../$@ *
+
+
+package-binutils: binutils$(BUILD_BITS).7z
+package-gcc: gcc$(BUILD_BITS).7z
+package-gdb: gdb$(BUILD_BITS).7z
+
+ifeq ($(GDB_ONLY),)
+packages: package-binutils
+packages: package-gcc
+endif
+packages: package-gdb
+
+
 info:
 	@echo -e "\r"
 	@echo -e "$(BINUTILS_FILE)\r"
+	@echo -e "$(MINGW_W64_FILE)\r"
 	@echo -e "$(GCC_FILE)\r"
 	@echo -e "$(GMP_FILE)\r"
 	@echo -e "$(MPFR_FILE)\r"
@@ -537,5 +616,3 @@ info:
 	@echo -e "$(PDCURSES_FILE)\r"
 	@echo -e "$(ICONV_FILE)\r"
 	@echo -e "$(GDB_FILE)\r"
-	@echo -e "\r"
-	@echo -e "mingw-w64\r" && cd $(SOURCE_DIR)/mingw-w64 && svn info

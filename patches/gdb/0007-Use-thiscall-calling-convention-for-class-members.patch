@@ -1,7 +1,7 @@
-From 5a5ca10e911b60ae85890fc9806d9cfd330f0683 Mon Sep 17 00:00:00 2001
+From 8b5d86f14a6ec91c0172987e0377faf48e370507 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:15:24 +0100
-Subject: [PATCH 07/14] Use thiscall calling convention for class members
+Subject: [PATCH 07/15] Use thiscall calling convention for class members
 
 ---
  gdb/eval.c      |  2 ++
@@ -9,10 +9,10 @@ Subject: [PATCH 07/14] Use thiscall calling convention for class members
  2 files changed, 30 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/eval.c b/gdb/eval.c
-index bfbe319..c30d64f 100644
+index d374b6a..a9b5038 100644
 --- a/gdb/eval.c
 +++ b/gdb/eval.c
-@@ -1669,6 +1669,8 @@ evaluate_subexp_standard (struct type *expect_type,
+@@ -1676,6 +1676,8 @@ evaluate_subexp_standard (struct type *expect_type,
  	      nargs--;
  	      argvec++;
  	    }
@@ -22,10 +22,10 @@ index bfbe319..c30d64f 100644
        else if (op == STRUCTOP_MEMBER || op == STRUCTOP_MPTR)
  	{
 diff --git a/gdb/i386-tdep.c b/gdb/i386-tdep.c
-index ce44ffd..7243feb 100644
+index 5e3cc79..0f9c8ba 100644
 --- a/gdb/i386-tdep.c
 +++ b/gdb/i386-tdep.c
-@@ -45,6 +45,7 @@
+@@ -46,6 +46,7 @@
  #include "remote.h"
  #include "exceptions.h"
  #include "gdb_assert.h"
@@ -33,7 +33,7 @@ index ce44ffd..7243feb 100644
  #include <string.h>
  
  #include "i386-tdep.h"
-@@ -2474,6 +2475,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2647,6 +2648,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    int i;
    int write_pass;
    int args_space = 0;
@@ -61,7 +61,7 @@ index ce44ffd..7243feb 100644
  
    /* Determine the total space required for arguments and struct
       return address in a first pass (allowing for 16-byte-aligned
-@@ -2496,7 +2518,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2669,7 +2691,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
  	    args_space += 4;
  	}
  
@@ -70,7 +70,7 @@ index ce44ffd..7243feb 100644
  	{
  	  int len = TYPE_LENGTH (value_enclosing_type (args[i]));
  
-@@ -2548,6 +2570,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2721,6 +2743,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    /* ...and fake a frame pointer.  */
    regcache_cooked_write (regcache, I386_EBP_REGNUM, buf);
  
@@ -83,5 +83,5 @@ index ce44ffd..7243feb 100644
       (i386_frame_this_id, i386_sigtramp_frame_this_id,
       i386_dummy_id).  It's there, since all frame unwinders for
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

@@ -1,14 +1,14 @@
-From 2341d76bcdaa1f6e3e09c82e4431fc59aa2e730c Mon Sep 17 00:00:00 2001
+From 5fd5e238f4a7d378c500a1e4ddaf9a1a65395a7b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:11:21 +0100
-Subject: [PATCH 06/14] Clear symbols if executable can't be attached
+Subject: [PATCH 06/15] Clear symbols if executable can't be attached
 
 ---
- gdb/exec.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ gdb/exec.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/exec.c b/gdb/exec.c
-index 2d2949f..4ff46b1 100644
+index 087c122..7639c0c 100644
 --- a/gdb/exec.c
 +++ b/gdb/exec.c
 @@ -143,6 +143,12 @@ exec_file_clear (int from_tty)
@@ -45,7 +45,7 @@ index 2d2949f..4ff46b1 100644
  
        /* gdb_bfd_open (and its variants) prefers canonicalized pathname for
  	 better BFD caching.  */
-@@ -263,6 +274,9 @@
+@@ -263,6 +274,9 @@ exec_file_attach (char *filename, int from_tty)
        /* Tell display code (if any) about the changed file name.  */
        if (deprecated_exec_file_display_hook)
  	(*deprecated_exec_file_display_hook) (filename);
@@ -56,5 +56,5 @@ index 2d2949f..4ff46b1 100644
  
    do_cleanups (cleanups);
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

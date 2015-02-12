@@ -1,7 +1,7 @@
-From bc11366e1ea1a7f410af9ac5d918c89e528c5145 Mon Sep 17 00:00:00 2001
+From 96e0f84418242c02b5080d9c97aafcb3259fbd36 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:57:39 +0100
-Subject: [PATCH 05/14] Add syntax highlighting for TUI
+Subject: [PATCH 05/15] Add syntax highlighting for TUI
 
 ---
  gdb/Makefile.in         |   2 +-
@@ -11,7 +11,7 @@ Subject: [PATCH 05/14] Add syntax highlighting for TUI
  4 files changed, 611 insertions(+), 15 deletions(-)
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index d2bbbd5..3a243a8 100644
+index ea27cf5..465fdde 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -278,7 +278,7 @@ SUBDIR_TUI_SRCS = \
@@ -21,8 +21,8 @@ index d2bbbd5..3a243a8 100644
 -	-DTUI=1
 +	-DTUI=1 -DTUI_SYNTAX_HIGHLIGHT
  
- #
- # python sub directory definitons
+ # Guile sub directory definitons for guile support.
+ 
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
 index cb40a57..6c374f1 100644
 --- a/gdb/tui/tui-source.c
@@ -765,5 +765,5 @@ index c30b76c..f1296b0 100644
    else
      {
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

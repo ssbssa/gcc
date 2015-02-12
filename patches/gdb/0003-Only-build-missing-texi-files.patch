@@ -1,17 +1,17 @@
-From 702ec1cc15e27d855958ddc19aca2d78a7959308 Mon Sep 17 00:00:00 2001
+From b4bf3598b6c0736aa13a1a7e9509df458fa634f0 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:53:04 +0100
-Subject: [PATCH 03/14] Only build missing texi files
+Subject: [PATCH 03/15] Only build missing texi files
 
 ---
  gdb/doc/Makefile.in | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/gdb/doc/Makefile.in b/gdb/doc/Makefile.in
-index cf63e4a..ac9ae8c 100644
+index c9c8c85..91f021b 100644
 --- a/gdb/doc/Makefile.in
 +++ b/gdb/doc/Makefile.in
-@@ -130,7 +130,7 @@ GDB_DOC_BUILD_INCLUDES = \
+@@ -135,7 +135,7 @@ GDB_DOC_FILES = \
  	$(srcdir)/gdb.texinfo \
  	$(srcdir)/guile.texi \
  	$(srcdir)/python.texi \
@@ -20,7 +20,7 @@ index cf63e4a..ac9ae8c 100644
  	$(GDB_DOC_BUILD_INCLUDES)
  
  # Stabs manual: All files
-@@ -139,7 +139,7 @@ STABS_DOC_SOURCE_INCLUDES = \
+@@ -144,7 +144,7 @@ STABS_DOC_SOURCE_INCLUDES = \
  STABS_DOC_BUILD_INCLUDES =
  STABS_DOC_FILES = \
  	$(srcdir)/stabs.texinfo \
@@ -29,7 +29,7 @@ index cf63e4a..ac9ae8c 100644
  	$(STABS_DOC_BUILD_INCLUDES)
  
  # Annotate migration document
-@@ -150,7 +150,7 @@ ANNOTATE_DOC_BUILD_INCLUDES = \
+@@ -155,7 +155,7 @@ ANNOTATE_DOC_BUILD_INCLUDES = \
  	GDBvn.texi
  ANNOTATE_DOC_FILES = \
  	$(srcdir)/annotate.texinfo \
@@ -39,5 +39,5 @@ index cf63e4a..ac9ae8c 100644
  
  # Options to extract the man page from gdb.texinfo
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

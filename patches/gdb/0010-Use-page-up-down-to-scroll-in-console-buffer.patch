@@ -1,7 +1,7 @@
-From f7743a7d717f54f81d0775316e5c1fe9be1fea80 Mon Sep 17 00:00:00 2001
+From 07b6529fb1d5a023fe25b0ce81ca38b0e10fa87e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 17:27:17 +0100
-Subject: [PATCH 10/14] Use page-up/down to scroll in console buffer
+Subject: [PATCH 10/15] Use page-up/down to scroll in console buffer
 
 ---
  gdb/tui/tui.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -108,5 +108,5 @@ index a5b83bd..c2febbb 100644
      rl_bind_key_in_map (tui_commands[i].key, tui_rl_command_key, tui_keymap);
  
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

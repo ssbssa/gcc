@@ -1,0 +1,43 @@
+From a27bb401559fadf012e596444e06008d5bb87080 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 5 Nov 2014 20:05:04 +0100
+Subject: [PATCH 15/15] Show details for access violation
+
+---
+ gdb/windows-nat.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
+index 67b861f..30b34c8 100644
+--- a/gdb/windows-nat.c
++++ b/gdb/windows-nat.c
+@@ -920,7 +920,9 @@ jit_install_command (char *args, int from_tty)
+ 
+   strcpy (command_str, "\"");
+   strcat (command_str, gdb_file);
+-  strcat (command_str, "\" -q -p %ld -ex \"signal-event %ld\" -ex \"c\"");
++  strcat (command_str, "\" -q -p %ld -ex \"signal-event %ld\""
++	  " -ex \"set debugexceptions on\" -ex \"c\""
++	  " -ex \"set debugexceptions off\"");
+ 
+   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE,
+ 		      "Software\\Microsoft\\Windows NT\\"
+@@ -1276,6 +1278,15 @@ handle_exception (struct target_waitstatus *ourstatus)
+     {
+     case EXCEPTION_ACCESS_VIOLATION:
+       DEBUG_EXCEPTION_SIMPLE ("EXCEPTION_ACCESS_VIOLATION");
++      if (current_event.u.Exception.ExceptionRecord.NumberParameters == 2)
++	{
++	  ULONG_PTR *ei =
++	    current_event.u.Exception.ExceptionRecord.ExceptionInformation;
++	  DEBUG_EXCEPT(("     %s violation at %s\n",
++			ei[0] == 8 ? "data execution prevention" :
++			(ei[0] ? "write access" : "read access"),
++			host_address_to_string ((void*)ei[1])));
++	}
+       ourstatus->value.sig = GDB_SIGNAL_SEGV;
+ #ifdef __CYGWIN__
+       {
+-- 
+1.9.4.msysgit.2
+

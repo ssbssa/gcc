@@ -1,7 +1,7 @@
-From 9b7449adee5e4d1c6bfa43e23d0d1746f05e30fb Mon Sep 17 00:00:00 2001
+From d71cd6c7a0b2752bc3c4bf118ac34d5863d4b0ac Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:54:46 +0100
-Subject: [PATCH 04/14] Fix mingw build with curses
+Subject: [PATCH 04/15] Fix mingw build with curses
 
 ---
  gdb/configure    | 4 +++-
@@ -9,10 +9,10 @@ Subject: [PATCH 04/14] Fix mingw build with curses
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/gdb/configure b/gdb/configure
-index 9349917..ce1ab53 100755
+index 4b2906e..c4e5dfb 100755
 --- a/gdb/configure
 +++ b/gdb/configure
-@@ -7099,7 +7099,9 @@ case $host_os in
+@@ -7111,7 +7111,9 @@ case $host_os in
      ;;
    *mingw32*)
      ac_cv_search_tgetent="none required"
@@ -24,7 +24,7 @@ index 9349917..ce1ab53 100755
  esac
  
 diff --git a/gdb/configure.ac b/gdb/configure.ac
-index 55f37d2..6e6eda6 100644
+index c083e52..8e5525d 100644
 --- a/gdb/configure.ac
 +++ b/gdb/configure.ac
 @@ -628,7 +628,9 @@ case $host_os in
@@ -39,5 +39,5 @@ index 55f37d2..6e6eda6 100644
  esac
  
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

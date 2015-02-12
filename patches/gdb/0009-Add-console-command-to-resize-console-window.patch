@@ -1,7 +1,7 @@
-From 237338e450ded7fbd4ce0a04523dbe7612aaf6f7 Mon Sep 17 00:00:00 2001
+From c81e0d733355a87fae151dbdb4a1f7d3fb0b6ad7 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 17:22:35 +0100
-Subject: [PATCH 09/14] Add console command to resize console window
+Subject: [PATCH 09/15] Add console command to resize console window
 
 ---
  gdb/tui/tui-win.c |   3 +-
@@ -102,12 +102,12 @@ index f1296b0..a5b83bd 100644
  
  void
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 700eab4..90e56bc 100644
+index 16fd20c..67b861f 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -68,6 +68,11 @@
- #include "i386-nat.h"
+@@ -70,6 +70,11 @@
  #include "complaints.h"
+ #include "inf-child.h"
  
 +#ifdef TUI
 +#include "tui/tui-win.h"
@@ -117,7 +117,7 @@ index 700eab4..90e56bc 100644
  #define AdjustTokenPrivileges		dyn_AdjustTokenPrivileges
  #define DebugActiveProcessStop		dyn_DebugActiveProcessStop
  #define DebugBreakProcess		dyn_DebugBreakProcess
-@@ -1043,6 +1048,121 @@ jit_uninstall_command (char *args, int from_tty)
+@@ -959,6 +964,121 @@ jit_uninstall_command (char *args, int from_tty)
      error (_("Error deleting 'Debugger' registry value."));
  }
  
@@ -239,7 +239,7 @@ index 700eab4..90e56bc 100644
  /* Handle DEBUG_STRING output from child process.
     Cygwin prepends its messages with a "cygwin:".  Interpret this as
     a Cygwin signal.  Otherwise just print the string as a warning.  */
-@@ -2767,6 +2887,9 @@ _initialize_windows_nat (void)
+@@ -2702,6 +2822,9 @@ _initialize_windows_nat (void)
    c = add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
  	       _("Uninstall JIT debugger."));
  
@@ -250,5 +250,5 @@ index 700eab4..90e56bc 100644
  	       _("Load dll library symbols from FILE."));
    set_cmd_completer (c, filename_completer);
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

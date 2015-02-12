@@ -1,7 +1,7 @@
-From 7ba1330a8b7718137fe4d5d0a131ea4f49cf8345 Mon Sep 17 00:00:00 2001
+From e639373be013f77603c92a344926228c7fe6fd7a Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 11 Mar 2014 19:50:44 +0100
-Subject: [PATCH 12/14] fix resize crashes
+Subject: [PATCH 12/15] Fix resize crashes
 
 ---
  gdb/tui/tui-win.c | 10 ++++------
@@ -43,5 +43,5 @@ index 428c0fb..cef673d 100644
  	 window.  */
        if (win_with_focus != TUI_CMD_WIN)
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 

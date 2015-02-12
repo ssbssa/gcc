@@ -1,8 +1,8 @@
-From 6acd513f529bbd998433adfc2c5ab4d1dbe54890 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=D0=A0=D1=83=D1=81=D0=BB=D0=B0=D0=BD=20=D0=98=D0=B6=D0=B1=D1?=
- =?UTF-8?q?=83=D0=BB=D0=B0=D1=82=D0=BE=D0=B2?= <lrn1986@gmail.com>
+From 5d56ae2c5b1248202ca76f5f035fc6063fb0d769 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=D0=A0=D1=83=D1=81=D0=BB=D0=B0=D0=BD=20=D0=98=D0=B6=D0=B1?=
+ =?UTF-8?q?=D1=83=D0=BB=D0=B0=D1=82=D0=BE=D0=B2?= <lrn1986@gmail.com>
 Date: Sat, 29 Sep 2012 18:16:16 +0400
-Subject: [PATCH 01/14] Make gdb JIT-capable (MS-Windows)
+Subject: [PATCH 01/15] Make gdb JIT-capable (MS-Windows)
 
 Adds the signal-event command (MS-Windows-only) that signals
 an event with user-provided ID. Used to resume crashing
@@ -15,10 +15,10 @@ PR gdb/14529
  2 files changed, 49 insertions(+)
 
 diff --git a/gdb/doc/gdb.texinfo b/gdb/doc/gdb.texinfo
-index 74ddcf5..6cccf05 100644
+index 9e89855..b86ee57 100644
 --- a/gdb/doc/gdb.texinfo
 +++ b/gdb/doc/gdb.texinfo
-@@ -19827,6 +19827,33 @@ This is a Cygwin-specific alias of @code{info shared}.
+@@ -20004,6 +20004,33 @@ of @value{GDBN}.  Use the @code{sharedlibrary} command instead.
  This command loads symbols from a dll similarly to
  add-sym command but without the need to specify a base address.
  
@@ -53,10 +53,10 @@ index 74ddcf5..6cccf05 100644
  @cindex debugging the Cygwin DLL
  @cindex Cygwin DLL, debugging
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 4fa07bd..a0db993 100644
+index e6ec62b..b4f9f89 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -963,6 +963,25 @@ dll_symbol_command (char *args, int from_tty)
+@@ -879,6 +879,25 @@ dll_symbol_command (char *args, int from_tty)
    safe_symbol_file_add (args, from_tty, NULL, 0, OBJF_SHARED | OBJF_USERLOADED);
  }
  
@@ -82,7 +82,7 @@ index 4fa07bd..a0db993 100644
  /* Handle DEBUG_STRING output from child process.
     Cygwin prepends its messages with a "cygwin:".  Interpret this as
     a Cygwin signal.  Otherwise just print the string as a warning.  */
-@@ -2680,6 +2699,9 @@ _initialize_windows_nat (void)
+@@ -2615,6 +2634,9 @@ _initialize_windows_nat (void)
    cygwin_internal (CW_SET_DOS_FILE_WARNING, 0);
  #endif
  
@@ -93,5 +93,5 @@ index 4fa07bd..a0db993 100644
  	       _("Load dll library symbols from FILE."));
    set_cmd_completer (c, filename_completer);
 -- 
-1.8.5.2.msysgit.0
+1.9.4.msysgit.2
 
