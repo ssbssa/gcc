@@ -26,7 +26,7 @@ else
 endif
 
 
-BINUTILS_VER=2.25
+BINUTILS_VER=2.25.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.bz2
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -50,7 +50,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=4.9.2
+GCC_VER=4.9.3
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.bz2
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -69,11 +69,11 @@ GMP_VER=6.0.0
 GMP_SRC_DIR=gmp-$(GMP_VER)
 GMP_FILE=$(GMP_SRC_DIR)a.tar.xz
 
-MPFR_VER=3.1.2
+MPFR_VER=3.1.3
 MPFR_SRC_DIR=mpfr-$(MPFR_VER)
 MPFR_FILE=$(MPFR_SRC_DIR).tar.xz
 
-MPC_VER=1.0.2
+MPC_VER=1.0.3
 MPC_SRC_DIR=mpc-$(MPC_VER)
 MPC_FILE=$(MPC_SRC_DIR).tar.gz
 
@@ -156,11 +156,7 @@ $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done: | $(SOURCE_DIR)/binutils-02-p
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/timestamp.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done: | $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <dll-syment-name.patch
-	@touch $@
-
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -337,7 +333,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-01-extract-05-isl.done \
   $(SOURCE_DIR)/gcc-01-extract-06-cloog.done \
   $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done \
-  $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done \
+  $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
   $(SOURCE_DIR)/mingw-w64-02-patch.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
@@ -560,7 +556,7 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-03-dll-syment-name.done \
+  $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
   $(SOURCE_DIR)/mingw-w64-02-patch.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
   $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done \

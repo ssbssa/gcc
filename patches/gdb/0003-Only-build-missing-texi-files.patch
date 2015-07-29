@@ -1,26 +1,17 @@
-From b4bf3598b6c0736aa13a1a7e9509df458fa634f0 Mon Sep 17 00:00:00 2001
-From: Hannes Domani <ssbssa@yahoo.de>
-Date: Tue, 4 Mar 2014 19:53:04 +0100
-Subject: [PATCH 03/15] Only build missing texi files
-
----
- gdb/doc/Makefile.in | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/gdb/doc/Makefile.in b/gdb/doc/Makefile.in
-index c9c8c85..91f021b 100644
---- a/gdb/doc/Makefile.in
-+++ b/gdb/doc/Makefile.in
-@@ -135,7 +135,7 @@ GDB_DOC_FILES = \
- 	$(srcdir)/gdb.texinfo \
- 	$(srcdir)/guile.texi \
- 	$(srcdir)/python.texi \
--	$(GDB_DOC_SOURCE_INCLUDES) \
-+	$(GDB_DOC_SOURCE_INCLUDES) | \
- 	$(GDB_DOC_BUILD_INCLUDES)
+--- a/bfd/doc/Makefile.in	2015-01-15 11:58:11.000000000 +0100
++++ b/bfd/doc/Makefile.in	2015-07-29 20:42:40.472068900 +0200
+@@ -436,7 +436,7 @@
+ clean-libtool:
+ 	-rm -rf .libs _libs
  
- # Stabs manual: All files
-@@ -144,7 +144,7 @@ STABS_DOC_SOURCE_INCLUDES = \
+-bfd.info: bfd.texinfo $(bfd_TEXINFOS)
++bfd.info: bfd.texinfo | $(bfd_TEXINFOS)
+ 	restore=: && backupdir="$(am__leading_dot)am$$$$" && \
+ 	rm -rf $$backupdir && mkdir $$backupdir && \
+ 	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \
+--- a/gdb/doc/Makefile.in	2015-01-15 11:58:12.000000000 +0100
++++ b/gdb/doc/Makefile.in	2015-07-29 20:50:55.494382600 +0200
+@@ -144,7 +144,7 @@
  STABS_DOC_BUILD_INCLUDES =
  STABS_DOC_FILES = \
  	$(srcdir)/stabs.texinfo \
@@ -29,7 +20,7 @@ index c9c8c85..91f021b 100644
  	$(STABS_DOC_BUILD_INCLUDES)
  
  # Annotate migration document
-@@ -155,7 +155,7 @@ ANNOTATE_DOC_BUILD_INCLUDES = \
+@@ -155,7 +155,7 @@
  	GDBvn.texi
  ANNOTATE_DOC_FILES = \
  	$(srcdir)/annotate.texinfo \
@@ -38,6 +29,12 @@ index c9c8c85..91f021b 100644
  	$(ANNOTATE_DOC_BUILD_INCLUDES)
  
  # Options to extract the man page from gdb.texinfo
--- 
-1.9.4.msysgit.2
-
+@@ -481,7 +481,7 @@
+ 		$(srcdir)/gdb.texinfo
+ 
+ # GDB MANUAL: info file
+-gdb.info: ${GDB_DOC_FILES}
++gdb.info: | ${GDB_DOC_FILES}
+ 	$(MAKEINFO_CMD) $(READLINE_TEXI_INCFLAG) -I ${GDBMI_DIR} -I $(srcdir) \
+ 		-o gdb.info $(srcdir)/gdb.texinfo
+ 
