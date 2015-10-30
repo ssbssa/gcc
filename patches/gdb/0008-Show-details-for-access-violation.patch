@@ -1,17 +1,17 @@
-From a27bb401559fadf012e596444e06008d5bb87080 Mon Sep 17 00:00:00 2001
+From 1a5849fda8957325eb46da24492935cac5fd0596 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 5 Nov 2014 20:05:04 +0100
-Subject: [PATCH 15/15] Show details for access violation
+Subject: [PATCH 08/19] Show details for access violation
 
 ---
  gdb/windows-nat.c | 13 ++++++++++++-
  1 file changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 67b861f..30b34c8 100644
+index 911cc20..1d30418 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -920,7 +920,9 @@ jit_install_command (char *args, int from_tty)
+@@ -838,7 +838,9 @@ jit_install_command (char *args, int from_tty)
  
    strcpy (command_str, "\"");
    strcat (command_str, gdb_file);
@@ -22,7 +22,7 @@ index 67b861f..30b34c8 100644
  
    if (RegCreateKeyEx (HKEY_LOCAL_MACHINE,
  		      "Software\\Microsoft\\Windows NT\\"
-@@ -1276,6 +1278,15 @@ handle_exception (struct target_waitstatus *ourstatus)
+@@ -1083,6 +1085,15 @@ handle_exception (struct target_waitstatus *ourstatus)
      {
      case EXCEPTION_ACCESS_VIOLATION:
        DEBUG_EXCEPTION_SIMPLE ("EXCEPTION_ACCESS_VIOLATION");

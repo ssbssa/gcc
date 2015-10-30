@@ -1,17 +1,17 @@
-From bee56e7f0f49c58564f8fba4ffe742002f34994f Mon Sep 17 00:00:00 2001
+From 57a33e5eaff1ecaaebb0b663f8768495b2b27010 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:43:44 +0100
-Subject: [PATCH 02/15] Add install/uninstall commands for JIT debugger
+Subject: [PATCH 02/19] Add install/uninstall commands for JIT debugger
 
 ---
  gdb/windows-nat.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 65 insertions(+)
 
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index b4f9f89..16fd20c 100644
+index 90e5784..c097cf9 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -39,6 +39,7 @@
+@@ -37,6 +37,7 @@
  #include <windows.h>
  #include <imagehlp.h>
  #include <psapi.h>
@@ -19,7 +19,7 @@ index b4f9f89..16fd20c 100644
  #ifdef __CYGWIN__
  #include <wchar.h>
  #include <sys/cygwin.h>
-@@ -898,6 +899,66 @@ signal_event_command (char *args, int from_tty)
+@@ -821,6 +822,66 @@ signal_event_command (char *args, int from_tty)
    CloseHandle ((HANDLE) event_id);
  }
  
@@ -86,17 +86,17 @@ index b4f9f89..16fd20c 100644
  /* Handle DEBUG_STRING output from child process.
     Cygwin prepends its messages with a "cygwin:".  Interpret this as
     a Cygwin signal.  Otherwise just print the string as a warning.  */
-@@ -2636,6 +2697,10 @@ _initialize_windows_nat (void)
+@@ -2560,6 +2621,10 @@ _initialize_windows_nat (void)
  
-   c = add_com ("signal-event", class_run, signal_event_command,
+   add_com ("signal-event", class_run, signal_event_command,
  	       _("Signal an object with ID."));
-+  c = add_com ("jit-install", class_obscure, jit_install_command,
++  add_com ("jit-install", class_obscure, jit_install_command,
 +	       _("Install as JIT debugger."));
-+  c = add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
++  add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
 +	       _("Uninstall JIT debugger."));
  
-   c = add_com ("dll-symbols", class_files, dll_symbol_command,
- 	       _("Load dll library symbols from FILE."));
+ #ifdef __CYGWIN__
+   add_setshow_boolean_cmd ("shell", class_support, &useshell, _("\
 -- 
 1.9.4.msysgit.2
 

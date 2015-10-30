@@ -1,0 +1,59 @@
+From 9bd3f2e233eddc6dc620c8a585f446e69282d0e6 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sat, 29 Aug 2015 15:31:46 +0200
+Subject: [PATCH 3/7] fix binmode
+
+---
+ mingw-w64-crt/crt/binmode.c |  7 ++++---
+ mingw-w64-crt/crt/crtexe.c  | 12 ++++++++++++
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/mingw-w64-crt/crt/binmode.c b/mingw-w64-crt/crt/binmode.c
+index f0473b0..2e46c2f 100644
+--- a/mingw-w64-crt/crt/binmode.c
++++ b/mingw-w64-crt/crt/binmode.c
+@@ -4,7 +4,8 @@
+  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
+  */
+ 
+-#define SPECIAL_CRTEXE
+-
+ #include <fcntl.h>
+-#include <stdlib.h>
++
++/* Set default file mode to binary */
++
++int _fmode = _O_BINARY;
+diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
+index ade4124..9817692 100644
+--- a/mingw-w64-crt/crt/crtexe.c
++++ b/mingw-w64-crt/crt/crtexe.c
+@@ -20,6 +20,8 @@
+ #include <tchar.h>
+ #include <sect_attribs.h>
+ #include <locale.h>
++#include <stdio.h>
++#include <fcntl.h>
+ 
+ #ifndef __winitenv
+ extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
+@@ -132,6 +134,16 @@ pre_c_init (void)
+     __set_app_type (_CONSOLE_APP);
+   __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
+ 
++  if (_fmode == _O_BINARY)
++    {
++      if (stdin)
++	_setmode (stdin->_file,_O_BINARY);
++      if (stdout)
++	_setmode (stdout->_file,_O_BINARY);
++      if (stderr)
++	_setmode (stderr->_file,_O_BINARY);
++    }
++
+   * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
+   * __MINGW_IMP_SYMBOL(_commode) = _commode;
+ 
+-- 
+1.9.4.msysgit.2
+

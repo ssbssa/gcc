@@ -1,0 +1,37 @@
+From f64b1fb58b234bea12834a05d3911891b74892d3 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sat, 29 Aug 2015 15:30:00 +0200
+Subject: [PATCH 2/7] fix _fpreset()
+
+---
+ mingw-w64-crt/crt/CRT_fp10.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/mingw-w64-crt/crt/CRT_fp10.c b/mingw-w64-crt/crt/CRT_fp10.c
+index 89f2617..47fd223 100644
+--- a/mingw-w64-crt/crt/CRT_fp10.c
++++ b/mingw-w64-crt/crt/CRT_fp10.c
+@@ -4,6 +4,10 @@
+  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
+  */
+ 
++#ifndef _WIN64
++#include <float.h>
++#endif
++
+ void _fpreset (void);
+ 
+ void _fpreset (void)
+@@ -18,6 +22,9 @@ void _fpreset (void)
+ #else /* msvc: */
+   __asm fninit;
+ #endif
++#ifndef _WIN64
++  _control87( _PC_53,_MCW_PC );
++#endif
+ #endif
+ }
+ 
+-- 
+1.9.4.msysgit.2
+

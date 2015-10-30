@@ -1,8 +1,8 @@
-From 5d56ae2c5b1248202ca76f5f035fc6063fb0d769 Mon Sep 17 00:00:00 2001
+From 5d5c391ed718e0a62e46497a7fc5c278163d5029 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=D0=A0=D1=83=D1=81=D0=BB=D0=B0=D0=BD=20=D0=98=D0=B6=D0=B1?=
  =?UTF-8?q?=D1=83=D0=BB=D0=B0=D1=82=D0=BE=D0=B2?= <lrn1986@gmail.com>
 Date: Sat, 29 Sep 2012 18:16:16 +0400
-Subject: [PATCH 01/15] Make gdb JIT-capable (MS-Windows)
+Subject: [PATCH 01/19] Make gdb JIT-capable (MS-Windows)
 
 Adds the signal-event command (MS-Windows-only) that signals
 an event with user-provided ID. Used to resume crashing
@@ -15,12 +15,12 @@ PR gdb/14529
  2 files changed, 49 insertions(+)
 
 diff --git a/gdb/doc/gdb.texinfo b/gdb/doc/gdb.texinfo
-index 9e89855..b86ee57 100644
+index 4477048..84d1e14 100644
 --- a/gdb/doc/gdb.texinfo
 +++ b/gdb/doc/gdb.texinfo
-@@ -20004,6 +20004,33 @@ of @value{GDBN}.  Use the @code{sharedlibrary} command instead.
- This command loads symbols from a dll similarly to
- add-sym command but without the need to specify a base address.
+@@ -20789,6 +20789,33 @@ This command displays thread specific information stored in the
+ Thread Information Block (readable on the X86 CPU family using @code{$fs}
+ selector for 32-bit programs and @code{$gs} for 64-bit programs).
  
 +@kindex signal-event
 +@item signal-event @var{id}
@@ -53,11 +53,11 @@ index 9e89855..b86ee57 100644
  @cindex debugging the Cygwin DLL
  @cindex Cygwin DLL, debugging
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index e6ec62b..b4f9f89 100644
+index 2f674b6..90e5784 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -879,6 +879,25 @@ dll_symbol_command (char *args, int from_tty)
-   safe_symbol_file_add (args, from_tty, NULL, 0, OBJF_SHARED | OBJF_USERLOADED);
+@@ -802,6 +802,25 @@ windows_clear_solib (void)
+   solib_end = &solib_start;
  }
  
 +static void
@@ -82,16 +82,16 @@ index e6ec62b..b4f9f89 100644
  /* Handle DEBUG_STRING output from child process.
     Cygwin prepends its messages with a "cygwin:".  Interpret this as
     a Cygwin signal.  Otherwise just print the string as a warning.  */
-@@ -2615,6 +2634,9 @@ _initialize_windows_nat (void)
+@@ -2539,6 +2558,9 @@ _initialize_windows_nat (void)
    cygwin_internal (CW_SET_DOS_FILE_WARNING, 0);
  #endif
  
-+  c = add_com ("signal-event", class_run, signal_event_command,
++  add_com ("signal-event", class_run, signal_event_command,
 +	       _("Signal an object with ID."));
 +
-   c = add_com ("dll-symbols", class_files, dll_symbol_command,
- 	       _("Load dll library symbols from FILE."));
-   set_cmd_completer (c, filename_completer);
+ #ifdef __CYGWIN__
+   add_setshow_boolean_cmd ("shell", class_support, &useshell, _("\
+ Set use of shell to start subprocess."), _("\
 -- 
 1.9.4.msysgit.2
 

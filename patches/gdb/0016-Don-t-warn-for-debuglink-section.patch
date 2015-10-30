@@ -1,0 +1,24 @@
+From 5ba17d1a1d02f7e344d0d219bea99d3865acde7f Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 14 Jan 2015 19:17:42 +0100
+Subject: [PATCH 16/19] Don't warn for debuglink section
+
+---
+ gdb/symfile.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gdb/symfile.c b/gdb/symfile.c
+index 0c35ffa..bc96c1b 100644
+--- a/gdb/symfile.c
++++ b/gdb/symfile.c
+@@ -693,6 +693,7 @@ addr_info_make_relative (struct section_addr_info *addrs, bfd *abfd)
+ 
+ 	  if (!(strcmp (sect_name, ".gnu.liblist") == 0
+ 		|| strcmp (sect_name, ".gnu.conflict") == 0
++		|| strcmp (sect_name, ".gnu_debuglink") == 0
+ 		|| (strcmp (sect_name, ".bss") == 0
+ 		    && i > 0
+ 		    && strcmp (addrs->other[i - 1].name, ".dynbss") == 0
+-- 
+1.9.4.msysgit.2
+

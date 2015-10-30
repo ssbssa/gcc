@@ -1,0 +1,210 @@
+From 82f330c825eef263b2fc282a316748efdbc5b7e8 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 2 Sep 2015 20:50:28 +0200
+Subject: [PATCH 18/19] Add console command to resize console window
+
+---
+ gdb/tui/tui-win.c |   4 +-
+ gdb/tui/tui-win.h |   1 +
+ gdb/tui/tui.c     |  13 +++++++
+ gdb/windows-nat.c | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 126 insertions(+), 2 deletions(-)
+
+diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
+index bb5800f..804b3d4 100644
+--- a/gdb/tui/tui-win.c
++++ b/gdb/tui/tui-win.c
+@@ -902,9 +902,10 @@ tui_sigwinch_handler (int signal)
+   mark_async_signal_handler (tui_sigwinch_token);
+   tui_set_win_resized_to (TRUE);
+ }
++#endif
+ 
+ /* Callback for asynchronously resizing TUI following a SIGWINCH signal.  */
+-static void
++void
+ tui_async_resize_screen (gdb_client_data arg)
+ {
+   rl_resize_terminal ();
+@@ -928,7 +929,6 @@ tui_async_resize_screen (gdb_client_data arg)
+       tui_redisplay_readline ();
+     }
+ }
+-#endif
+ 
+ /* Initialize TUI's SIGWINCH signal handler.  Note that the handler is not
+    uninstalled when we exit TUI, so the handler should not assume that TUI is
+diff --git a/gdb/tui/tui-win.h b/gdb/tui/tui-win.h
+index f3c1368..466fec4 100644
+--- a/gdb/tui/tui-win.h
++++ b/gdb/tui/tui-win.h
+@@ -48,6 +48,7 @@ extern int tui_active_border_attrs;
+ 
+ extern int tui_update_variables (void);
+ 
++extern void tui_async_resize_screen (void *);
+ extern void tui_initialize_win (void);
+ 
+ /* Update gdb's knowledge of the terminal size.  */
+diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
+index 573efe3..1e77f81 100644
+--- a/gdb/tui/tui.c
++++ b/gdb/tui/tui.c
+@@ -634,6 +634,19 @@ tui_disable (void)
+ 
+   tui_active = 0;
+   tui_update_gdb_sizes ();
++
++#ifdef __MINGW32__
++    {
++      int width, height;
++      rl_reset_screen_size ();
++      rl_get_screen_size (&height, &width);
++      if (width != tui_term_width () || height != tui_term_height ())
++	{
++	  tui_set_win_resized_to (TRUE);
++	  set_screen_width_and_height (width, height);
++	}
++    }
++#endif
+ }
+ 
+ /* Command wrapper for enabling tui mode.  */
+diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
+index 1d30418..a210743 100644
+--- a/gdb/windows-nat.c
++++ b/gdb/windows-nat.c
+@@ -67,6 +67,11 @@
+ #include "complaints.h"
+ #include "inf-child.h"
+ 
++#include "readline/readline.h"
++#ifdef TUI
++#include "tui/tui-win.h"
++#endif
++
+ #define AdjustTokenPrivileges		dyn_AdjustTokenPrivileges
+ #define DebugActiveProcessStop		dyn_DebugActiveProcessStop
+ #define DebugBreakProcess		dyn_DebugBreakProcess
+@@ -862,6 +867,107 @@ jit_install_command (char *args, int from_tty)
+ }
+ 
+ static void
++console_resize (int *wp, int *hp, int bh)
++{
++  HANDLE hStdout;
++  CONSOLE_SCREEN_BUFFER_INFO csbi;
++  COORD c;
++  int w, h, bottom;
++  SMALL_RECT sr;
++
++  if (!wp || !hp) return;
++
++  w = *wp;
++  h = *hp;
++
++  hStdout = GetStdHandle (STD_OUTPUT_HANDLE);
++  GetConsoleScreenBufferInfo (hStdout, &csbi);
++
++  if (w < 0 || h < 0)
++    {
++      COORD coord = GetLargestConsoleWindowSize (hStdout);
++      if (w < 0) w = coord.X;
++      if (h < 0) h = coord.Y;
++    }
++
++  if (w <= 0) w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
++  if (h <= 0) h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
++  if (bh <= 0) bh = csbi.dwSize.Y;
++
++  if (bh < h) bh = h;
++  c = csbi.dwSize;
++  if (w > c.X || bh > c.Y)
++    {
++      if (w > c.X) c.X = w;
++      if (bh > c.Y) c.Y = bh;
++      SetConsoleScreenBufferSize (hStdout, c);
++    }
++
++  bottom = csbi.srWindow.Top + h - 1;
++  if (bottom >= c.Y) bottom = c.Y - 1;
++
++  sr.Left = 0;
++  sr.Top = bottom - (h - 1);
++  sr.Right = w - 1;
++  sr.Bottom = bottom;
++  SetConsoleWindowInfo (hStdout, TRUE, &sr);
++
++  if( w < c.X || bh < c.Y )
++    {
++      c.X = w;
++      c.Y = bh;
++      SetConsoleScreenBufferSize (hStdout, c);
++    }
++
++  *wp = w;
++  *hp = h;
++}
++
++static void
++console_resize_command (char *args, int from_tty)
++{
++  char **argv;
++  struct cleanup *cleanups;
++
++  dont_repeat ();
++
++  if (args == NULL) return;
++
++  argv = gdb_buildargv (args);
++  cleanups = make_cleanup_freeargv (argv);
++
++  if (argv[0])
++    {
++      int w, h, hb;
++      w = atoi (argv[0]);
++      h = hb = 0;
++      if (argv[1])
++	{
++	  h = atoi (argv[1]);
++	  if (atoi(argv[2]))
++	    hb = atoi (argv[2]);
++	}
++      if (strcmp (argv[0], "full") == 0)
++	{
++	  if (w == 0) w = -1;
++	  if (h == 0) h = -1;
++	}
++      console_resize (&w, &h, hb);
++
++#ifdef TUI
++      tui_set_win_resized_to (TRUE);
++      RL_SETSTATE (RL_STATE_REDISPLAYING);
++      tui_async_resize_screen (0);
++      RL_UNSETSTATE (RL_STATE_REDISPLAYING);
++#else
++      rl_resize_terminal ();
++#endif
++    }
++
++  do_cleanups (cleanups);
++}
++
++static void
+ jit_uninstall_command (char *args, int from_tty)
+ {
+   HKEY hKey;
+@@ -2637,6 +2743,10 @@ _initialize_windows_nat (void)
+   add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
+ 	       _("Uninstall JIT debugger."));
+ 
++  add_com ("console", class_obscure, console_resize_command,
++	       _("Resize console."));
++
++
+ #ifdef __CYGWIN__
+   add_setshow_boolean_cmd ("shell", class_support, &useshell, _("\
+ Set use of shell to start subprocess."), _("\
+-- 
+1.9.4.msysgit.2
+

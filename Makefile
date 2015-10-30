@@ -38,7 +38,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=3.3.0
+MINGW_W64_VER=4.0.4
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -50,7 +50,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=4.9.3
+GCC_VER=5.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.bz2
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -77,13 +77,9 @@ MPC_VER=1.0.3
 MPC_SRC_DIR=mpc-$(MPC_VER)
 MPC_FILE=$(MPC_SRC_DIR).tar.gz
 
-ISL_VER=0.12.2
+ISL_VER=0.14
 ISL_SRC_DIR=isl-$(ISL_VER)
 ISL_FILE=$(ISL_SRC_DIR).tar.bz2
-
-CLOOG_VER=0.18.1
-CLOOG_SRC_DIR=cloog-$(CLOOG_VER)
-CLOOG_FILE=$(CLOOG_SRC_DIR).tar.gz
 
 EXPAT_VER=2.1.0
 EXPAT_SRC_DIR=expat-$(EXPAT_VER)
@@ -106,7 +102,7 @@ ICONV_CONF=$(SOURCE_DIR_ABS)/$(ICONV_SRC_DIR)/configure \
 	   --build=$(MYBUILD) --host=$(MYTARGET) \
 	   --enable-static --disable-shared --prefix=$(GDB_LIBS)
 
-GDB_VER=7.8.2
+GDB_VER=7.10
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -190,11 +186,39 @@ $(SOURCE_DIR)/mingw-w64-01-extract.done: | pkg/$(MINGW_W64_FILE) $(SOURCE_DIR)/b
 	tar -C $(SOURCE_DIR) -xjf pkg/$(MINGW_W64_FILE)
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch.done: | $(SOURCE_DIR)/mingw-w64-01-extract.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p0 <patches/mingw-w64.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-01-stpcpy-wcpcpy.done: | $(SOURCE_DIR)/mingw-w64-01-extract.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0001-add-stpcpy-wcpcpy.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch.done
+$(SOURCE_DIR)/mingw-w64-02-patch-02-_fpreset.done: | $(SOURCE_DIR)/mingw-w64-02-patch-01-stpcpy-wcpcpy.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0002-fix-_fpreset.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-03-binmode.done: | $(SOURCE_DIR)/mingw-w64-02-patch-02-_fpreset.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0003-fix-binmode.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-04-remove-error-handlers.done: | $(SOURCE_DIR)/mingw-w64-02-patch-03-binmode.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0004-remove-error-handlers.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-05-_vswprintf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-04-remove-error-handlers.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0005-fix-_vswprintf.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-06-use-_TCHAR-for-argv.done: | $(SOURCE_DIR)/mingw-w64-02-patch-05-_vswprintf.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0006-use-_TCHAR-for-argv.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-07-free-argv.done: | $(SOURCE_DIR)/mingw-w64-02-patch-06-use-_TCHAR-for-argv.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0007-free-argv.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done: | $(SOURCE_DIR)/mingw-w64-02-patch-07-free-argv.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-overloaded-variants-of-fpclassify-isnan-signbit.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -234,12 +258,7 @@ $(SOURCE_DIR)/gcc-01-extract-05-isl.done: | $(SOURCE_DIR)/gcc-01-extract-04-mpc.
 	mv $(SOURCE_DIR)/$(GCC_SRC_DIR)/$(ISL_SRC_DIR) $(SOURCE_DIR)/$(GCC_SRC_DIR)/isl
 	@touch $@
 
-$(SOURCE_DIR)/gcc-01-extract-06-cloog.done: | $(SOURCE_DIR)/gcc-01-extract-05-isl.done pkg/$(CLOOG_FILE)
-	tar -C $(SOURCE_DIR)/$(GCC_SRC_DIR) -xzf pkg/$(CLOOG_FILE)
-	mv $(SOURCE_DIR)/$(GCC_SRC_DIR)/$(CLOOG_SRC_DIR) $(SOURCE_DIR)/$(GCC_SRC_DIR)/cloog
-	@touch $@
-
-$(SOURCE_DIR)/gcc-02-patch-01-gengtype.done: | $(SOURCE_DIR)/gcc-01-extract-06-cloog.done
+$(SOURCE_DIR)/gcc-02-patch-01-gengtype.done: | $(SOURCE_DIR)/gcc-01-extract-05-isl.done
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/gengtype.patch
 	@touch $@
 
@@ -292,11 +311,11 @@ $(BUILD_DIR)/mingw-w64-08-crt-make-install.done: | $(BUILD_DIR)/mingw-w64-07-crt
 # gcc
 
 $(BUILD_DIR)/gcc-06-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-05-make-install-gcc.done
-	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/gcc
+	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc
 	@touch $@
 
 $(BUILD_DIR)/gcc-07-make-install.done: | $(BUILD_DIR)/gcc-06-make.done
-	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/gcc install-strip
+	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc install-strip
 	@touch $@
 
 ifeq ($(BUILD_BITS),64)
@@ -331,10 +350,9 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-01-extract-03-mpfr.done \
   $(SOURCE_DIR)/gcc-01-extract-04-mpc.done \
   $(SOURCE_DIR)/gcc-01-extract-05-isl.done \
-  $(SOURCE_DIR)/gcc-01-extract-06-cloog.done \
   $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done \
   $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
   $(SOURCE_DIR)/gcc-02-patch-03-lfs.done \
@@ -352,7 +370,7 @@ endif
 
 # expat
 
-$(SOURCE_DIR)/expat-01-extract.done: | pkg/$(EXPAT_FILE) $(SOURCE_DIR)/gcc-01-extract-06-cloog.done
+$(SOURCE_DIR)/expat-01-extract.done: | pkg/$(EXPAT_FILE) $(SOURCE_DIR)/gcc-01-extract-05-isl.done
 	tar -C $(SOURCE_DIR) -xzf pkg/$(EXPAT_FILE)
 	@touch $@
 
@@ -408,7 +426,11 @@ $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done: | $(SOURCE_DIR)/pdcurses-02-pat
 	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0008-line-up.patch
 	@touch $@
 
-$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done
+$(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done: | $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0009-fix-doupdate.patch
+	@touch $@
+
+$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done
 	@mkdir -p $(BUILD_DIR)/pdcurses
 	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/pdcurses -f $(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR)/win32/gccwin32.mak PDCURSES_SRCDIR=$(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR) pdcurses.a
 	@touch $@
@@ -458,75 +480,71 @@ $(SOURCE_DIR)/gdb-02-patch-03-doc.done: | $(SOURCE_DIR)/gdb-02-patch-02-jit-inst
 	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0003-Only-build-missing-texi-files.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-04-tui.done: | $(SOURCE_DIR)/gdb-02-patch-03-doc.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0004-Fix-mingw-build-with-curses.patch
+$(SOURCE_DIR)/gdb-02-patch-04-tui-syntax-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-03-doc.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0004-Add-syntax-highlighting-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-05-tui-syntax-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-04-tui.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0005-Add-syntax-highlighting-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-05-clear-symbols.done: | $(SOURCE_DIR)/gdb-02-patch-04-tui-syntax-highlight.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0005-Clear-symbols-if-executable-can-t-be-attached.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-06-clear-symbols.done: | $(SOURCE_DIR)/gdb-02-patch-05-tui-syntax-highlight.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0006-Clear-symbols-if-executable-can-t-be-attached.patch
+$(SOURCE_DIR)/gdb-02-patch-06-thiscall.done: | $(SOURCE_DIR)/gdb-02-patch-05-clear-symbols.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0006-Use-thiscall-calling-convention-for-class-members.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-07-thiscall.done: | $(SOURCE_DIR)/gdb-02-patch-06-clear-symbols.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0007-Use-thiscall-calling-convention-for-class-members.patch
+$(SOURCE_DIR)/gdb-02-patch-07-userprofile-home.done: | $(SOURCE_DIR)/gdb-02-patch-06-thiscall.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0007-Use-USERPROFILE-as-alternative-to-HOME.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-08-tui-return-move.done: | $(SOURCE_DIR)/gdb-02-patch-07-thiscall.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0008-Move-to-end-of-line-when-hitting-return.patch
+$(SOURCE_DIR)/gdb-02-patch-08-access-violation.done: | $(SOURCE_DIR)/gdb-02-patch-07-userprofile-home.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0008-Show-details-for-access-violation.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-09-resize-console.done: | $(SOURCE_DIR)/gdb-02-patch-08-tui-return-move.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0009-Add-console-command-to-resize-console-window.patch
+$(SOURCE_DIR)/gdb-02-patch-09-tui-multi-line-syntax.done: | $(SOURCE_DIR)/gdb-02-patch-08-access-violation.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0009-Add-multi-line-syntax-highlighting-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done: | $(SOURCE_DIR)/gdb-02-patch-09-resize-console.done
+$(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done: | $(SOURCE_DIR)/gdb-02-patch-09-tui-multi-line-syntax.done
 	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0010-Use-page-up-down-to-scroll-in-console-buffer.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-11-tui-multi-line-syntax.done: | $(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0011-Add-multi-line-syntax-highlighting-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-11-resize-crashes.done: | $(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0011-Fix-resize-crashes.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-12-resize-crashes.done: | $(SOURCE_DIR)/gdb-02-patch-11-tui-multi-line-syntax.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0012-fix-resize-crashes.patch
+$(SOURCE_DIR)/gdb-02-patch-12-tui-search.done: | $(SOURCE_DIR)/gdb-02-patch-11-resize-crashes.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0012-Fix-search-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-13-tui-search.done: | $(SOURCE_DIR)/gdb-02-patch-12-resize-crashes.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0013-fix-search-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-13-ctrl-left-right.done: | $(SOURCE_DIR)/gdb-02-patch-12-tui-search.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0013-Use-ctrl-left-right-to-move-to-previous-next-word.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-14-userprofile-home.done: | $(SOURCE_DIR)/gdb-02-patch-13-tui-search.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Use-USERPROFILE-as-alternative-to-HOME-for-.gdbinit.patch
+$(SOURCE_DIR)/gdb-02-patch-14-moving-cursor.done: | $(SOURCE_DIR)/gdb-02-patch-13-ctrl-left-right.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Display-cursor-when-moving.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-15-access-violation.done: | $(SOURCE_DIR)/gdb-02-patch-14-userprofile-home.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0015-Show-details-for-access-violation.patch
+$(SOURCE_DIR)/gdb-02-patch-15-exec-point-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-14-moving-cursor.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0015-Don-t-highlight-wrong-execution-point.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-16-ctrl-left-right.done: | $(SOURCE_DIR)/gdb-02-patch-15-access-violation.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0016-ctrl-left-right.patch
+$(SOURCE_DIR)/gdb-02-patch-16-no-warn-debuglink.done: | $(SOURCE_DIR)/gdb-02-patch-15-exec-point-highlight.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0016-Don-t-warn-for-debuglink-section.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-17-moving-cursor.done: | $(SOURCE_DIR)/gdb-02-patch-16-ctrl-left-right.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0017-moving-cursor.patch
+$(SOURCE_DIR)/gdb-02-patch-17-no-source-color.done: | $(SOURCE_DIR)/gdb-02-patch-16-no-warn-debuglink.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0017-Fix-highlight-colors-for-empty-source-window.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-18-exec-point-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-17-moving-cursor.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0018-exec-point-highlight.patch
+$(SOURCE_DIR)/gdb-02-patch-18-console-resize.done: | $(SOURCE_DIR)/gdb-02-patch-17-no-source-color.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0018-Add-console-command-to-resize-console-window.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-19-no-warn-debuglink.done: | $(SOURCE_DIR)/gdb-02-patch-18-exec-point-highlight.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-no-warn-debuglink.patch
+$(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done: | $(SOURCE_DIR)/gdb-02-patch-18-console-resize.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-Restore-TUI-behavior-of-list-and-frame.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done: | $(SOURCE_DIR)/gdb-02-patch-19-no-warn-debuglink.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0020-no-source-color.patch
-	@touch $@
-
-$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done
+$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-10-combine.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done
 	@mkdir -p $(BUILD_DIR)/gdb
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF)
 	@touch $@
@@ -548,7 +566,6 @@ extract-all: | \
   $(SOURCE_DIR)/gcc-01-extract-03-mpfr.done \
   $(SOURCE_DIR)/gcc-01-extract-04-mpc.done \
   $(SOURCE_DIR)/gcc-01-extract-05-isl.done \
-  $(SOURCE_DIR)/gcc-01-extract-06-cloog.done \
   $(SOURCE_DIR)/expat-01-extract.done \
   $(SOURCE_DIR)/pdcurses-01-extract.done \
   $(SOURCE_DIR)/iconv-01-extract.done \
@@ -557,10 +574,10 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
-  $(SOURCE_DIR)/pdcurses-02-patch-08-line-up.done \
-  $(SOURCE_DIR)/gdb-02-patch-20-no-source-color.done \
+  $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done \
+  $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done
@@ -607,7 +624,6 @@ info:
 	@echo -e "$(MPFR_FILE)\r"
 	@echo -e "$(MPC_FILE)\r"
 	@echo -e "$(ISL_FILE)\r"
-	@echo -e "$(CLOOG_FILE)\r"
 	@echo -e "$(EXPAT_FILE)\r"
 	@echo -e "$(PDCURSES_FILE)\r"
 	@echo -e "$(ICONV_FILE)\r"

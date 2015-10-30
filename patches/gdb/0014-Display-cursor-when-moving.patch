@@ -1,5 +1,16 @@
---- a/readline/display.c	2014-06-11 18:34:41.000000000 +0200
-+++ b/readline/display.c	2015-01-12 17:47:46.565251500 +0100
+From d63bc8795c72a51e4a96da40476c825bb2b7f7ba Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Mon, 12 Jan 2015 17:51:13 +0100
+Subject: [PATCH 14/19] Display cursor when moving
+
+---
+ readline/display.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/readline/display.c b/readline/display.c
+index 7653d87..6e796ca 100644
+--- a/readline/display.c
++++ b/readline/display.c
 @@ -45,6 +45,10 @@
  # include <pc.h>
  #endif
@@ -11,7 +22,7 @@
  /* System-specific feature definitions and include files. */
  #include "rldefs.h"
  #include "rlmbutil.h"
-@@ -1251,6 +1255,19 @@
+@@ -1251,6 +1255,19 @@ rl_redisplay ()
  
    RL_UNSETSTATE (RL_STATE_REDISPLAYING);
    _rl_release_sigint ();
@@ -31,3 +42,6 @@
  }
  
  /* PWP: update_line() is based on finding the middle difference of each
+-- 
+1.9.4.msysgit.2
+

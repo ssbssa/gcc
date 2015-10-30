@@ -1,7 +1,7 @@
-From 8b5d86f14a6ec91c0172987e0377faf48e370507 Mon Sep 17 00:00:00 2001
+From 2f913c8dbdfa4612925ce6447fc2e7c1625046cf Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:15:24 +0100
-Subject: [PATCH 07/15] Use thiscall calling convention for class members
+Subject: [PATCH 06/19] Use thiscall calling convention for class members
 
 ---
  gdb/eval.c      |  2 ++
@@ -9,10 +9,10 @@ Subject: [PATCH 07/15] Use thiscall calling convention for class members
  2 files changed, 30 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/eval.c b/gdb/eval.c
-index d374b6a..a9b5038 100644
+index 6bbd495..5aadb35 100644
 --- a/gdb/eval.c
 +++ b/gdb/eval.c
-@@ -1676,6 +1676,8 @@ evaluate_subexp_standard (struct type *expect_type,
+@@ -1663,6 +1663,8 @@ evaluate_subexp_standard (struct type *expect_type,
  	      nargs--;
  	      argvec++;
  	    }
@@ -22,18 +22,18 @@ index d374b6a..a9b5038 100644
        else if (op == STRUCTOP_MEMBER || op == STRUCTOP_MPTR)
  	{
 diff --git a/gdb/i386-tdep.c b/gdb/i386-tdep.c
-index 5e3cc79..0f9c8ba 100644
+index 371a282..cb20972 100644
 --- a/gdb/i386-tdep.c
 +++ b/gdb/i386-tdep.c
-@@ -46,6 +46,7 @@
- #include "remote.h"
- #include "exceptions.h"
- #include "gdb_assert.h"
-+#include "infcall.h"
- #include <string.h>
- 
+@@ -47,6 +47,7 @@
  #include "i386-tdep.h"
-@@ -2647,6 +2648,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+ #include "i387-tdep.h"
+ #include "x86-xstate.h"
++#include "infcall.h"
+ 
+ #include "record.h"
+ #include "record-full.h"
+@@ -2652,6 +2653,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    int i;
    int write_pass;
    int args_space = 0;
@@ -51,8 +51,8 @@ index 5e3cc79..0f9c8ba 100644
 +	  && nargs > 0
 +	  && !TYPE_STATIC (value_type (function)))
 +	{
-+	  struct symtab *symtab =
-+	    find_pc_symtab (find_function_addr (function, NULL));
++	  struct compunit_symtab *symtab =
++	    find_pc_compunit_symtab (find_function_addr (function, NULL));
 +	  if (symtab
 +	      && producer_is_gcc_ge_4 (symtab->producer) > 6)
 +	    i386_windows_thiscall = 1;
@@ -61,7 +61,7 @@ index 5e3cc79..0f9c8ba 100644
  
    /* Determine the total space required for arguments and struct
       return address in a first pass (allowing for 16-byte-aligned
-@@ -2669,7 +2691,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2674,7 +2696,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
  	    args_space += 4;
  	}
  
@@ -70,7 +70,7 @@ index 5e3cc79..0f9c8ba 100644
  	{
  	  int len = TYPE_LENGTH (value_enclosing_type (args[i]));
  
-@@ -2721,6 +2743,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2726,6 +2748,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    /* ...and fake a frame pointer.  */
    regcache_cooked_write (regcache, I386_EBP_REGNUM, buf);
  

@@ -1,0 +1,109 @@
+From 304ad92b7b10c62d21e634a3766164b852e38390 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 30 Oct 2015 17:12:42 +0100
+Subject: [PATCH 8/8] overloaded variants of fpclassify/isnan/signbit
+
+---
+ mingw-w64-headers/crt/math.h | 51 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/mingw-w64-headers/crt/math.h b/mingw-w64-headers/crt/math.h
+index ce42ed1..1032005 100644
+--- a/mingw-w64-headers/crt/math.h
++++ b/mingw-w64-headers/crt/math.h
+@@ -503,6 +503,7 @@ __fin)))
+ #define __dfp_expansion(__call,__fin,x) __fin
+ #endif
+ 
++#ifndef __cplusplus
+ #define fpclassify(x) \
+ __mingw_choose_expr (                                         \
+   __mingw_types_compatible_p (__typeof__ (x), double),            \
+@@ -514,6 +515,22 @@ __mingw_choose_expr (                                         \
+       __mingw_types_compatible_p (__typeof__ (x), long double),   \
+         __fpclassifyl(x),                                       \
+     __dfp_expansion(__fpclassify,(__builtin_trap(),0),x))))
++#else
++extern "C++" {
++  __CRT_INLINE int fpclassify (float x)
++  {
++    return __fpclassifyf (x);
++  }
++  __CRT_INLINE int fpclassify (double x)
++  {
++    return __fpclassify (x);
++  }
++  __CRT_INLINE int fpclassify (long double x)
++  {
++    return __fpclassifyl (x);
++  }
++}
++#endif
+ 
+ 
+ /* 7.12.3.2 */
+@@ -605,6 +622,7 @@ __mingw_choose_expr (                                         \
+ 
+ 
+ 
++#ifndef __cplusplus
+ #define isnan(x) \
+ __mingw_choose_expr (                                         \
+   __mingw_types_compatible_p (__typeof__ (x), double),            \
+@@ -616,6 +634,22 @@ __mingw_choose_expr (                                         \
+       __mingw_types_compatible_p (__typeof__ (x), long double),   \
+         __isnanl(x),                                            \
+     __dfp_expansion(__isnan,(__builtin_trap(),x),x))))
++#else
++extern "C++" {
++  __CRT_INLINE int isnan (float x)
++  {
++    return __isnanf (x);
++  }
++  __CRT_INLINE int isnan (double x)
++  {
++    return __isnan (x);
++  }
++  __CRT_INLINE int isnan (long double x)
++  {
++    return __isnanl (x);
++  }
++}
++#endif
+ 
+ /* 7.12.3.5 */
+ #define isnormal(x) (fpclassify(x) == FP_NORMAL)
+@@ -668,6 +702,7 @@ __mingw_choose_expr (                                         \
+   }
+ #endif
+ 
++#ifndef __cplusplus
+ #define signbit(x) \
+ __mingw_choose_expr (                                         \
+   __mingw_types_compatible_p (__typeof__ (x), double),            \
+@@ -679,6 +714,22 @@ __mingw_choose_expr (                                         \
+       __mingw_types_compatible_p (__typeof__ (x), long double),   \
+         __signbitl(x),                                          \
+      __dfp_expansion(__signbit,(__builtin_trap(),x),x))))
++#else
++extern "C++" {
++  __CRT_INLINE int signbit (float x)
++  {
++    return __signbitf (x);
++  }
++  __CRT_INLINE int signbit (double x)
++  {
++    return __signbit (x);
++  }
++  __CRT_INLINE int signbit (long double x)
++  {
++    return __signbitl (x);
++  }
++}
++#endif
+ 
+ /* 7.12.4 Trigonometric functions: Double in C89 */
+   extern float __cdecl sinf(float _X);
+-- 
+1.9.4.msysgit.2
+

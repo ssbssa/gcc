@@ -1,18 +1,18 @@
-From de500070616f001df5cf7397b105b5c9acc98211 Mon Sep 17 00:00:00 2001
+From 43246ed47b9b24658e848ef5dc7b08b5d5a4a438 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 19:47:12 +0100
-Subject: [PATCH 11/15] Add multi-line syntax highlighting for TUI
+Subject: [PATCH 09/19] Add multi-line syntax highlighting for TUI
 
 ---
  gdb/source.c         | 113 +++++++++++++++++++++++++++++++++++++++++++++++++--
- gdb/tui/tui-source.c |  42 ++++++++++++++++++-
- 2 files changed, 150 insertions(+), 5 deletions(-)
+ gdb/tui/tui-source.c |  47 +++++++++++++++++++--
+ 2 files changed, 153 insertions(+), 7 deletions(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index 14b1f71..f9e1c32 100644
+index fbec0f1..f97e915 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
-@@ -1173,6 +1173,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
+@@ -1180,6 +1180,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
      internal_error (__FILE__, __LINE__, _("invalid filename_display_string"));
  }
  
@@ -111,7 +111,7 @@ index 14b1f71..f9e1c32 100644
  /* Create and initialize the table S->line_charpos that records
     the positions of the lines in the source file, which is assumed
     to be open on descriptor DESC.
-@@ -1238,13 +1330,28 @@ find_source_lines (struct symtab *s, int desc)
+@@ -1245,13 +1337,28 @@ find_source_lines (struct symtab *s, int desc)
  	    line_charpos[nlines++] = p - data;
  	  }
        }
@@ -144,10 +144,10 @@ index 14b1f71..f9e1c32 100644
  
  
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index 6c374f1..c57455b 100644
+index a8479e4..3b3bb21 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
-@@ -340,15 +340,51 @@ enum
+@@ -338,15 +338,51 @@ enum
    COL_COMMENT,
  };
  
@@ -200,14 +200,19 @@ index 6c374f1..c57455b 100644
    while (src_line[0])
      {
        char c = src_line[0];
-@@ -718,7 +754,9 @@ tui_set_source_content (struct symtab *s,
+@@ -714,9 +750,12 @@ tui_set_source_content (struct symtab *s,
+ #ifdef TUI_SYNTAX_HIGHLIGHT
+ 			  if (tui_can_syntax_highlight)
  			    {
- 			      tui_syntax_highlight (lang,
- 						    src_line + cur_len,
+-			      tui_syntax_highlight (lang,
+-						    src_line + cur_len,
 -						    col_line + cur_len);
-+						    col_line + cur_len,
-+						    s->line_charpos[s->nlines
-+						    + cur_line_no - 1]);
++			      if (cur_line_no <= s->nlines)
++				tui_syntax_highlight (lang,
++						      src_line + cur_len,
++						      col_line + cur_len,
++						      s->line_charpos[s->nlines
++						      + cur_line_no - 1]);
  
  			      src_line[threshold-SYNTAX_HIGHLIGHT_EXTRA] = 0;
  

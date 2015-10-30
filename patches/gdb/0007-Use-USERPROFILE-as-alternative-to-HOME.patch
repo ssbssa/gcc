@@ -1,17 +1,19 @@
-From e7a6970939a0988f7f9db29d8b4d1713a239dd77 Mon Sep 17 00:00:00 2001
+From 8d4281399c64f9076a52c2fadf2a1cfc45d06740 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 5 Nov 2014 19:58:33 +0100
-Subject: [PATCH 14/15] Use %USERPROFILE% as alternative to %HOME%
+Subject: [PATCH 07/19] Use %USERPROFILE% as alternative to %HOME%
 
 ---
- gdb/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ gdb/main.c        | 4 ++++
+ gdb/windows-nat.c | 4 ++++
+ readline/tilde.c  | 5 +++++
+ 3 files changed, 13 insertions(+)
 
 diff --git a/gdb/main.c b/gdb/main.c
-index 3a4e402..7b54349 100644
+index aecd60a..7ad9a6d 100644
 --- a/gdb/main.c
 +++ b/gdb/main.c
-@@ -254,6 +254,10 @@ get_init_files (const char **system_gdbinit,
+@@ -248,6 +248,10 @@ get_init_files (const char **system_gdbinit,
  	}
  
        homedir = getenv ("HOME");
@@ -22,9 +24,11 @@ index 3a4e402..7b54349 100644
  
        /* If the .gdbinit file in the current directory is the same as
  	 the $HOME/.gdbinit file, it should not be sourced.  homebuf
---- a/gdb/windows-nat.c	2014-11-05 20:12:00.554412000 +0100
-+++ b/gdb/windows-nat.c	2015-01-01 17:19:16.748732900 +0100
-@@ -2999,6 +2999,10 @@
+diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
+index c097cf9..911cc20 100644
+--- a/gdb/windows-nat.c
++++ b/gdb/windows-nat.c
+@@ -2773,6 +2773,10 @@ _initialize_check_for_gdb_ini (void)
      return;
  
    homedir = getenv ("HOME");
@@ -35,9 +39,11 @@ index 3a4e402..7b54349 100644
    if (homedir)
      {
        char *p;
---- a/readline/tilde.c	2015-01-01 17:20:55.628871300 +0100
-+++ b/readline/tilde.c	2015-01-01 17:21:01.898880100 +0100
-@@ -366,6 +366,11 @@
+diff --git a/readline/tilde.c b/readline/tilde.c
+index 1c53a45..252b221 100644
+--- a/readline/tilde.c
++++ b/readline/tilde.c
+@@ -366,6 +366,11 @@ tilde_expand_word (filename)
        if (expansion == 0)
  	expansion = sh_get_home_dir ();
  
