@@ -11,6 +11,14 @@ diff --git a/mingw-w64-headers/crt/math.h b/mingw-w64-headers/crt/math.h
 index ce42ed1..1032005 100644
 --- a/mingw-w64-headers/crt/math.h
 +++ b/mingw-w64-headers/crt/math.h
+@@ -297,7 +297,6 @@
+   _CRTIMP double __cdecl _scalb (double, long);
+   _CRTIMP int __cdecl _finite (double);
+   _CRTIMP int __cdecl _fpclass (double);
+-  _CRTIMP int __cdecl _isnan (double);
+ #endif
+ 
+ /* END FLOAT.H COPY */
 @@ -503,6 +503,7 @@ __fin)))
  #define __dfp_expansion(__call,__fin,x) __fin
  #endif
@@ -104,6 +112,16 @@ index ce42ed1..1032005 100644
  
  /* 7.12.4 Trigonometric functions: Double in C89 */
    extern float __cdecl sinf(float _X);
+--- a/mingw-w64-headers/crt/float.h	2015-07-24 11:29:27.000000000 +0200
++++ b/mingw-w64-headers/crt/float.h	2016-01-28 20:12:22.210891100 +0100
+@@ -283,7 +283,6 @@
+ 
+ _CRTIMP int __cdecl __MINGW_NOTHROW _finite (double);
+ _CRTIMP int __cdecl __MINGW_NOTHROW _fpclass (double);
+-_CRTIMP int __cdecl __MINGW_NOTHROW _isnan (double);
+ 
+ #define _copysignl copysignl
+ extern long double __cdecl _chgsignl (long double);
 -- 
 1.9.4.msysgit.2
 
