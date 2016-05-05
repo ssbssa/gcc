@@ -535,7 +535,7 @@ index 018a1df..a8479e4 100644
 +#ifdef TUI_SYNTAX_HIGHLIGHT
 +		  lang = deduce_language_from_filename (src->fullname);
 +		  if (lang == language_unknown)
-+		    lang = get_frame_language ();
++		    lang = get_frame_language (get_selected_frame (NULL));
 +		  if (lang == language_unknown)
 +		    lang = language_cplus;
 +#endif

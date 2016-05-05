@@ -1,0 +1,99 @@
+--- a/gdb/windows-nat.c	2016-04-22 17:22:28.815067500 +0200
++++ b/gdb/windows-nat.c	2016-04-25 17:26:23.441670000 +0200
+@@ -446,6 +446,8 @@
+     {
+       windows_thread_info *here = th->next;
+       th->next = here->next;
++      if (here->name)
++	xfree (here->name);
+       xfree (here);
+     }
+ }
+@@ -1199,6 +1201,17 @@
+     host_address_to_string (\
+       current_event.u.Exception.ExceptionRecord.ExceptionAddress))
+ 
++#pragma pack(push,8)
++typedef struct tagTHREADNAME_INFO
++{
++  DWORD dwType;
++  LPCSTR szName;
++  DWORD dwThreadID;
++  DWORD dwFlags;
++} THREADNAME_INFO;
++#pragma pack(pop)
++#define EXCEPTION_THREAD_NAME 0x406d1388
++
+ static int
+ handle_exception (struct target_waitstatus *ourstatus)
+ {
+@@ -1318,6 +1331,37 @@
+       DEBUG_EXCEPTION_SIMPLE ("EXCEPTION_NONCONTINUABLE_EXCEPTION");
+       ourstatus->value.sig = GDB_SIGNAL_ILL;
+       break;
++    case EXCEPTION_THREAD_NAME:
++      if (current_event.u.Exception.ExceptionRecord.NumberParameters
++	  == sizeof (THREADNAME_INFO) / sizeof (ULONG_PTR))
++	{
++	  THREADNAME_INFO *tni = (THREADNAME_INFO *)
++	    current_event.u.Exception.ExceptionRecord.ExceptionInformation;
++
++	  DWORD thread_id = tni->dwThreadID;
++	  if (thread_id == (DWORD)-1)
++	    thread_id = current_event.dwThreadId;
++	  th = thread_rec (thread_id, FALSE);
++
++	  if (th && tni->dwType == 0x1000 && !tni->dwFlags)
++	    {
++	      char *thread_name = NULL;
++	      if (!tni->szName ||
++		  target_read_string((CORE_ADDR)tni->szName, &thread_name,
++				     1024, 0))
++		{
++		  if (thread_name && !*thread_name)
++		    {
++		      xfree (thread_name);
++		      thread_name = NULL;
++		    }
++		  if (th->name)
++		    xfree (th->name);
++		  th->name = thread_name;
++		}
++	    }
++	}
++      return 0;
+     default:
+       /* Treat unhandled first chance exceptions specially.  */
+       if (current_event.u.Exception.dwFirstChance)
+@@ -1690,7 +1734,8 @@
+ 	break;
+       if (handle_exception (ourstatus))
+ 	thread_id = current_event.dwThreadId;
+-      else
++      else if (current_event.u.Exception.ExceptionRecord.ExceptionCode
++	       != EXCEPTION_THREAD_NAME)
+ 	continue_status = DBG_EXCEPTION_NOT_HANDLED;
+       break;
+ 
+@@ -2606,6 +2651,13 @@
+   return normal_pid_to_str (ptid);
+ }
+ 
++static const char *
++windows_thread_name (struct target_ops *ops, struct thread_info *tp)
++{
++  windows_thread_info *th = thread_rec (ptid_get_tid (tp->ptid), FALSE);
++  return th ? th->name : NULL;
++}
++
+ static enum target_xfer_status
+ windows_xfer_shared_libraries (struct target_ops *ops,
+ 			       enum target_object object, const char *annex,
+@@ -2712,6 +2764,7 @@
+   t->to_mourn_inferior = windows_mourn_inferior;
+   t->to_thread_alive = windows_thread_alive;
+   t->to_pid_to_str = windows_pid_to_str;
++  t->to_thread_name = windows_thread_name;
+   t->to_interrupt = windows_interrupt;
+   t->to_pid_to_exec_file = windows_pid_to_exec_file;
+   t->to_get_ada_task_ptid = windows_get_ada_task_ptid;

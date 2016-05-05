@@ -1,6 +1,6 @@
 --- gcc/diagnostic-color.c	2015-01-05 13:33:28.000000000 +0100
-+++ gcc/diagnostic-color.c	2015-09-05 14:31:42.927956100 +0200
-@@ -264,12 +264,53 @@
++++ gcc/diagnostic-color.c	2016-03-05 12:57:08.156905200 +0100
+@@ -264,12 +264,61 @@
  }
  
  #if defined(_WIN32)
@@ -10,15 +10,22 @@
 +#include <windows.h>
 +#include <winternl.h>
 +
++#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
++#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
++#endif
++
 +static int
-+cyg_isatty (int num)
++w_isatty (int num)
  {
 -  return false;
 +  HANDLE fh = (HANDLE)_get_osfhandle (num);
++  if (fh == INVALID_HANDLE_VALUE)
++    return 0;
 +
 +  DWORD flags;
 +  if (GetConsoleMode (fh, &flags))
-+    return 0;
++    /* Check if console understands terminal escape sequences.  */
++    return SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 +
 +  HMODULE ntdll = GetModuleHandle ("ntdll.dll");
 +  if (!ntdll)
@@ -35,6 +42,7 @@
 +  OBJECT_NAME_INFORMATION *oni = (OBJECT_NAME_INFORMATION*) xmalloc (s);
 +  ULONG len;
 +  int is_a_tty = 0;
++  /* mintty uses a named pipe like "ptyNNNN-to-master".  */
 +  if (!fNtQueryObject (fh, ObjectNameInformation, oni, s, &len))
 +    {
 +      wchar_t namedPipe[] = L"\\Device\\NamedPipe\\";
@@ -53,12 +61,12 @@
 +  return is_a_tty;
  }
 -#else
-+#define isatty cyg_isatty
++#define isatty w_isatty
 +#endif
  
  /* Return true if we should use color when in auto mode, false otherwise. */
  static bool
-@@ -298,4 +339,3 @@
+@@ -298,4 +347,3 @@
        gcc_unreachable ();
      }
  }

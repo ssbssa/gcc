@@ -1,0 +1,36 @@
+From: Martin Koegler <martin dot koegler at chello dot at>
+To: binutils at sourceware dot org,	nickc at redhat dot com
+Cc: Martin Koegler <martin dot koegler at chello dot at>
+Subject: [PATCH] Don't gc sections containing exported symbols
+Date: Mon, 14 Mar 2016 22:53:35 +0100
+Message-Id: <1457992415-11509-1-git-send-email-martin@mail.zuhause>
+
+From: Martin Koegler <martin.koegler@chello.at>
+
+---
+ ld/pe-dll.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Keeping exported symbols improves #19803. 
+
+There is still one issue with the DLL entry point (and maybe other issues too):
+entry_symbol is resolved in lang_end, which is called after lang_gc_sections - so it is too late.
+I'm not quite sure, how we can inform gc_sections about the entry point.
+And PE has the second complication "thumb_entry_symbol", which sets entry_symbol in gld_i386pe_finish.
+
+diff --git a/ld/pe-dll.c b/ld/pe-dll.c
+index 14f963b..5b10248 100644
+--- a/ld/pe-dll.c
++++ b/ld/pe-dll.c
+@@ -924,6 +924,8 @@ process_def_file_and_drectve (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *
+ 	    exported_symbol_sections[i] = blhe->u.def.section;
+ 	  else
+ 	    exported_symbol_sections[i] = blhe->u.c.p->section;
++	  if (exported_symbol_sections[i])
++	    exported_symbol_sections[i]->flags |= SEC_KEEP;
+ 
+ 	  if (pe_def_file->exports[i].ordinal != -1)
+ 	    {
+-- 
+2.6.2
+

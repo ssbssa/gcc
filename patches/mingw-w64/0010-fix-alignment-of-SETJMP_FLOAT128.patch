@@ -1,0 +1,25 @@
+From 277f57be337df6923234b3b932e2925b12078629 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Mon, 21 Mar 2016 19:23:39 +0100
+Subject: [PATCH] fix alignment of SETJMP_FLOAT128
+
+---
+ mingw-w64-headers/crt/setjmp.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mingw-w64-headers/crt/setjmp.h b/mingw-w64-headers/crt/setjmp.h
+index 5be566d..3572a4d 100644
+--- a/mingw-w64-headers/crt/setjmp.h
++++ b/mingw-w64-headers/crt/setjmp.h
+@@ -109,7 +109,7 @@ extern "C" {
+ 
+ #elif defined(__x86_64)
+ 
+-  typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
++  typedef struct _CRT_ALIGN(16) _SETJMP_FLOAT128 {
+     __MINGW_EXTENSION unsigned __int64 Part[2];
+   } SETJMP_FLOAT128;
+ 
+-- 
+1.9.4.msysgit.2
+

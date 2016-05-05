@@ -1,0 +1,11 @@
+--- gcc/common.opt	2015-07-01 19:06:52.000000000 +0200
++++ gcc/common.opt	2016-03-03 15:35:18.000000000 +0100
+@@ -1365,7 +1365,7 @@
+ ; On SVR4 targets, it also controls whether or not to emit a
+ ; string identifying the compiler.
+ fident
+-Common Report Var(flag_no_ident,0)
++Common Report Var(flag_no_ident,0) Init(1)
+ Process #ident directives
+ 
+ fif-conversion

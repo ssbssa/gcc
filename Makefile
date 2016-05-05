@@ -1,5 +1,5 @@
 
-MYPKG=ssbssa-1
+MYPKG=ssbssa-2
 BUILD_BITS=32
 
 SOURCE_DIR=src
@@ -37,7 +37,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=4.0.4
+MINGW_W64_VER=4.0.5
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -60,7 +60,6 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --disable-bootstrap --enable-lto --enable-fully-dynamic-string \
 	 --with-gnu-ld --disable-symvers --disable-werror --disable-shared \
 	 --disable-version-specific-runtime-libs \
-	 --with-specs='%{!fident:-fno-ident}' \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
@@ -101,7 +100,7 @@ ICONV_CONF=$(SOURCE_DIR_ABS)/$(ICONV_SRC_DIR)/configure \
 	   --build=$(MYBUILD) --host=$(MYTARGET) \
 	   --enable-static --disable-shared --prefix=$(GDB_LIBS)
 
-GDB_VER=7.10.1
+GDB_VER=7.11
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -155,7 +154,11 @@ $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done: | $(SOURCE_DIR)
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/compress-debug-sections.patch
 	@touch $@
 
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done
+$(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done: | $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/Don-t-gc-exported-symbols.patch
+	@touch $@
+
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -221,7 +224,23 @@ $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done: | $(SOURCE_DIR)/
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-overloaded-variants-of-fpclassify-isnan-signbit.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done
+$(SOURCE_DIR)/mingw-w64-02-patch-09-scanf-leaks.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-scanf-wscanf-fix-memory-leaks.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-10-fix-alignment.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-scanf-leaks.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-fix-alignment-of-SETJMP_FLOAT128.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-11-dwmapi-iconic.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-fix-alignment.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-dwmapi-add-missing-Iconic-functions.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-12-printf-precision.done: | $(SOURCE_DIR)/mingw-w64-02-patch-11-dwmapi-iconic.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0012-fix-printf-precision.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-12-printf-precision.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -281,7 +300,15 @@ $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done: | $(SOURCE_DIR)/gcc-02-patc
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done
+$(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done: | $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/fno-ident.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color-console.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -351,12 +378,15 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done \
   $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
   $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done \
+  $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-12-printf-precision.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
   $(SOURCE_DIR)/gcc-02-patch-03-lfs.done \
   $(SOURCE_DIR)/gcc-02-patch-04-make-rel-pref.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
+  $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
+  $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -429,7 +459,11 @@ $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done: | $(SOURCE_DIR)/pdcurses-02-pa
 	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0009-fix-doupdate.patch
 	@touch $@
 
-$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done
+$(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done: | $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done
+	patch -d $(SOURCE_DIR)/$(PDCURSES_SRC_DIR) -p1 <patches/pdcurses/0010-fix-wheel.patch
+	@touch $@
+
+$(BUILD_DIR)/pdcurses-03-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done
 	@mkdir -p $(BUILD_DIR)/pdcurses
 	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/pdcurses -f $(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR)/win32/gccwin32.mak PDCURSES_SRCDIR=$(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR) pdcurses.a
 	@touch $@
@@ -543,7 +577,15 @@ $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done: | $(SOURCE_DIR)/gdb-02-patch-
 	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-Restore-TUI-behavior-of-list-and-frame.patch
 	@touch $@
 
-$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done
+$(SOURCE_DIR)/gdb-02-patch-20-tui-wheel.done: | $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0020-TUI-wheel.patch
+	@touch $@
+
+$(SOURCE_DIR)/gdb-02-patch-21-thread-name.done: | $(SOURCE_DIR)/gdb-02-patch-20-tui-wheel.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0021-thread-name.patch
+	@touch $@
+
+$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-21-thread-name.done
 	@mkdir -p $(BUILD_DIR)/gdb
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF)
 	@touch $@
@@ -572,11 +614,11 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-08-overloaded-fpclassify.done \
-  $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
-  $(SOURCE_DIR)/pdcurses-02-patch-09-doupdate.done \
-  $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done \
+  $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-12-printf-precision.done \
+  $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
+  $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
+  $(SOURCE_DIR)/gdb-02-patch-21-thread-name.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

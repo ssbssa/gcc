@@ -1,0 +1,135 @@
+--- gcc/diagnostic-color.c	2016-03-06 13:56:28.359957200 +0100
++++ gcc/diagnostic-color.c	2016-04-29 15:01:13.915202100 +0200
+@@ -272,6 +272,9 @@
+ #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+ #endif
+ 
++int console_escaping = 0;
++int console_color = 0;
++
+ static int
+ w_isatty (int num)
+ {
+@@ -281,8 +284,18 @@
+ 
+   DWORD flags;
+   if (GetConsoleMode (fh, &flags))
+-    /* Check if console understands terminal escape sequences.  */
+-    return SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
++    {
++      /* Check if console understands terminal escape sequences.  */
++      console_escaping =
++	!SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
++      if (console_escaping)
++	{
++	  CONSOLE_SCREEN_BUFFER_INFO csbi;
++	  GetConsoleScreenBufferInfo (fh, &csbi);
++	  console_color = csbi.wAttributes & 0xff;
++	}
++      return 1;
++    }
+ 
+   HMODULE ntdll = GetModuleHandle ("ntdll.dll");
+   if (!ntdll)
+--- gcc/pretty-print.c	2015-01-05 13:33:28.000000000 +0100
++++ gcc/pretty-print.c	2016-04-29 15:05:18.057166200 +0200
+@@ -31,6 +31,12 @@
+ #include <iconv.h>
+ #endif
+ 
++#ifdef _WIN32
++#include <windows.h>
++extern int console_escaping;
++extern int console_color;
++#endif
++
+ // Default construct an output buffer.
+ 
+ output_buffer::output_buffer ()
+@@ -118,7 +124,85 @@
+ pp_write_text_to_stream (pretty_printer *pp)
+ {
+   const char *text = pp_formatted_text (pp);
+-  fputs (text, pp_buffer (pp)->stream);
++
++#ifdef _WIN32
++  if (console_escaping)
++    {
++      int console_fg = console_color & 0x07;
++      int console_bg = console_color >> 4;
++      int console_bold = (console_color & 0x08) >> 3;
++      int fg = console_fg;
++      int bg = console_bg;
++      int bold = console_bold;
++
++      HANDLE fh = (HANDLE)_get_osfhandle (STDERR_FILENO);
++      DWORD written;
++      const char *pos = text;
++      while (*pos)
++	{
++	  while (*pos && *pos != '\33') pos++;
++	  if (pos > text)
++	    WriteConsole (fh, text, pos - text, &written, NULL);
++	  if (*pos == '\33' && pos[1] == '[')
++	    {
++	      pos += 2;
++	      const char *nums = pos;
++	      while ((*pos >= '0' && *pos <= '9') || *pos == ';') pos++;
++	      if (*pos == 'm')
++		{
++		  if (*nums == 'm')
++		    {
++		      fg = console_fg;
++		      bg = console_bg;
++		      bold = console_bold;
++		    }
++		  while (*nums != 'm')
++		    {
++		      int n = 0;
++		      while (*nums >= '0' && *nums <= '9')
++			{
++			  n = 10*n + (*nums - '0');
++			  nums++;
++			}
++		      if (n == 0)
++			{
++			  fg = console_fg;
++			  bg = console_bg;
++			  bold = console_bold;
++			}
++		      else if (n == 1)
++			bold = 1;
++		      else if (n >= 30 && n <= 37)
++			{
++			  n -= 30;
++			  fg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
++			}
++		      else if (n == 39)
++			{
++			  fg = console_fg;
++			  bold = console_bold;
++			}
++		      else if (n >= 40 && n <= 47)
++			{
++			  n -= 40;
++			  bg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
++			}
++		      else if (n == 49)
++			bg = console_bg;
++		      if (*nums == ';') nums++;
++		    }
++		  int c = fg | (bold << 3) | (bg << 4);
++		  SetConsoleTextAttribute (fh, c);
++		}
++	      if (*pos) pos++;
++	      text = pos;
++	    }
++	}
++    }
++  else
++#endif
++    fputs (text, pp_buffer (pp)->stream);
++
+   pp_clear_output_area (pp);
+ }
+ 

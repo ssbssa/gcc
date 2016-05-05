@@ -1,0 +1,48 @@
+From 9e29248c230fee614054da3745a2a6feec7ced3c Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Mon, 2 May 2016 19:31:51 +0200
+Subject: [PATCH] Fix printf("%.1s") out of bounds access
+
+If the precision is specified, no more than that many bytes are written.
+---
+ mingw-w64-crt/stdio/mingw_pformat.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/mingw-w64-crt/stdio/mingw_pformat.c b/mingw-w64-crt/stdio/mingw_pformat.c
+index eb271b8..1929f14 100644
+--- a/mingw-w64-crt/stdio/mingw_pformat.c
++++ b/mingw-w64-crt/stdio/mingw_pformat.c
+@@ -514,7 +514,7 @@ void __pformat_putchars( const char *s, int count, __pformat_t *stream )
+       memset(&ps, 0, sizeof(ps) );
+       --count;
+       p = &w[0];
+-      l = mbrtowc (p, s, strlen (s), &ps);
++      l = mbrtowc (p, s, MB_CUR_MAX, &ps);
+       if (!l)
+         break;
+       if ((ssize_t)l < 0)
+@@ -558,7 +558,9 @@ void __pformat_puts( const char *s, __pformat_t *stream )
+    * (after first verifying that the input pointer is not NULL).
+    */
+   if( s == NULL ) s = "(null)";
+-  __pformat_putchars( s, strlen( s ), stream );
++  size_t outlen =
++    stream->precision < 0 ? strlen( s ) : strnlen( s, stream->precision );
++  __pformat_putchars( s, outlen, stream );
+ }
+ 
+ static
+@@ -648,7 +650,9 @@ void __pformat_wcputs( const wchar_t *s, __pformat_t *stream )
+    * (after first verifying that the input pointer is not NULL).
+    */
+   if( s == NULL ) s = L"(null)";
+-  __pformat_wputchars( s, wcslen( s ), stream );
++  size_t outlen =
++    stream->precision < 0 ? wcslen( s ) : wcsnlen( s, stream->precision );
++  __pformat_wputchars( s, outlen, stream );
+ }
+ 
+ static
+-- 
+1.9.4.msysgit.2
+

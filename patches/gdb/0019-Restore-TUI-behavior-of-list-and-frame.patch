@@ -28,7 +28,7 @@ index 39803d9..7e9a0ee 100644
 @@ -2284,6 +2288,10 @@ void
  select_frame_command (char *level_exp, int from_tty)
  {
-   select_frame (parse_frame_specification_1 (level_exp, "No stack.", NULL));
+   select_frame (parse_frame_specification (level_exp, NULL));
 +
 +#ifdef TUI
 +  tui_new_selected_frame = 1;
