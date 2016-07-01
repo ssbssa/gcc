@@ -1,0 +1,11 @@
+--- a/gdb/event-loop.c	2016-02-10 04:19:39.000000000 +0100
++++ b/gdb/event-loop.c	2016-06-14 19:17:06.990880100 +0200
+@@ -295,7 +295,7 @@
+ 	case 1:
+ 	  /* Are there events already waiting to be collected on the
+ 	     monitored file descriptors?  */
+-	  res = gdb_wait_for_event (0);
++	  res = 0;
+ 	  break;
+ 	case 2:
+ 	  /* Are there any asynchronous event handlers ready?  */

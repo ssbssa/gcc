@@ -1,0 +1,169 @@
+--- ld/pe-dll.h	2015-11-13 09:27:42.000000000 +0100
++++ ld/pe-dll.h	2016-06-27 17:35:04.146887500 +0200
+@@ -38,6 +38,7 @@
+ extern int pe_use_nul_prefixed_import_tables;
+ extern int pe_use_coff_long_section_names;
+ extern int pe_leading_underscore;
++extern int pe_dll_enable_reloc_section;
+ 
+ typedef enum { EXCLUDESYMS, EXCLUDELIBS, EXCLUDEFORIMPLIB } exclude_type;
+ 
+--- ld/pe-dll.c	2015-11-13 09:27:42.000000000 +0100
++++ ld/pe-dll.c	2016-06-27 18:09:21.238546400 +0200
+@@ -159,6 +159,7 @@
+ int pe_use_nul_prefixed_import_tables = 0;
+ int pe_use_coff_long_section_names = -1;
+ int pe_leading_underscore = -1;
++int pe_dll_enable_reloc_section = 0;
+ 
+ /* Static variables and types.  */
+ 
+@@ -3370,7 +3371,14 @@
+   process_def_file_and_drectve (abfd, info);
+ 
+   if (pe_def_file->num_exports == 0 && !bfd_link_pic (info))
+-    return;
++    {
++      if (pe_dll_enable_reloc_section)
++	{
++	  build_filler_bfd (0);
++	  pe_output_file_set_long_section_names (filler_bfd);
++	}
++      return;
++    }
+ 
+   generate_edata (abfd, info);
+   build_filler_bfd (1);
+@@ -3389,33 +3397,16 @@
+ void
+ pe_dll_fill_sections (bfd *abfd, struct bfd_link_info *info)
+ {
+-  pe_dll_id_target (bfd_get_target (abfd));
+-  pe_output_file_set_long_section_names (abfd);
+-  image_base = pe_data (abfd)->pe_opthdr.ImageBase;
++  pe_exe_fill_sections (abfd, info);
+ 
+-  generate_reloc (abfd, info);
+-  if (reloc_sz > 0)
++  if (edata_s)
+     {
+-      bfd_set_section_size (filler_bfd, reloc_s, reloc_sz);
+-
+-      /* Resize the sections.  */
+-      lang_reset_memory_regions ();
+-      lang_size_sections (NULL, TRUE);
+-
+-      /* Redo special stuff.  */
+-      ldemul_after_allocation ();
+-
+-      /* Do the assignments again.  */
+-      lang_do_assignments (lang_final_phase_enum);
++      fill_edata (abfd, info);
++      edata_s->contents = edata_d;
+     }
+ 
+-  fill_edata (abfd, info);
+-
+   if (bfd_link_dll (info))
+     pe_data (abfd)->dll = 1;
+-
+-  edata_s->contents = edata_d;
+-  reloc_s->contents = reloc_d;
+ }
+ 
+ void
+--- ld/pep-dll.h	2015-11-13 09:27:42.000000000 +0100
++++ ld/pep-dll.h	2016-06-27 17:41:27.611820400 +0200
+@@ -39,6 +39,7 @@
+ extern int pep_use_nul_prefixed_import_tables;
+ extern int pep_use_coff_long_section_names;
+ extern int pep_leading_underscore;
++extern int pep_dll_enable_reloc_section;
+ 
+ typedef enum { EXCLUDESYMS, EXCLUDELIBS, EXCLUDEFORIMPLIB } exclude_type;
+ 
+--- ld/pep-dll.c	2015-11-13 09:27:42.000000000 +0100
++++ ld/pep-dll.c	2016-06-27 17:40:56.121019200 +0200
+@@ -39,6 +39,7 @@
+ #define pe_use_coff_long_section_names \
+ 				    pep_use_coff_long_section_names
+ #define pe_leading_underscore	    pep_leading_underscore
++#define pe_dll_enable_reloc_section pep_dll_enable_reloc_section
+ 
+ /* External globals.  */
+ #define pe_data_import_dll          pep_data_import_dll
+--- ld/emultempl/pe.em	2015-11-13 09:27:42.000000000 +0100
++++ ld/emultempl/pe.em	2016-06-27 17:36:32.271927900 +0200
+@@ -274,6 +274,7 @@
+ #define OPTION_INSERT_TIMESTAMP		(OPTION_TERMINAL_SERVER_AWARE + 1)
+ #define OPTION_NO_INSERT_TIMESTAMP	(OPTION_INSERT_TIMESTAMP + 1)
+ #define OPTION_BUILD_ID			(OPTION_NO_INSERT_TIMESTAMP + 1)
++#define OPTION_ENABLE_RELOC_SECTION	(OPTION_BUILD_ID + 1)
+ 
+ static void
+ gld${EMULATION_NAME}_add_options
+@@ -354,6 +355,7 @@
+     {"wdmdriver", no_argument, NULL, OPTION_WDM_DRIVER},
+     {"tsaware", no_argument, NULL, OPTION_TERMINAL_SERVER_AWARE},
+     {"build-id", optional_argument, NULL, OPTION_BUILD_ID},
++    {"enable-reloc-section", no_argument, NULL, OPTION_ENABLE_RELOC_SECTION},
+     {NULL, no_argument, NULL, 0}
+   };
+ 
+@@ -870,6 +872,8 @@
+ /*  Get DLLCharacteristics bits  */
+     case OPTION_DYNAMIC_BASE:
+       pe_dll_characteristics |= IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE;
++    case OPTION_ENABLE_RELOC_SECTION:
++      pe_dll_enable_reloc_section = 1;
+       break;
+     case OPTION_FORCE_INTEGRITY:
+       pe_dll_characteristics |= IMAGE_DLL_CHARACTERISTICS_FORCE_INTEGRITY;
+@@ -2067,6 +2071,7 @@
+ #ifdef DLL_SUPPORT
+   if (bfd_link_pic (&link_info)
+ #if !defined(TARGET_IS_shpe)
++      || pe_dll_enable_reloc_section
+       || (!bfd_link_relocatable (&link_info)
+ 	  && pe_def_file->num_exports != 0)
+ #endif
+--- ld/emultempl/pep.em	2015-11-13 09:27:42.000000000 +0100
++++ ld/emultempl/pep.em	2016-06-27 17:36:57.069346300 +0200
+@@ -248,7 +248,8 @@
+   OPTION_INSERT_TIMESTAMP,
+   OPTION_NO_INSERT_TIMESTAMP,
+   OPTION_TERMINAL_SERVER_AWARE,
+-  OPTION_BUILD_ID
++  OPTION_BUILD_ID,
++  OPTION_ENABLE_RELOC_SECTION
+ };
+ 
+ static void
+@@ -327,6 +328,7 @@
+     {"insert-timestamp", no_argument, NULL, OPTION_INSERT_TIMESTAMP},
+     {"no-insert-timestamp", no_argument, NULL, OPTION_NO_INSERT_TIMESTAMP},
+     {"build-id", optional_argument, NULL, OPTION_BUILD_ID},
++    {"enable-reloc-section", no_argument, NULL, OPTION_ENABLE_RELOC_SECTION},
+     {NULL, no_argument, NULL, 0}
+   };
+ 
+@@ -810,9 +812,10 @@
+     /*  Get DLLCharacteristics bits  */
+     case OPTION_HIGH_ENTROPY_VA:
+       pe_dll_characteristics |= IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA;
+-      break;
+     case OPTION_DYNAMIC_BASE:
+       pe_dll_characteristics |= IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE;
++    case OPTION_ENABLE_RELOC_SECTION:
++      pep_dll_enable_reloc_section = 1;
+       break;
+     case OPTION_FORCE_INTEGRITY:
+       pe_dll_characteristics |= IMAGE_DLL_CHARACTERISTICS_FORCE_INTEGRITY;
+@@ -1847,6 +1850,7 @@
+ 
+ #ifdef DLL_SUPPORT
+   if (bfd_link_pic (&link_info)
++      || pep_dll_enable_reloc_section
+       || (!bfd_link_relocatable (&link_info)
+ 	  && pep_def_file->num_exports != 0))
+     {

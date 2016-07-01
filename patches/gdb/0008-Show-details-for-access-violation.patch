@@ -11,12 +11,13 @@ diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
 index 911cc20..1d30418 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -838,7 +838,9 @@ jit_install_command (char *args, int from_tty)
+@@ -838,7 +838,10 @@ jit_install_command (char *args, int from_tty)
  
    strcpy (command_str, "\"");
    strcat (command_str, gdb_file);
 -  strcat (command_str, "\" -q -p %ld -ex \"signal-event %ld\" -ex \"c\"");
 +  strcat (command_str, "\" -q -p %ld -ex \"signal-event %ld\""
++	  " -ex \"b ExitProcess\""
 +	  " -ex \"set debugexceptions on\" -ex \"c\""
 +	  " -ex \"set debugexceptions off\"");
  

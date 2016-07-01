@@ -528,14 +528,18 @@ index 018a1df..a8479e4 100644
  
                    if (TUI_SRC_WIN->generic.title)
                      xfree (TUI_SRC_WIN->generic.title);
-@@ -104,19 +577,35 @@ tui_set_source_content (struct symtab *s,
+@@ -104,19 +577,39 @@ tui_set_source_content (struct symtab *s,
  		  xfree (src->fullname);
  		  src->fullname = xstrdup (symtab_to_fullname (s));
  
 +#ifdef TUI_SYNTAX_HIGHLIGHT
 +		  lang = deduce_language_from_filename (src->fullname);
 +		  if (lang == language_unknown)
-+		    lang = get_frame_language (get_selected_frame (NULL));
++		    {
++		      struct frame_info *fi = get_selected_frame_if_set ();
++		      if (fi)
++			lang = get_frame_language (fi);
++		    }
 +		  if (lang == language_unknown)
 +		    lang = language_cplus;
 +#endif
@@ -567,7 +571,7 @@ index 018a1df..a8479e4 100644
  		  while (cur_line < nlines)
  		    {
  		      struct tui_win_element *element
-@@ -125,9 +614,11 @@ tui_set_source_content (struct symtab *s,
+@@ -125,9 +618,11 @@ tui_set_source_content (struct symtab *s,
  		      /* Get the first character in the line.  */
  		      c = fgetc (stream);
  
@@ -582,7 +586,7 @@ index 018a1df..a8479e4 100644
  		      /* Init the line with the line number.  */
  		      sprintf (src_line, "%-6d", cur_line_no);
  		      cur_len = strlen (src_line);
-@@ -218,20 +709,37 @@ tui_set_source_content (struct symtab *s,
+@@ -218,20 +713,37 @@ tui_set_source_content (struct symtab *s,
  			}
  		      /* Now copy the line taking the offset into
  			 account.  */

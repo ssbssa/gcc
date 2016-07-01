@@ -1,0 +1,16 @@
+--- a/gcc/config/i386/i386.c	
++++ a/gcc/config/i386/i386.c	
+@@ -52678,6 +52678,13 @@ ix86_canonical_va_list_type (tree type)
+ 	}
+       if (TYPE_MAIN_VARIANT (wtype) == TYPE_MAIN_VARIANT (htype))
+ 	return ms_va_list_type_node;
++      if (in_lto_p
++         && TYPE_STRUCTURAL_EQUALITY_P (type)
++         && POINTER_TYPE_P (type)
++         && POINTER_TYPE_P (ms_va_list_type_node)
++         && (TYPE_CANONICAL (TREE_TYPE (type))
++             == TYPE_CANONICAL (TREE_TYPE (ms_va_list_type_node))))
++       return ms_va_list_type_node;
+       return NULL_TREE;
+     }
+   return std_canonical_va_list_type (type);

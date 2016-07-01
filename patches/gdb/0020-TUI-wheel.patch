@@ -1,13 +1,13 @@
 --- a/gdb/tui/tui.c	2016-03-06 14:02:34.298887700 +0100
-+++ b/gdb/tui/tui.c	2016-03-09 17:25:04.714965400 +0100
-@@ -629,6 +629,8 @@
-      so that terminal management with the inferior works.  */
-   tui_setup_io (0);
++++ b/gdb/tui/tui.c	2016-08-18 14:38:22.881022900 +0200
+@@ -622,6 +622,8 @@
+   rl_startup_hook = 0;
+   rl_already_prompted = 0;
  
 +  mouse_set (0);
 +
-   /* Update gdb's knowledge of its terminal.  */
-   gdb_save_tty_state ();
+   /* Leave curses and restore previous gdb terminal setting.  */
+   endwin ();
  
 --- a/gdb/tui/tui-io.c	2016-03-08 20:40:36.793009400 +0100
 +++ b/gdb/tui/tui-io.c	2016-03-08 20:40:42.308324800 +0100

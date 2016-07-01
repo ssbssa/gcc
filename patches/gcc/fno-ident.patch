@@ -6,6 +6,6 @@
  fident
 -Common Report Var(flag_no_ident,0)
 +Common Report Var(flag_no_ident,0) Init(1)
- Process #ident directives
+ Process #ident directives.
  
  fif-conversion
