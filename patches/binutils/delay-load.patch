@@ -1,0 +1,28 @@
+--- ld/emultempl/pe.em	2016-07-01 13:13:20.695764400 +0200
++++ ld/emultempl/pe.em	2017-02-04 19:01:59.380345400 +0100
+@@ -1817,6 +1817,7 @@
+ 		asymbol **symbols;
+ 		long nsyms, src_count;
+ 		struct bfd_link_hash_entry * blhe;
++		int do_exclude = 0;
+ 
+ 		if (!bfd_generic_link_read_symbols (is->the_bfd))
+ 		  {
+@@ -1843,9 +1844,16 @@
+ 			    && blhe->type == bfd_link_hash_defined
+ 			    && blhe->u.undef.next == NULL
+ 			    && blhe != link_info.hash->undefs_tail)
+-			  stub_sec->flags |= SEC_EXCLUDE;
++			  {
++			    do_exclude = 1;
++			    break;
++			  }
+ 		      }
+ 		  }
++
++		if (do_exclude && nsyms > 0
++		    && strncmp (symbols[nsyms - 1]->name, "___tailMerge_", 13) != 0)
++		  stub_sec->flags |= SEC_EXCLUDE;
+ 	      }
+ 	  }
+       }

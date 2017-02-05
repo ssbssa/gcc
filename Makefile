@@ -49,7 +49,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=6.2.0
+GCC_VER=6.3.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.bz2
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -63,11 +63,11 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
-GMP_VER=6.1.0
+GMP_VER=6.1.2
 GMP_SRC_DIR=gmp-$(GMP_VER)
 GMP_FILE=$(GMP_SRC_DIR).tar.xz
 
-MPFR_VER=3.1.4
+MPFR_VER=3.1.5
 MPFR_SRC_DIR=mpfr-$(MPFR_VER)
 MPFR_FILE=$(MPFR_SRC_DIR).tar.xz
 
@@ -79,9 +79,9 @@ ISL_VER=0.16.1
 ISL_SRC_DIR=isl-$(ISL_VER)
 ISL_FILE=$(ISL_SRC_DIR).tar.bz2
 
-EXPAT_VER=2.1.0
+EXPAT_VER=2.2.0
 EXPAT_SRC_DIR=expat-$(EXPAT_VER)
-EXPAT_FILE=$(EXPAT_SRC_DIR).tar.gz
+EXPAT_FILE=$(EXPAT_SRC_DIR).tar.bz2
 EXPAT_CONF=$(SOURCE_DIR_ABS)/$(EXPAT_SRC_DIR)/configure \
 	   --build=$(MYBUILD) --host=$(MYTARGET) \
 	   --enable-static --disable-shared --prefix=$(GDB_LIBS)
@@ -100,12 +100,16 @@ ICONV_CONF=$(SOURCE_DIR_ABS)/$(ICONV_SRC_DIR)/configure \
 	   --build=$(MYBUILD) --host=$(MYTARGET) \
 	   --enable-static --disable-shared --prefix=$(GDB_LIBS)
 
+PYTHON_VER=2.7.13
+PYTHON_FILE=python-$(PYTHON_VER)-w$(BUILD_BITS).tar.xz
+PYTHON_DIR=Python27
+
 GDB_VER=7.11.1
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
 	 --build=$(MYBUILD) --host=$(MYTARGET) --target=$(MYTARGET) \
-	 --prefix=$(GDB_DIR) --disable-nls \
+	 --disable-nls \
 	 CPPFLAGS="-I$(GDB_LIBS)/include" LDFLAGS="-L$(GDB_LIBS)/lib" \
 	 --enable-curses --enable-tui \
 	 --with-libiconv-prefix=$(GDB_LIBS) \
@@ -162,7 +166,11 @@ $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done: | $(SOURCE_DIR)/binutils-0
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/dynamic-base.patch
 	@touch $@
 
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done
+$(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/delay-load.patch
+	@touch $@
+
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -304,19 +312,15 @@ $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color-console.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-08-va_arg-lto.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/va_arg-lto.patch
-	@touch $@
-
-$(SOURCE_DIR)/gcc-02-patch-09-weak-ref.done: | $(SOURCE_DIR)/gcc-02-patch-08-va_arg-lto.done
+$(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/weak-ref.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-10-gcolumn-info.done: | $(SOURCE_DIR)/gcc-02-patch-09-weak-ref.done
+$(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done: | $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/gcolumn-info.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-10-gcolumn-info.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -388,6 +392,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done \
   $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
   $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done \
+  $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
@@ -396,9 +401,8 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
   $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
   $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-va_arg-lto.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-weak-ref.done \
-  $(SOURCE_DIR)/gcc-02-patch-10-gcolumn-info.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -412,7 +416,7 @@ endif
 # expat
 
 $(SOURCE_DIR)/expat-01-extract.done: | pkg/$(EXPAT_FILE) $(SOURCE_DIR)/gcc-01-extract-05-isl.done
-	tar -C $(SOURCE_DIR) -xzf pkg/$(EXPAT_FILE)
+	tar -C $(SOURCE_DIR) -xjf pkg/$(EXPAT_FILE)
 	@touch $@
 
 $(BUILD_DIR)/expat-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(SOURCE_DIR)/expat-01-extract.done
@@ -505,6 +509,12 @@ $(BUILD_DIR)/iconv-04-make.done: | $(BUILD_DIR)/iconv-03-configure.done
 $(BUILD_DIR)/iconv-05-make-install.done: | $(BUILD_DIR)/iconv-04-make.done
 	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/iconv install
 	@touch $@
+
+
+# python
+
+$(GDB_LIBS)/$(PYTHON_DIR): | pkg/$(PYTHON_FILE) $(BUILD_DIR)/iconv-05-make-install.done
+	tar -C $(GDB_LIBS) -xJf pkg/$(PYTHON_FILE)
 
 
 # gdb
@@ -603,7 +613,7 @@ $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done: | $(SOURCE_DIR)/gdb-02-patch
 
 $(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done
 	@mkdir -p $(BUILD_DIR)/gdb
-	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF)
+	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF) --prefix=$(GDB_DIR)
 	@touch $@
 
 $(BUILD_DIR)/gdb-04-make.done: | $(BUILD_DIR)/gdb-03-configure.done
@@ -612,6 +622,27 @@ $(BUILD_DIR)/gdb-04-make.done: | $(BUILD_DIR)/gdb-03-configure.done
 
 $(BUILD_DIR)/gdb-05-make-install.done: | $(BUILD_DIR)/gdb-04-make.done
 	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/gdb/gdb install-strip
+	@touch $@
+
+
+# gdb-python
+
+$(BUILD_DIR)/gdb-python-01-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done $(GDB_LIBS)/$(PYTHON_DIR)
+	@mkdir -p $(BUILD_DIR)/gdb-python
+	$(GCC_PATH) cd $(BUILD_DIR)/gdb-python && $(GDB_CONF) --prefix=$(GDB_DIR)-python --with-python=$(GDB_LIBS)/$(PYTHON_DIR)/python
+	@touch $@
+
+$(BUILD_DIR)/gdb-python-02-make.done: | $(BUILD_DIR)/gdb-python-01-configure.done
+	$(GCC_PATH) $(MAKE) CC_FOR_BUILD=$(MYBUILD)-gcc -C $(BUILD_DIR)/gdb-python
+	@touch $@
+
+$(BUILD_DIR)/gdb-python-03-make-install.done: | $(BUILD_DIR)/gdb-python-02-make.done
+	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/gdb-python/gdb install-strip
+	@touch $@
+
+$(BUILD_DIR)/gdb-python-04-python.done: | $(BUILD_DIR)/gdb-python-03-make-install.done
+	cp -af $(GDB_LIBS)/$(PYTHON_DIR)/python27.dll $(GDB_DIR)-python/bin/
+	cp -arf $(GDB_LIBS)/$(PYTHON_DIR)/Lib $(GDB_DIR)-python/lib
 	@touch $@
 
 
@@ -630,9 +661,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done \
+  $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done \
-  $(SOURCE_DIR)/gcc-02-patch-10-gcolumn-info.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done \
   $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
   $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done \
 
@@ -646,6 +677,7 @@ build-expat: | $(BUILD_DIR)/expat-05-make-install.done
 build-pdcurses: | $(BUILD_DIR)/pdcurses-04-make-install.done
 build-iconv: | $(BUILD_DIR)/iconv-05-make-install.done
 build-gdb: | $(BUILD_DIR)/gdb-05-make-install.done
+build-gdb-python: | $(BUILD_DIR)/gdb-python-04-python.done
 
 
 binutils$(BUILD_BITS).7z: | build-binutils
@@ -660,16 +692,22 @@ gdb$(BUILD_BITS).7z: | build-gdb
 	@rm -f $@
 	cd $(GDB_DIR) && 7z a -mx=9 ../$@ *
 
+gdb$(BUILD_BITS)-python.7z: | build-gdb-python
+	@rm -f $@
+	cd $(GDB_DIR)-python && 7z a -mx=9 ../$@ *
+
 
 package-binutils: binutils$(BUILD_BITS).7z
 package-gcc: gcc$(BUILD_BITS).7z
 package-gdb: gdb$(BUILD_BITS).7z
+package-gdb-python: gdb$(BUILD_BITS)-python.7z
 
 ifeq ($(GDB_ONLY),)
 packages: package-binutils
 packages: package-gcc
 endif
 packages: package-gdb
+packages: package-gdb-python
 
 
 info:
@@ -684,4 +722,5 @@ info:
 	@echo -e "$(EXPAT_FILE)\r"
 	@echo -e "$(PDCURSES_FILE)\r"
 	@echo -e "$(ICONV_FILE)\r"
+	@echo -e "$(PYTHON_FILE)\r"
 	@echo -e "$(GDB_FILE)\r"
