@@ -1,14 +1,14 @@
-From 78efefb7363a8e9246eedde6d933bd22bc5aee99 Mon Sep 17 00:00:00 2001
+From 842c8f42a55798d60f65fe36af96029ce2280d42 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
-Subject: [PATCH 7/7] free argv[]
+Subject: [PATCH 07/11] free argv[]
 
 ---
  mingw-w64-crt/crt/crtexe.c | 10 ++++++++++
  1 file changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 2c04304..973b06b 100644
+index 602c57c..1f53604 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -77,6 +77,7 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
@@ -28,8 +28,8 @@ index 2c04304..973b06b 100644
      __main ();
  #ifdef WPRFLAG
      __winitenv = envp;
-@@ -340,6 +343,13 @@ __tmainCRTStartup (void)
-     __initenv = envp;
+@@ -342,6 +345,13 @@ __tmainCRTStartup (void)
+ #endif
      mainret = main (argc, argv, envp);
  #endif
 +    {

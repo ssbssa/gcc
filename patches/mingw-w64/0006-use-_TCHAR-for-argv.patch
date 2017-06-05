@@ -1,14 +1,14 @@
-From 2e449f49452fa21d0b827bf0a86d6cbb0763f0e1 Mon Sep 17 00:00:00 2001
+From 1290f81b8ec15177c1257645c5fd31a2c99c4ce9 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:54:43 +0200
-Subject: [PATCH 6/7] use _TCHAR for argv
+Subject: [PATCH 06/11] use _TCHAR for argv
 
 ---
  mingw-w64-crt/crt/crtexe.c | 52 +++++++---------------------------------------
  1 file changed, 8 insertions(+), 44 deletions(-)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 3e0f886..2c04304 100644
+index 1ca378e..602c57c 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -76,13 +76,8 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
@@ -40,7 +40,7 @@ index 3e0f886..2c04304 100644
  
  static int __cdecl pre_c_init (void);
  static void __cdecl pre_cpp_init (void);
-@@ -401,46 +392,19 @@ check_managed_app (void)
+@@ -403,46 +394,19 @@ check_managed_app (void)
    return 0;
  }
  

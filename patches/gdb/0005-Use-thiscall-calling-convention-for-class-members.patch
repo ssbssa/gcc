@@ -1,7 +1,7 @@
-From 2f913c8dbdfa4612925ce6447fc2e7c1625046cf Mon Sep 17 00:00:00 2001
+From 8c8553b52c737886eabc684736096799257040b3 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:15:24 +0100
-Subject: [PATCH 06/19] Use thiscall calling convention for class members
+Subject: [PATCH 05/23] Use thiscall calling convention for class members
 
 ---
  gdb/eval.c      |  2 ++
@@ -9,10 +9,10 @@ Subject: [PATCH 06/19] Use thiscall calling convention for class members
  2 files changed, 30 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/eval.c b/gdb/eval.c
-index 6bbd495..5aadb35 100644
+index 2a39774..13e87b7 100644
 --- a/gdb/eval.c
 +++ b/gdb/eval.c
-@@ -1663,6 +1663,8 @@ evaluate_subexp_standard (struct type *expect_type,
+@@ -1643,6 +1643,8 @@ evaluate_subexp_standard (struct type *expect_type,
  	      nargs--;
  	      argvec++;
  	    }
@@ -22,7 +22,7 @@ index 6bbd495..5aadb35 100644
        else if (op == STRUCTOP_MEMBER || op == STRUCTOP_MPTR)
  	{
 diff --git a/gdb/i386-tdep.c b/gdb/i386-tdep.c
-index 371a282..cb20972 100644
+index fe68486..4b2f465 100644
 --- a/gdb/i386-tdep.c
 +++ b/gdb/i386-tdep.c
 @@ -47,6 +47,7 @@
@@ -33,7 +33,7 @@ index 371a282..cb20972 100644
  
  #include "record.h"
  #include "record-full.h"
-@@ -2652,6 +2653,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2683,6 +2684,27 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    int i;
    int write_pass;
    int args_space = 0;
@@ -59,9 +59,9 @@ index 371a282..cb20972 100644
 +	}
 +    }
  
-   /* Determine the total space required for arguments and struct
-      return address in a first pass (allowing for 16-byte-aligned
-@@ -2674,7 +2696,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+   /* BND registers can be in arbitrary values at the moment of the
+      inferior call.  This can cause boundary violations that are not
+@@ -2712,7 +2734,7 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
  	    args_space += 4;
  	}
  
@@ -70,7 +70,7 @@ index 371a282..cb20972 100644
  	{
  	  int len = TYPE_LENGTH (value_enclosing_type (args[i]));
  
-@@ -2726,6 +2748,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
+@@ -2764,6 +2786,11 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
    /* ...and fake a frame pointer.  */
    regcache_cooked_write (regcache, I386_EBP_REGNUM, buf);
  

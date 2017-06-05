@@ -1,0 +1,26 @@
+From fc13079687e48cdde24c3523922f8f5d01d4c099 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Mon, 5 Jun 2017 15:33:55 +0200
+Subject: [PATCH 23/23] Fix ::hypot has not been declared with python
+
+---
+ gdb/python/python-internal.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/gdb/python/python-internal.h b/gdb/python/python-internal.h
+index ebb83f0..9d2a2f5 100644
+--- a/gdb/python/python-internal.h
++++ b/gdb/python/python-internal.h
+@@ -88,6 +88,9 @@
+ /* Request clean size types from Python.  */
+ #define PY_SSIZE_T_CLEAN
+ 
++/* Fix ::hypot has not been declared.  */
++#include <math.h>
++
+ /* Include the Python header files using angle brackets rather than
+    double quotes.  On case-insensitive filesystems, this prevents us
+    from including our python/python.h header file.  */
+-- 
+1.9.4.msysgit.2
+

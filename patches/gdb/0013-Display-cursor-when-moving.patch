@@ -1,14 +1,14 @@
-From d63bc8795c72a51e4a96da40476c825bb2b7f7ba Mon Sep 17 00:00:00 2001
+From 0303123d80b79a06b66c39413597e7504a1b737c Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 12 Jan 2015 17:51:13 +0100
-Subject: [PATCH 14/19] Display cursor when moving
+Subject: [PATCH 13/23] Display cursor when moving
 
 ---
  readline/display.c | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
 
 diff --git a/readline/display.c b/readline/display.c
-index 7653d87..6e796ca 100644
+index 9044305..5a4695f 100644
 --- a/readline/display.c
 +++ b/readline/display.c
 @@ -45,6 +45,10 @@

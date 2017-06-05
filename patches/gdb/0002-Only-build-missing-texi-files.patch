@@ -1,7 +1,7 @@
-From b272160984522068d8cdd3c77c0ab6cc59d11501 Mon Sep 17 00:00:00 2001
+From 3bf260ec51de999db2ba4967fcd1e078ae573861 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 30 Aug 2015 15:52:48 +0200
-Subject: [PATCH 03/19] Only build missing texi files
+Subject: [PATCH 02/23] Only build missing texi files
 
 ---
  bfd/doc/Makefile.in | 2 +-
@@ -9,10 +9,10 @@ Subject: [PATCH 03/19] Only build missing texi files
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/bfd/doc/Makefile.in b/bfd/doc/Makefile.in
-index 74be3cb..95f2983 100644
+index 669f6b2..6ad20b5 100644
 --- a/bfd/doc/Makefile.in
 +++ b/bfd/doc/Makefile.in
-@@ -439,7 +439,7 @@ mostlyclean-libtool:
+@@ -468,7 +468,7 @@ mostlyclean-libtool:
  clean-libtool:
  	-rm -rf .libs _libs
  
@@ -22,7 +22,7 @@ index 74be3cb..95f2983 100644
  	rm -rf $$backupdir && mkdir $$backupdir && \
  	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \
 diff --git a/gdb/doc/Makefile.in b/gdb/doc/Makefile.in
-index 85ed95b..edffeac 100644
+index 5a58fa7..6b3106c 100644
 --- a/gdb/doc/Makefile.in
 +++ b/gdb/doc/Makefile.in
 @@ -148,7 +148,7 @@ STABS_DOC_BUILD_INCLUDES = \

@@ -1,14 +1,14 @@
-From d106ef7647caa2ff056ea114dcfe7f52f2527a1e Mon Sep 17 00:00:00 2001
+From 22a9d670bdcb6280b7ada8b5a984c5191eb1b8ad Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:45 +0200
-Subject: [PATCH 5/7] fix _vswprintf
+Subject: [PATCH 05/11] fix _vswprintf
 
 ---
  mingw-w64-crt/lib64/msvcrt.def.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mingw-w64-crt/lib64/msvcrt.def.in b/mingw-w64-crt/lib64/msvcrt.def.in
-index ab42da0..d04e60e 100644
+index 0873041..e5f4140 100644
 --- a/mingw-w64-crt/lib64/msvcrt.def.in
 +++ b/mingw-w64-crt/lib64/msvcrt.def.in
 @@ -859,7 +859,7 @@ _vsprintf_l

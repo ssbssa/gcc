@@ -25,7 +25,7 @@ else
 endif
 
 
-BINUTILS_VER=2.26.1
+BINUTILS_VER=2.28
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.bz2
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -37,7 +37,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=4.0.6
+MINGW_W64_VER=5.0.2
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -49,7 +49,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=6.3.0
+GCC_VER=7.1.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.bz2
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -93,7 +93,7 @@ PDCURSES_CONF=$(SOURCE_DIR_ABS)/$(PDCURSES_SRC_DIR)/configure \
 	      --build=$(MYBUILD) --host=$(MYTARGET) \
 	      --enable-static --disable-shared --prefix=$(GDB_LIBS)
 
-ICONV_VER=1.14
+ICONV_VER=1.15
 ICONV_SRC_DIR=libiconv-$(ICONV_VER)
 ICONV_FILE=$(ICONV_SRC_DIR).tar.gz
 ICONV_CONF=$(SOURCE_DIR_ABS)/$(ICONV_SRC_DIR)/configure \
@@ -104,7 +104,7 @@ PYTHON_VER=2.7.13
 PYTHON_FILE=python-$(PYTHON_VER)-w$(BUILD_BITS).tar.xz
 PYTHON_DIR=Python27
 
-GDB_VER=7.11.1
+GDB_VER=8.0
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -150,11 +150,7 @@ $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done: | $(SOURCE_DIR)/binutils-01-ex
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/makeinfo.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-02-timestamp.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/timestamp.patch
-	@touch $@
-
-$(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done: | $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done
+$(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/compress-debug-sections.patch
 	@touch $@
 
@@ -240,11 +236,15 @@ $(SOURCE_DIR)/mingw-w64-02-patch-09-dwmapi-iconic.done: | $(SOURCE_DIR)/mingw-w6
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-dwmapi-add-missing-Iconic-functions.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-dwmapi-iconic.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-fix-printf-precision.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-10-printf-out-of-bounds-access.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-dwmapi-iconic.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-fix-printf-out-of-bounds-access.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done
+$(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-out-of-bounds-access.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-add-strndup-wcsndup.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -316,11 +316,7 @@ $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done: | $(SOURCE_DIR)/gcc-02-patch-07-dia
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/weak-ref.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done: | $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/gcolumn-info.patch
-	@touch $@
-
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -388,12 +384,11 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-01-extract-04-mpc.done \
   $(SOURCE_DIR)/gcc-01-extract-05-isl.done \
   $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done \
-  $(SOURCE_DIR)/binutils-02-patch-02-timestamp.done \
   $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done \
   $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
   $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done \
   $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
   $(SOURCE_DIR)/gcc-02-patch-03-lfs.done \
@@ -402,7 +397,6 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
   $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
   $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -523,95 +517,99 @@ $(SOURCE_DIR)/gdb-01-extract.done: | pkg/$(GDB_FILE) $(SOURCE_DIR)/iconv-01-extr
 	tar -C $(SOURCE_DIR) -xJf pkg/$(GDB_FILE)
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-01-jit.done: | $(SOURCE_DIR)/gdb-01-extract.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0001-Make-gdb-JIT-capable-MS-Windows.patch
+$(SOURCE_DIR)/gdb-02-patch-01-jit-installer.done: | $(SOURCE_DIR)/gdb-01-extract.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0001-Add-install-uninstall-commands-for-JIT-debugger.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-02-jit-installer.done: | $(SOURCE_DIR)/gdb-02-patch-01-jit.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0002-Add-install-uninstall-commands-for-JIT-debugger.patch
+$(SOURCE_DIR)/gdb-02-patch-02-doc.done: | $(SOURCE_DIR)/gdb-02-patch-01-jit-installer.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0002-Only-build-missing-texi-files.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-03-doc.done: | $(SOURCE_DIR)/gdb-02-patch-02-jit-installer.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0003-Only-build-missing-texi-files.patch
+$(SOURCE_DIR)/gdb-02-patch-03-tui-syntax-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-02-doc.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0003-Add-syntax-highlighting-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-04-tui-syntax-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-03-doc.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0004-Add-syntax-highlighting-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-04-clear-symbols.done: | $(SOURCE_DIR)/gdb-02-patch-03-tui-syntax-highlight.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0004-Clear-symbols-if-executable-can-t-be-attached.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-05-clear-symbols.done: | $(SOURCE_DIR)/gdb-02-patch-04-tui-syntax-highlight.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0005-Clear-symbols-if-executable-can-t-be-attached.patch
+$(SOURCE_DIR)/gdb-02-patch-05-thiscall.done: | $(SOURCE_DIR)/gdb-02-patch-04-clear-symbols.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0005-Use-thiscall-calling-convention-for-class-members.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-06-thiscall.done: | $(SOURCE_DIR)/gdb-02-patch-05-clear-symbols.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0006-Use-thiscall-calling-convention-for-class-members.patch
+$(SOURCE_DIR)/gdb-02-patch-06-userprofile-home.done: | $(SOURCE_DIR)/gdb-02-patch-05-thiscall.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0006-Use-USERPROFILE-as-alternative-to-HOME.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-07-userprofile-home.done: | $(SOURCE_DIR)/gdb-02-patch-06-thiscall.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0007-Use-USERPROFILE-as-alternative-to-HOME.patch
+$(SOURCE_DIR)/gdb-02-patch-07-access-violation.done: | $(SOURCE_DIR)/gdb-02-patch-06-userprofile-home.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0007-Show-details-for-access-violation.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-08-access-violation.done: | $(SOURCE_DIR)/gdb-02-patch-07-userprofile-home.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0008-Show-details-for-access-violation.patch
+$(SOURCE_DIR)/gdb-02-patch-08-tui-multi-line-syntax.done: | $(SOURCE_DIR)/gdb-02-patch-07-access-violation.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0008-Add-multi-line-syntax-highlighting-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-09-tui-multi-line-syntax.done: | $(SOURCE_DIR)/gdb-02-patch-08-access-violation.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0009-Add-multi-line-syntax-highlighting-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-09-console-scroll.done: | $(SOURCE_DIR)/gdb-02-patch-08-tui-multi-line-syntax.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0009-Use-page-up-down-to-scroll-in-console-buffer.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done: | $(SOURCE_DIR)/gdb-02-patch-09-tui-multi-line-syntax.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0010-Use-page-up-down-to-scroll-in-console-buffer.patch
+$(SOURCE_DIR)/gdb-02-patch-10-resize-crashes.done: | $(SOURCE_DIR)/gdb-02-patch-09-console-scroll.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0010-Fix-resize-crashes.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-11-resize-crashes.done: | $(SOURCE_DIR)/gdb-02-patch-10-console-scroll.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0011-Fix-resize-crashes.patch
+$(SOURCE_DIR)/gdb-02-patch-11-tui-search.done: | $(SOURCE_DIR)/gdb-02-patch-10-resize-crashes.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0011-Fix-search-for-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-12-tui-search.done: | $(SOURCE_DIR)/gdb-02-patch-11-resize-crashes.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0012-Fix-search-for-TUI.patch
+$(SOURCE_DIR)/gdb-02-patch-12-ctrl-left-right.done: | $(SOURCE_DIR)/gdb-02-patch-11-tui-search.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0012-Use-ctrl-left-right-to-move-to-previous-next-word.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-13-ctrl-left-right.done: | $(SOURCE_DIR)/gdb-02-patch-12-tui-search.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0013-Use-ctrl-left-right-to-move-to-previous-next-word.patch
+$(SOURCE_DIR)/gdb-02-patch-13-moving-cursor.done: | $(SOURCE_DIR)/gdb-02-patch-12-ctrl-left-right.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0013-Display-cursor-when-moving.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-14-moving-cursor.done: | $(SOURCE_DIR)/gdb-02-patch-13-ctrl-left-right.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Display-cursor-when-moving.patch
+$(SOURCE_DIR)/gdb-02-patch-14-exec-point-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-13-moving-cursor.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0014-Don-t-highlight-wrong-execution-point.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-15-exec-point-highlight.done: | $(SOURCE_DIR)/gdb-02-patch-14-moving-cursor.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0015-Don-t-highlight-wrong-execution-point.patch
+$(SOURCE_DIR)/gdb-02-patch-15-no-warn-debuglink.done: | $(SOURCE_DIR)/gdb-02-patch-14-exec-point-highlight.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0015-Don-t-warn-for-debuglink-section.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-16-no-warn-debuglink.done: | $(SOURCE_DIR)/gdb-02-patch-15-exec-point-highlight.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0016-Don-t-warn-for-debuglink-section.patch
+$(SOURCE_DIR)/gdb-02-patch-16-no-source-color.done: | $(SOURCE_DIR)/gdb-02-patch-15-no-warn-debuglink.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0016-Fix-highlight-colors-for-empty-source-window.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-17-no-source-color.done: | $(SOURCE_DIR)/gdb-02-patch-16-no-warn-debuglink.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0017-Fix-highlight-colors-for-empty-source-window.patch
+$(SOURCE_DIR)/gdb-02-patch-17-console-resize.done: | $(SOURCE_DIR)/gdb-02-patch-16-no-source-color.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0017-Add-console-command-to-resize-console-window.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-18-console-resize.done: | $(SOURCE_DIR)/gdb-02-patch-17-no-source-color.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0018-Add-console-command-to-resize-console-window.patch
+$(SOURCE_DIR)/gdb-02-patch-18-tui-list-frame.done: | $(SOURCE_DIR)/gdb-02-patch-17-console-resize.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0018-Restore-TUI-behavior-of-list-and-frame.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done: | $(SOURCE_DIR)/gdb-02-patch-18-console-resize.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-Restore-TUI-behavior-of-list-and-frame.patch
+$(SOURCE_DIR)/gdb-02-patch-19-tui-wheel.done: | $(SOURCE_DIR)/gdb-02-patch-18-tui-list-frame.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0019-Use-mouse-wheel-in-TUI.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-20-tui-wheel.done: | $(SOURCE_DIR)/gdb-02-patch-19-tui-list-frame.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0020-TUI-wheel.patch
+$(SOURCE_DIR)/gdb-02-patch-20-thread-name.done: | $(SOURCE_DIR)/gdb-02-patch-19-tui-wheel.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0020-Support-thread-names-in-gdbserver.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-21-thread-name.done: | $(SOURCE_DIR)/gdb-02-patch-20-tui-wheel.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0021-thread-name.patch
+$(SOURCE_DIR)/gdb-02-patch-21-readline-assert.done: | $(SOURCE_DIR)/gdb-02-patch-20-thread-name.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0021-Fix-readline-assert.patch
 	@touch $@
 
-$(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done: | $(SOURCE_DIR)/gdb-02-patch-21-thread-name.done
-	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0022-fix-readline-assert.patch
+$(SOURCE_DIR)/gdb-02-patch-22-memory-leaks.done: | $(SOURCE_DIR)/gdb-02-patch-21-readline-assert.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0022-Fix-memory-leaks.patch
 	@touch $@
 
-$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done
+$(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done: | $(SOURCE_DIR)/gdb-02-patch-22-memory-leaks.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0023-Fix-hypot-has-not-been-declared-with-python.patch
+	@touch $@
+
+$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done
 	@mkdir -p $(BUILD_DIR)/gdb
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF) --prefix=$(GDB_DIR)
 	@touch $@
@@ -627,7 +625,7 @@ $(BUILD_DIR)/gdb-05-make-install.done: | $(BUILD_DIR)/gdb-04-make.done
 
 # gdb-python
 
-$(BUILD_DIR)/gdb-python-01-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done $(GDB_LIBS)/$(PYTHON_DIR)
+$(BUILD_DIR)/gdb-python-01-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done $(GDB_LIBS)/$(PYTHON_DIR)
 	@mkdir -p $(BUILD_DIR)/gdb-python
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb-python && $(GDB_CONF) --prefix=$(GDB_DIR)-python --with-python=$(GDB_LIBS)/$(PYTHON_DIR)/python
 	@touch $@
@@ -662,10 +660,10 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-precision.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-gcolumn-info.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
   $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
-  $(SOURCE_DIR)/gdb-02-patch-22-readline-assert.done \
+  $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

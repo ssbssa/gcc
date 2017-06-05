@@ -1,7 +1,7 @@
-From 9bd3f2e233eddc6dc620c8a585f446e69282d0e6 Mon Sep 17 00:00:00 2001
+From 7bd417f5244b8856e01b0b73da5d6516b883e338 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 3/7] fix binmode
+Subject: [PATCH 03/11] fix binmode
 
 ---
  mingw-w64-crt/crt/binmode.c |  7 ++++---
@@ -25,7 +25,7 @@ index f0473b0..2e46c2f 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index ade4124..9817692 100644
+index ae37e0f..3c43e61 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -20,6 +20,8 @@

@@ -1,7 +1,7 @@
-From 6f3cb8eb68b2ea59f0c74fd4eb5b4cc3d70c6252 Mon Sep 17 00:00:00 2001
+From c8ebce304f367142e2db17946a11b0811d401701 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Thu, 1 Jan 2015 15:18:08 +0100
-Subject: [PATCH 13/19] Use ctrl-left/right to move to previous/next word
+Subject: [PATCH 12/23] Use ctrl-left/right to move to previous/next word
 
 ---
  readline/readline.c | 3 +++

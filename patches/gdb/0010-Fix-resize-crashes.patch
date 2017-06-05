@@ -1,17 +1,17 @@
-From f66a025a9ae643beefb2950ead5eca866b1b443a Mon Sep 17 00:00:00 2001
+From 44d1e737beebc2569546da736b1701bd0f1172c9 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 11 Mar 2014 19:50:44 +0100
-Subject: [PATCH 11/19] Fix resize crashes
+Subject: [PATCH 10/23] Fix resize crashes
 
 ---
  gdb/tui/tui-win.c | 8 ++------
  1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
-index 629d54d..bb5800f 100644
+index f49d7d5..2bdad11 100644
 --- a/gdb/tui/tui-win.c
 +++ b/gdb/tui/tui-win.c
-@@ -768,12 +768,7 @@ tui_resize_all (void)
+@@ -783,12 +783,7 @@ tui_resize_all (void)
        split_diff = height_diff / num_wins_displayed;
        cmd_split_diff = split_diff;
        if (height_diff % num_wins_displayed)
@@ -25,7 +25,7 @@ index 629d54d..bb5800f 100644
        /* Now adjust each window.  */
        /* erase + clearok are used instead of a straightforward clear as
           AIX 5.3 does not define clear.  */
-@@ -864,6 +859,7 @@ tui_resize_all (void)
+@@ -879,6 +874,7 @@ tui_resize_all (void)
  
  	  /* Change the command window's height/width.  */
  	  TUI_CMD_WIN->generic.origin.y = locator->origin.y + 1;

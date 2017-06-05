@@ -1,7 +1,7 @@
-From 43246ed47b9b24658e848ef5dc7b08b5d5a4a438 Mon Sep 17 00:00:00 2001
+From 12ec4421542156978c3f9a6be18b895240718e6d Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 19:47:12 +0100
-Subject: [PATCH 09/19] Add multi-line syntax highlighting for TUI
+Subject: [PATCH 08/23] Add multi-line syntax highlighting for TUI
 
 ---
  gdb/source.c         | 113 +++++++++++++++++++++++++++++++++++++++++++++++++--
@@ -9,10 +9,10 @@ Subject: [PATCH 09/19] Add multi-line syntax highlighting for TUI
  2 files changed, 153 insertions(+), 7 deletions(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index fbec0f1..f97e915 100644
+index 8926e54..f48546f 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
-@@ -1180,6 +1180,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
+@@ -1208,6 +1208,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
      internal_error (__FILE__, __LINE__, _("invalid filename_display_string"));
  }
  
@@ -22,7 +22,7 @@ index fbec0f1..f97e915 100644
 +const char *
 +find_end_comment (const char *line, const char *line_end)
 +{
-+  line = memmem (line, line_end - line, "*/", 2);
++  line = (const char *) memmem (line, line_end - line, "*/", 2);
 +  if (!line) return NULL;
 +  return line + 2;
 +}
@@ -111,7 +111,7 @@ index fbec0f1..f97e915 100644
  /* Create and initialize the table S->line_charpos that records
     the positions of the lines in the source file, which is assumed
     to be open on descriptor DESC.
-@@ -1245,13 +1337,28 @@ find_source_lines (struct symtab *s, int desc)
+@@ -1273,13 +1365,28 @@ find_source_lines (struct symtab *s, int desc)
  	    line_charpos[nlines++] = p - data;
  	  }
        }
@@ -144,7 +144,7 @@ index fbec0f1..f97e915 100644
  
  
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index a8479e4..3b3bb21 100644
+index f1cc8ca..e1d16e5 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
 @@ -338,15 +338,51 @@ enum
@@ -200,7 +200,7 @@ index a8479e4..3b3bb21 100644
    while (src_line[0])
      {
        char c = src_line[0];
-@@ -714,9 +750,12 @@ tui_set_source_content (struct symtab *s,
+@@ -718,9 +754,12 @@ tui_set_source_content (struct symtab *s,
  #ifdef TUI_SYNTAX_HIGHLIGHT
  			  if (tui_can_syntax_highlight)
  			    {

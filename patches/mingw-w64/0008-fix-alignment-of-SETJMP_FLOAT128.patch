@@ -1,7 +1,7 @@
-From 277f57be337df6923234b3b932e2925b12078629 Mon Sep 17 00:00:00 2001
+From 74ae9d4f0f75f05a658364ed85957b2ee1100c73 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 21 Mar 2016 19:23:39 +0100
-Subject: [PATCH] fix alignment of SETJMP_FLOAT128
+Subject: [PATCH 08/11] fix alignment of SETJMP_FLOAT128
 
 ---
  mingw-w64-headers/crt/setjmp.h | 2 +-

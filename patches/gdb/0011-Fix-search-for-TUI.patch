@@ -1,19 +1,19 @@
-From 1cbda20de2d82e37af1c0e5cadff845c0082b437 Mon Sep 17 00:00:00 2001
+From aa5ba392b51331f1a0c9587b2b61148d63e2a23f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 12 Mar 2014 18:57:12 +0100
-Subject: [PATCH 12/19] Fix search for TUI
+Subject: [PATCH 11/23] Fix search for TUI
 
 ---
  gdb/source.c | 12 +++++++++++-
  1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index f97e915..9eb60b9 100644
+index f48546f..248ff12 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
-@@ -43,6 +43,10 @@
- #include "ui-out.h"
- #include "readline/readline.h"
+@@ -45,6 +45,10 @@
+ #include "common/enum-flags.h"
+ #include <algorithm>
  
 +#ifdef TUI
 +#include "tui/tui.h"
@@ -22,7 +22,7 @@ index f97e915..9eb60b9 100644
  #define OPEN_MODE (O_RDONLY | O_BINARY)
  #define FDOPEN_MODE FOPEN_RB
  
-@@ -159,6 +163,10 @@ get_first_line_listed (void)
+@@ -161,6 +165,10 @@ get_first_line_listed (void)
  static void
  clear_lines_listed_range (void)
  {
@@ -33,7 +33,7 @@ index f97e915..9eb60b9 100644
    first_line_listed = 0;
    last_line_listed = 0;
  }
-@@ -1441,6 +1449,7 @@ print_source_lines_base (struct symtab *s, int line, int stopline,
+@@ -1469,6 +1477,7 @@ print_source_lines_base (struct symtab *s, int line, int stopline,
    current_source_symtab = s;
    current_source_line = line;
    first_line_listed = line;
@@ -41,7 +41,7 @@ index f97e915..9eb60b9 100644
  
    /* If printing of source lines is disabled, just print file and line
       number.  */
-@@ -1834,7 +1843,7 @@ reverse_search_command (char *regex, int from_tty)
+@@ -1858,7 +1867,7 @@ reverse_search_command (char *regex, int from_tty)
    stream = fdopen (desc, FDOPEN_MODE);
    clearerr (stream);
    cleanups = make_cleanup_fclose (stream);
@@ -50,7 +50,7 @@ index f97e915..9eb60b9 100644
      {
  /* FIXME!!!  We walk right off the end of buf if we get a long line!!!  */
        char buf[4096];		/* Should be reasonable???  */
-@@ -1869,6 +1878,7 @@ reverse_search_command (char *regex, int from_tty)
+@@ -1893,6 +1902,7 @@ reverse_search_command (char *regex, int from_tty)
  	  return;
  	}
        line--;

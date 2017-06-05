@@ -1,7 +1,7 @@
-From ac220b370c0b8d872a280dfceca4c934f833a943 Mon Sep 17 00:00:00 2001
+From 5725c65d04460de7da27930d1ca3c37c97f539c2 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 23 Mar 2016 17:45:22 +0100
-Subject: [PATCH] dwmapi: add missing *Iconic* functions
+Subject: [PATCH 09/11] dwmapi: add missing *Iconic* functions
 
 ---
  mingw-w64-crt/lib64/dwmapi.def | 3 +++

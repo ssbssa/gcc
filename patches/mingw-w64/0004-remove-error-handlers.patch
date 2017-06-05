@@ -1,7 +1,7 @@
-From ab1a2d94baeeafad555cf194ed0f8673539c647f Mon Sep 17 00:00:00 2001
+From e6eadb6a0597060f2d745c1798a3549f7a8e549b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
-Subject: [PATCH 4/7] remove error handlers
+Subject: [PATCH 04/11] remove error handlers
 
 ---
  mingw-w64-crt/crt/crtexe.c       | 6 ++++++
@@ -9,7 +9,7 @@ Subject: [PATCH 4/7] remove error handlers
  2 files changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 9817692..3e0f886 100644
+index 3c43e61..1ca378e 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -104,6 +104,7 @@ static void __cdecl pre_cpp_init (void);
