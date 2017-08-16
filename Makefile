@@ -25,9 +25,9 @@ else
 endif
 
 
-BINUTILS_VER=2.28
+BINUTILS_VER=2.28.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
-BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.bz2
+BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --build=$(MYBUILD) --target=$(MYTARGET) \
 	      --disable-multilib --with-sysroot=$(BINUTILS_DIR) \
@@ -49,9 +49,9 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=7.1.0
+GCC_VER=7.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
-GCC_FILE=$(GCC_SRC_DIR).tar.bz2
+GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --build=$(MYBUILD) --target=$(MYTARGET) \
 	 --disable-multilib --with-sysroot=$(GCC_DIR) \
@@ -79,7 +79,7 @@ ISL_VER=0.16.1
 ISL_SRC_DIR=isl-$(ISL_VER)
 ISL_FILE=$(ISL_SRC_DIR).tar.bz2
 
-EXPAT_VER=2.2.0
+EXPAT_VER=2.2.3
 EXPAT_SRC_DIR=expat-$(EXPAT_VER)
 EXPAT_FILE=$(EXPAT_SRC_DIR).tar.bz2
 EXPAT_CONF=$(SOURCE_DIR_ABS)/$(EXPAT_SRC_DIR)/configure \
@@ -143,7 +143,7 @@ ifeq ($(GDB_ONLY),)
 # binutils
 
 $(SOURCE_DIR)/binutils-01-extract.done: | $(SOURCE_DIR) pkg/$(BINUTILS_FILE)
-	tar -C $(SOURCE_DIR) -xjf pkg/$(BINUTILS_FILE)
+	tar -C $(SOURCE_DIR) -xJf pkg/$(BINUTILS_FILE)
 	@touch $@
 
 $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done: | $(SOURCE_DIR)/binutils-01-extract.done
@@ -261,7 +261,7 @@ $(BUILD_DIR)/mingw-w64-05-headers-make-install.done: | $(BUILD_DIR)/mingw-w64-04
 # gcc core
 
 $(SOURCE_DIR)/gcc-01-extract-01-gcc.done: | pkg/$(GCC_FILE) $(SOURCE_DIR)/mingw-w64-01-extract.done
-	tar -C $(SOURCE_DIR) -xjf pkg/$(GCC_FILE)
+	tar -C $(SOURCE_DIR) -xJf pkg/$(GCC_FILE)
 	@touch $@
 
 $(SOURCE_DIR)/gcc-01-extract-02-gmp.done: | $(SOURCE_DIR)/gcc-01-extract-01-gcc.done pkg/$(GMP_FILE)
