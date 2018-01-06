@@ -1,4 +1,4 @@
-From 72b2c0cbd61121eb9ab7927fc1f4bb27124cbbfb Mon Sep 17 00:00:00 2001
+From dc1b516fa7cb98fbb03dbfdbec414827a3c55d73 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 5 Nov 2014 20:05:04 +0100
 Subject: [PATCH 07/23] Show details for access violation
@@ -8,7 +8,7 @@ Subject: [PATCH 07/23] Show details for access violation
  1 file changed, 13 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index ae08ccb..07564d4 100644
+index ae08ccb9b0..07564d46ec 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
 @@ -870,7 +870,10 @@ jit_install_command (char *args, int from_tty)
@@ -40,5 +40,5 @@ index ae08ccb..07564d4 100644
  #ifdef __CYGWIN__
        {
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

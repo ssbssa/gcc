@@ -1,4 +1,4 @@
-From 8c8553b52c737886eabc684736096799257040b3 Mon Sep 17 00:00:00 2001
+From 031aaf07339bd7560f56c1c44ad592b5abc68cb6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:15:24 +0100
 Subject: [PATCH 05/23] Use thiscall calling convention for class members
@@ -9,7 +9,7 @@ Subject: [PATCH 05/23] Use thiscall calling convention for class members
  2 files changed, 30 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/eval.c b/gdb/eval.c
-index 2a39774..13e87b7 100644
+index 2a39774cfd..13e87b7e59 100644
 --- a/gdb/eval.c
 +++ b/gdb/eval.c
 @@ -1643,6 +1643,8 @@ evaluate_subexp_standard (struct type *expect_type,
@@ -22,7 +22,7 @@ index 2a39774..13e87b7 100644
        else if (op == STRUCTOP_MEMBER || op == STRUCTOP_MPTR)
  	{
 diff --git a/gdb/i386-tdep.c b/gdb/i386-tdep.c
-index fe68486..4b2f465 100644
+index fe68486990..4b2f465632 100644
 --- a/gdb/i386-tdep.c
 +++ b/gdb/i386-tdep.c
 @@ -47,6 +47,7 @@
@@ -83,5 +83,5 @@ index fe68486..4b2f465 100644
       (i386_frame_this_id, i386_sigtramp_frame_this_id,
       i386_dummy_id).  It's there, since all frame unwinders for
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

@@ -1,4 +1,4 @@
-From 675347a35ea3c5e494d3c743a743e281b07076fc Mon Sep 17 00:00:00 2001
+From e645bd0dc092aa0f4899aa11cc2f24570ee2d45b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 4 Sep 2015 15:55:24 +0200
 Subject: [PATCH 18/23] Restore TUI behavior of "list" and "frame"
@@ -12,7 +12,7 @@ Subject: [PATCH 18/23] Restore TUI behavior of "list" and "frame"
  5 files changed, 38 insertions(+), 5 deletions(-)
 
 diff --git a/gdb/stack.c b/gdb/stack.c
-index 1bad88e..d426cb9 100644
+index 1bad88e324..d426cb9410 100644
 --- a/gdb/stack.c
 +++ b/gdb/stack.c
 @@ -2294,6 +2294,10 @@ find_relative_frame (struct frame_info *frame, int *level_offset_ptr)
@@ -71,7 +71,7 @@ index 1bad88e..d426cb9 100644
  
  static void
 diff --git a/gdb/thread.c b/gdb/thread.c
-index 88fd521..000c4ca 100644
+index 88fd521a58..000c4ca180 100644
 --- a/gdb/thread.c
 +++ b/gdb/thread.c
 @@ -1908,6 +1908,10 @@ thread_apply_command (char *tidlist, int from_tty)
@@ -97,7 +97,7 @@ index 88fd521..000c4ca 100644
  }
  
 diff --git a/gdb/tui/tui-hooks.c b/gdb/tui/tui-hooks.c
-index 315f5b2..3a8ec6f 100644
+index 315f5b27dc..3a8ec6fd31 100644
 --- a/gdb/tui/tui-hooks.c
 +++ b/gdb/tui/tui-hooks.c
 @@ -185,6 +185,8 @@ tui_inferior_exit (struct inferior *inf)
@@ -124,7 +124,7 @@ index 315f5b2..3a8ec6f 100644
  
  /* Observer for the normal_stop notification.  */
 diff --git a/gdb/tui/tui-stack.c b/gdb/tui/tui-stack.c
-index a7a865e..4f88fc5 100644
+index a7a865eb0f..4f88fc5378 100644
 --- a/gdb/tui/tui-stack.c
 +++ b/gdb/tui/tui-stack.c
 @@ -44,9 +44,6 @@
@@ -147,7 +147,7 @@ index a7a865e..4f88fc5 100644
  {
    struct tui_gen_win_info *locator = tui_locator_win_info_ptr ();
 diff --git a/gdb/tui/tui-stack.h b/gdb/tui/tui-stack.h
-index 5f43634..a5ff4ee 100644
+index 5f43634e56..a5ff4ee643 100644
 --- a/gdb/tui/tui-stack.h
 +++ b/gdb/tui/tui-stack.h
 @@ -24,6 +24,7 @@
@@ -159,5 +159,5 @@ index 5f43634..a5ff4ee 100644
  extern void tui_show_locator_content (void);
  extern int tui_show_frame_info (struct frame_info *);
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

@@ -1,4 +1,4 @@
-From d9dbbd87b7511c3a0d581a40984d4450a9506f89 Mon Sep 17 00:00:00 2001
+From ee371de8c1cf8c05461725af89e0a15f693798c8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 9 Jan 2015 17:13:27 +0100
 Subject: [PATCH 14/23] Don't highlight wrong execution point
@@ -11,7 +11,7 @@ Subject: [PATCH 14/23] Don't highlight wrong execution point
  4 files changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/tui/tui-data.c b/gdb/tui/tui-data.c
-index 749a62e..3aa7194 100644
+index 749a62e304..3aa7194a69 100644
 --- a/gdb/tui/tui-data.c
 +++ b/gdb/tui/tui-data.c
 @@ -505,6 +505,7 @@ init_content_element (struct tui_win_element *element,
@@ -23,7 +23,7 @@ index 749a62e..3aa7194 100644
        break;
      case EXEC_INFO_WIN:
 diff --git a/gdb/tui/tui-data.h b/gdb/tui/tui-data.h
-index 2a4f55b..82633d0 100644
+index 2a4f55be79..82633d0062 100644
 --- a/gdb/tui/tui-data.h
 +++ b/gdb/tui/tui-data.h
 @@ -196,6 +196,7 @@ struct tui_locator_element
@@ -35,10 +35,10 @@ index 2a4f55b..82633d0 100644
    /* Architecture associated with code at this location.  */
    struct gdbarch *gdbarch;
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index e1d16e5..444f85c 100644
+index 3f331a6147..7282b0758e 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
-@@ -680,7 +680,7 @@ tui_set_source_content (struct symtab *s,
+@@ -721,7 +721,7 @@ tui_set_source_content (struct symtab *s,
  			cur_line_no;
  		      element->which_element.source.is_exec_point =
  			(filename_cmp (locator->content[0]
@@ -48,7 +48,7 @@ index e1d16e5..444f85c 100644
  				         && cur_line_no
  					      == locator->content[0]
 diff --git a/gdb/tui/tui-stack.c b/gdb/tui/tui-stack.c
-index 21a8bac..a7a865e 100644
+index 21a8baceba..a7a865eb0f 100644
 --- a/gdb/tui/tui-stack.c
 +++ b/gdb/tui/tui-stack.c
 @@ -332,6 +332,8 @@ tui_set_locator_info (struct gdbarch *gdbarch,
@@ -61,5 +61,5 @@ index 21a8bac..a7a865e 100644
    element->gdbarch = gdbarch;
    tui_set_locator_fullname (fullname);
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

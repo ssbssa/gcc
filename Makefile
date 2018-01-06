@@ -1,5 +1,5 @@
 
-MYPKG=ssbssa-1
+MYPKG=ssbssa-2
 BUILD_BITS=32
 
 SOURCE_DIR=src
@@ -25,7 +25,7 @@ else
 endif
 
 
-BINUTILS_VER=2.28.1
+BINUTILS_VER=2.29.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -37,7 +37,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=5.0.2
+MINGW_W64_VER=5.0.3
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -67,7 +67,7 @@ GMP_VER=6.1.2
 GMP_SRC_DIR=gmp-$(GMP_VER)
 GMP_FILE=$(GMP_SRC_DIR).tar.xz
 
-MPFR_VER=3.1.5
+MPFR_VER=3.1.6
 MPFR_SRC_DIR=mpfr-$(MPFR_VER)
 MPFR_FILE=$(MPFR_SRC_DIR).tar.xz
 
@@ -79,7 +79,7 @@ ISL_VER=0.16.1
 ISL_SRC_DIR=isl-$(ISL_VER)
 ISL_FILE=$(ISL_SRC_DIR).tar.bz2
 
-EXPAT_VER=2.2.3
+EXPAT_VER=2.2.5
 EXPAT_SRC_DIR=expat-$(EXPAT_VER)
 EXPAT_FILE=$(EXPAT_SRC_DIR).tar.bz2
 EXPAT_CONF=$(SOURCE_DIR_ABS)/$(EXPAT_SRC_DIR)/configure \
@@ -104,7 +104,7 @@ PYTHON_VER=2.7.13
 PYTHON_FILE=python-$(PYTHON_VER)-w$(BUILD_BITS).tar.xz
 PYTHON_DIR=Python27
 
-GDB_VER=8.0
+GDB_VER=8.0.1
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -244,7 +244,11 @@ $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-add-strndup-wcsndup.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done
+$(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0012-fix-wscanf.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -316,7 +320,11 @@ $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done: | $(SOURCE_DIR)/gcc-02-patch-07-dia
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/weak-ref.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
+$(SOURCE_DIR)/gcc-02-patch-09-lto-former-clone.done: | $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/lto-former-clone.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-lto-former-clone.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -388,7 +396,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
   $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done \
   $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
   $(SOURCE_DIR)/gcc-02-patch-03-lfs.done \
@@ -397,6 +405,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
   $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
   $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-lto-former-clone.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -609,7 +618,11 @@ $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done: | $(SOURCE_DIR)/gdb-02-patch-22
 	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0023-Fix-hypot-has-not-been-declared-with-python.patch
 	@touch $@
 
-$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done
+$(SOURCE_DIR)/gdb-02-patch-24-scrolling-tui.done: | $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done
+	patch -d $(SOURCE_DIR)/$(GDB_SRC_DIR) -p1 <patches/gdb/0024-Fix-scrolling-in-TUI.patch
+	@touch $@
+
+$(BUILD_DIR)/gdb-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-24-scrolling-tui.done
 	@mkdir -p $(BUILD_DIR)/gdb
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb && $(GDB_CONF) --prefix=$(GDB_DIR)
 	@touch $@
@@ -625,7 +638,7 @@ $(BUILD_DIR)/gdb-05-make-install.done: | $(BUILD_DIR)/gdb-04-make.done
 
 # gdb-python
 
-$(BUILD_DIR)/gdb-python-01-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done $(GDB_LIBS)/$(PYTHON_DIR)
+$(BUILD_DIR)/gdb-python-01-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-09-lto-plugin.done $(BUILD_DIR)/expat-05-make-install.done $(BUILD_DIR)/pdcurses-04-make-install.done $(BUILD_DIR)/iconv-05-make-install.done $(SOURCE_DIR)/gdb-02-patch-24-scrolling-tui.done $(GDB_LIBS)/$(PYTHON_DIR)
 	@mkdir -p $(BUILD_DIR)/gdb-python
 	$(GCC_PATH) cd $(BUILD_DIR)/gdb-python && $(GDB_CONF) --prefix=$(GDB_DIR)-python --with-python=$(GDB_LIBS)/$(PYTHON_DIR)/python
 	@touch $@
@@ -660,10 +673,10 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-lto-former-clone.done \
   $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
-  $(SOURCE_DIR)/gdb-02-patch-23-python-hypot.done \
+  $(SOURCE_DIR)/gdb-02-patch-24-scrolling-tui.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

@@ -1,4 +1,4 @@
-From cac6ab03fc51500da355a1d7730ab4861a256ae7 Mon Sep 17 00:00:00 2001
+From 9971c75e947252297c9f97d1450238f693fc94bd Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 5 Nov 2014 19:58:33 +0100
 Subject: [PATCH 06/23] Use %USERPROFILE% as alternative to %HOME%
@@ -10,7 +10,7 @@ Subject: [PATCH 06/23] Use %USERPROFILE% as alternative to %HOME%
  3 files changed, 13 insertions(+)
 
 diff --git a/gdb/main.c b/gdb/main.c
-index df4b111..7570ba6 100644
+index df4b1110d6..7570ba65e5 100644
 --- a/gdb/main.c
 +++ b/gdb/main.c
 @@ -246,6 +246,10 @@ get_init_files (const char **system_gdbinit,
@@ -25,7 +25,7 @@ index df4b111..7570ba6 100644
        /* If the .gdbinit file in the current directory is the same as
  	 the $HOME/.gdbinit file, it should not be sourced.  homebuf
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index a6680f4..ae08ccb 100644
+index a6680f4c7a..ae08ccb9b0 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
 @@ -3193,6 +3193,10 @@ _initialize_check_for_gdb_ini (void)
@@ -40,7 +40,7 @@ index a6680f4..ae08ccb 100644
      {
        char *p;
 diff --git a/readline/tilde.c b/readline/tilde.c
-index d4c1da9..344c16f 100644
+index d4c1da9e68..344c16f107 100644
 --- a/readline/tilde.c
 +++ b/readline/tilde.c
 @@ -370,6 +370,11 @@ tilde_expand_word (filename)
@@ -56,5 +56,5 @@ index d4c1da9..344c16f 100644
      }
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

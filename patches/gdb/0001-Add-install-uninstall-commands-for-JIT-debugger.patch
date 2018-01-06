@@ -1,4 +1,4 @@
-From 2aa03d413b477d5bc78cf6a78b6517571a8e6eb0 Mon Sep 17 00:00:00 2001
+From 3ac2584c7aa5ed39ddbcfefac1d0b1ecf2384790 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:43:44 +0100
 Subject: [PATCH 01/23] Add install/uninstall commands for JIT debugger
@@ -8,7 +8,7 @@ Subject: [PATCH 01/23] Add install/uninstall commands for JIT debugger
  1 file changed, 64 insertions(+)
 
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 805fb43..a6680f4 100644
+index 805fb4358d..a6680f4c7a 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
 @@ -854,6 +854,66 @@ signal_event_command (char *args, int from_tty)
@@ -90,5 +90,5 @@ index 805fb43..a6680f4 100644
  #ifdef __CYGWIN__
    add_setshow_boolean_cmd ("shell", class_support, &useshell, _("\
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

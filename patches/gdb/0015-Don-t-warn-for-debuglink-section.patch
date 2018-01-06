@@ -1,4 +1,4 @@
-From 1348ff2d1cf6ac51288d01e6048a022bc7837f3e Mon Sep 17 00:00:00 2001
+From aa14e0acb8e4ef44751d9fc18a8ef7df8afbaa9f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 14 Jan 2015 19:17:42 +0100
 Subject: [PATCH 15/23] Don't warn for debuglink section
@@ -8,7 +8,7 @@ Subject: [PATCH 15/23] Don't warn for debuglink section
  1 file changed, 1 insertion(+)
 
 diff --git a/gdb/symfile.c b/gdb/symfile.c
-index 846aabe..1093a46 100644
+index 846aabec48..1093a46155 100644
 --- a/gdb/symfile.c
 +++ b/gdb/symfile.c
 @@ -679,6 +679,7 @@ addr_info_make_relative (struct section_addr_info *addrs, bfd *abfd)
@@ -20,5 +20,5 @@ index 846aabe..1093a46 100644
  		    && i > 0
  		    && strcmp (addrs->other[i - 1].name, ".dynbss") == 0
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

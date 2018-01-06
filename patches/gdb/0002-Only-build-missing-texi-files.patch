@@ -1,4 +1,4 @@
-From 3bf260ec51de999db2ba4967fcd1e078ae573861 Mon Sep 17 00:00:00 2001
+From 9986b814be2e6b7d3132c5cb6c5ae3dd417cdb65 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 30 Aug 2015 15:52:48 +0200
 Subject: [PATCH 02/23] Only build missing texi files
@@ -9,7 +9,7 @@ Subject: [PATCH 02/23] Only build missing texi files
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/bfd/doc/Makefile.in b/bfd/doc/Makefile.in
-index 669f6b2..6ad20b5 100644
+index 669f6b2a24..6ad20b5736 100644
 --- a/bfd/doc/Makefile.in
 +++ b/bfd/doc/Makefile.in
 @@ -468,7 +468,7 @@ mostlyclean-libtool:
@@ -22,7 +22,7 @@ index 669f6b2..6ad20b5 100644
  	rm -rf $$backupdir && mkdir $$backupdir && \
  	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \
 diff --git a/gdb/doc/Makefile.in b/gdb/doc/Makefile.in
-index 5a58fa7..6b3106c 100644
+index 5a58fa7e45..6b3106c7d7 100644
 --- a/gdb/doc/Makefile.in
 +++ b/gdb/doc/Makefile.in
 @@ -148,7 +148,7 @@ STABS_DOC_BUILD_INCLUDES = \
@@ -53,5 +53,5 @@ index 5a58fa7..6b3106c 100644
  		-o gdb.info $(srcdir)/gdb.texinfo
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

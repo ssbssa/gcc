@@ -1,4 +1,4 @@
-From e87036e354ebdaddcb95428a5ab4d4f34727601a Mon Sep 17 00:00:00 2001
+From 4ea4b8a4bf4c5bc5d9bf6118595c4e5dcbd05a93 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 14 May 2017 16:12:38 +0200
 Subject: [PATCH 22/23] Fix memory leaks
@@ -11,7 +11,7 @@ Subject: [PATCH 22/23] Fix memory leaks
  4 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/gdb/coffread.c b/gdb/coffread.c
-index 9db4792..866735f 100644
+index 9db4792557..866735fb45 100644
 --- a/gdb/coffread.c
 +++ b/gdb/coffread.c
 @@ -386,10 +386,8 @@ static void
@@ -28,7 +28,7 @@ index 9db4792..866735f 100644
  		 NULL,
    /* The start address is irrelevant, since we set
 diff --git a/gdb/cp-support.c b/gdb/cp-support.c
-index 5704466..81c6e3f 100644
+index 5704466c92..81c6e3fc43 100644
 --- a/gdb/cp-support.c
 +++ b/gdb/cp-support.c
 @@ -527,7 +527,10 @@ cp_canonicalize_string_full (const char *string,
@@ -57,7 +57,7 @@ index 5704466..81c6e3f 100644
    if (ret.empty ())
      {
 diff --git a/gdb/tui/tui-io.c b/gdb/tui/tui-io.c
-index e25c084..c553bde 100644
+index e25c084ea2..c553bded55 100644
 --- a/gdb/tui/tui-io.c
 +++ b/gdb/tui/tui-io.c
 @@ -492,6 +492,7 @@ tui_setup_io (int mode)
@@ -69,7 +69,7 @@ index e25c084..c553bde 100644
        rl_completion_display_matches_hook = tui_rl_display_match_list;
        rl_already_prompted = 0;
 diff --git a/readline/shell.c b/readline/shell.c
-index ac0fb36..c0d8dec 100644
+index ac0fb3604b..c0d8dec97a 100644
 --- a/readline/shell.c
 +++ b/readline/shell.c
 @@ -141,10 +141,16 @@ sh_set_lines_and_columns (lines, cols)
@@ -90,5 +90,5 @@ index ac0fb36..c0d8dec 100644
  #endif /* !HAVE_SETENV */
  }
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

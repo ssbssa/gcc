@@ -1,4 +1,4 @@
-From 44d1e737beebc2569546da736b1701bd0f1172c9 Mon Sep 17 00:00:00 2001
+From 4103ae16f9ff106fb207c0bedeb5519a8160b985 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 11 Mar 2014 19:50:44 +0100
 Subject: [PATCH 10/23] Fix resize crashes
@@ -8,7 +8,7 @@ Subject: [PATCH 10/23] Fix resize crashes
  1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
-index f49d7d5..2bdad11 100644
+index f49d7d5b87..2bdad115b7 100644
 --- a/gdb/tui/tui-win.c
 +++ b/gdb/tui/tui-win.c
 @@ -783,12 +783,7 @@ tui_resize_all (void)
@@ -34,5 +34,5 @@ index f49d7d5..2bdad11 100644
  					     TUI_CMD_WIN->generic.height
  					     + cmd_split_diff);
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

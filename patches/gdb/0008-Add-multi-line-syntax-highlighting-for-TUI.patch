@@ -1,4 +1,4 @@
-From 12ec4421542156978c3f9a6be18b895240718e6d Mon Sep 17 00:00:00 2001
+From 1d1ee121527ad0a9ef6369b6f481ba033dbbc442 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 19:47:12 +0100
 Subject: [PATCH 08/23] Add multi-line syntax highlighting for TUI
@@ -9,7 +9,7 @@ Subject: [PATCH 08/23] Add multi-line syntax highlighting for TUI
  2 files changed, 153 insertions(+), 7 deletions(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index 8926e54..f48546f 100644
+index 8926e5477e..f48546f15a 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
 @@ -1208,6 +1208,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
@@ -144,10 +144,10 @@ index 8926e54..f48546f 100644
  
  
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index f1cc8ca..e1d16e5 100644
+index 3bd8f7358b..3f331a6147 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
-@@ -338,15 +338,51 @@ enum
+@@ -379,15 +379,51 @@ enum
    COL_COMMENT,
  };
  
@@ -200,7 +200,7 @@ index f1cc8ca..e1d16e5 100644
    while (src_line[0])
      {
        char c = src_line[0];
-@@ -718,9 +754,12 @@ tui_set_source_content (struct symtab *s,
+@@ -759,9 +795,12 @@ tui_set_source_content (struct symtab *s,
  #ifdef TUI_SYNTAX_HIGHLIGHT
  			  if (tui_can_syntax_highlight)
  			    {
@@ -217,5 +217,5 @@ index f1cc8ca..e1d16e5 100644
  			      src_line[threshold-SYNTAX_HIGHLIGHT_EXTRA] = 0;
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

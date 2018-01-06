@@ -1,4 +1,4 @@
-From 7cd88aa8f8433ee6a7b72d1f6a9beb0694690496 Mon Sep 17 00:00:00 2001
+From b64c221fcf0cb04e9688ce19649b382bd09d521b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 20:11:21 +0100
 Subject: [PATCH 04/23] Clear symbols if executable can't be attached
@@ -8,7 +8,7 @@ Subject: [PATCH 04/23] Clear symbols if executable can't be attached
  1 file changed, 16 insertions(+), 2 deletions(-)
 
 diff --git a/gdb/exec.c b/gdb/exec.c
-index 2c9a74b..ddffa76 100644
+index 2c9a74bcaa..ddffa768d8 100644
 --- a/gdb/exec.c
 +++ b/gdb/exec.c
 @@ -232,6 +232,12 @@ exec_file_locate_attach (int pid, int defer_bp_reset, int from_tty)
@@ -65,5 +65,5 @@ index 2c9a74b..ddffa76 100644
  
    do_cleanups (cleanups);
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

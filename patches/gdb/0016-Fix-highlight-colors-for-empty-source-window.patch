@@ -1,4 +1,4 @@
-From 9f200f27825a8a0dbc4d6c1170896f6671598b99 Mon Sep 17 00:00:00 2001
+From 039d1ef122ba029e2870060855e44856008f169c Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Thu, 12 Feb 2015 17:45:48 +0100
 Subject: [PATCH 16/23] Fix highlight colors for empty source window
@@ -8,10 +8,10 @@ Subject: [PATCH 16/23] Fix highlight colors for empty source window
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index 444f85c..1fad343 100644
+index 7282b0758e..76281bfb74 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
-@@ -858,8 +858,13 @@ tui_set_source_content_nil (struct tui_win_info *win_info,
+@@ -899,8 +899,13 @@ tui_set_source_content_nil (struct tui_win_info *win_info,
  	  for (i = xpos + warning_length; i < line_width; i++)
  	    src_line[i] = ' ';
  
@@ -27,5 +27,5 @@ index 444f85c..1fad343 100644
  
        curr_line++;
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

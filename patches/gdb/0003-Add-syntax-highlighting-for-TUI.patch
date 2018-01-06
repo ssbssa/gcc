@@ -1,17 +1,17 @@
-From 56f44a2889e19727bbd599001937ff505b7bfedf Mon Sep 17 00:00:00 2001
+From 8b56ef0e7c0f17a1c9109e01d12eb7e7fb1588e3 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:57:39 +0100
 Subject: [PATCH 03/23] Add syntax highlighting for TUI
 
 ---
  gdb/Makefile.in         |   2 +-
- gdb/tui/tui-source.c    | 540 ++++++++++++++++++++++++++++++++++++++++++++++--
- gdb/tui/tui-winsource.c |  61 +++++-
+ gdb/tui/tui-source.c    | 581 ++++++++++++++++++++++++++++++++++++++++++++++--
+ gdb/tui/tui-winsource.c |  61 ++++-
  gdb/tui/tui.c           |  28 +++
- 4 files changed, 614 insertions(+), 17 deletions(-)
+ 4 files changed, 655 insertions(+), 17 deletions(-)
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 1d2dbaf..9550655 100644
+index 1d2dbaf3f7..9550655e30 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -344,7 +344,7 @@ SUBDIR_TUI_SRCS = \
@@ -24,7 +24,7 @@ index 1d2dbaf..9550655 100644
  #
  # GCC Compile support sub-directory definitions
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index c037648..f1cc8ca 100644
+index c037648800..3bd8f7358b 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
 @@ -28,6 +28,7 @@
@@ -35,7 +35,7 @@ index c037648..f1cc8ca 100644
  
  #include "tui/tui.h"
  #include "tui/tui-data.h"
-@@ -36,6 +37,472 @@
+@@ -36,6 +37,513 @@
  #include "tui/tui-source.h"
  #include "gdb_curses.h"
  
@@ -106,18 +106,28 @@ index c037648..f1cc8ca 100644
 +    NULL
 +};
 +static const char *syntax_type_cpp_7[] = {
++    "alignas",
 +    "mutable",
 +    "virtual",
++    "wchar_t",
 +    NULL
 +};
 +static const char *syntax_type_cpp_8[] = {
++    "char16_t",
++    "char32_t",
++    "decltype",
 +    "explicit",
 +    "template",
 +    "typename",
 +    NULL
 +};
 +static const char *syntax_type_cpp_9[] = {
++    "constexpr",
 +    "namespace",
++    NULL
++};
++static const char *syntax_type_cpp_12[] = {
++    "thread_local",
 +    NULL
 +};
 +static const char **syntax_type_cpp[] = {
@@ -130,6 +140,9 @@ index c037648..f1cc8ca 100644
 +    syntax_type_cpp_7,
 +    syntax_type_cpp_8,
 +    syntax_type_cpp_9,
++    NULL,
++    NULL,
++    syntax_type_cpp_12,
 +};
 +
 +static const char *syntax_keyword_c_2[] = {
@@ -178,9 +191,16 @@ index c037648..f1cc8ca 100644
 +    syntax_keyword_c_8,
 +};
 +
++static const char *syntax_keyword_cpp_2[] = {
++    "or",
++    NULL
++};
 +static const char *syntax_keyword_cpp_3[] = {
++    "and",
 +    "new",
++    "not",
 +    "try",
++    "xor",
 +    NULL
 +};
 +static const char *syntax_keyword_cpp_4[] = {
@@ -188,23 +208,32 @@ index c037648..f1cc8ca 100644
 +    NULL
 +};
 +static const char *syntax_keyword_cpp_5[] = {
++    "bitor",
 +    "catch",
++    "compl",
++    "or_eq",
 +    "throw",
 +    "using",
 +    NULL
 +};
 +static const char *syntax_keyword_cpp_6[] = {
++    "and_eq",
++    "bitand",
 +    "delete",
 +    "friend",
++    "not_eq",
 +    "public",
 +    "typeid",
++    "xor_eq",
 +    NULL
 +};
 +static const char *syntax_keyword_cpp_7[] = {
++    "alignof",
 +    "private",
 +    NULL
 +};
 +static const char *syntax_keyword_cpp_8[] = {
++    "noexcept",
 +    "operator",
 +    NULL
 +};
@@ -224,13 +253,17 @@ index c037648..f1cc8ca 100644
 +    "dynamic_cast",
 +    NULL
 +};
++static const char *syntax_keyword_cpp_13[] = {
++    "static_assert",
++    NULL
++};
 +static const char *syntax_keyword_cpp_16[] = {
 +    "reinterpret_cast",
 +    NULL
 +};
 +static const char **syntax_keyword_cpp[] = {
 +    NULL,
-+    NULL,
++    syntax_keyword_cpp_2,
 +    syntax_keyword_cpp_3,
 +    syntax_keyword_cpp_4,
 +    syntax_keyword_cpp_5,
@@ -241,7 +274,7 @@ index c037648..f1cc8ca 100644
 +    syntax_keyword_cpp_10,
 +    syntax_keyword_cpp_11,
 +    syntax_keyword_cpp_12,
-+    NULL,
++    syntax_keyword_cpp_13,
 +    NULL,
 +    NULL,
 +    syntax_keyword_cpp_16,
@@ -252,7 +285,9 @@ index c037648..f1cc8ca 100644
 +    NULL
 +};
 +static const char *syntax_preproc_4[] = {
++    "elif",
 +    "else",
++    "line",
 +    "warn",
 +    NULL
 +};
@@ -292,12 +327,18 @@ index c037648..f1cc8ca 100644
 +    "false",
 +    NULL
 +};
++static const char *syntax_literal_7[] = {
++    "nullptr",
++    NULL
++};
 +static const char **syntax_literal[] = {
 +    NULL,
 +    NULL,
 +    NULL,
 +    syntax_literal_4,
 +    syntax_literal_5,
++    NULL,
++    syntax_literal_7,
 +};
 +
 +#define SYNTAX_HIGHLIGHT_EXTRA 16
@@ -410,7 +451,7 @@ index c037648..f1cc8ca 100644
 +		break;
 +	      if (lang==language_cplus &&
 +		  tui_keyword_highlight (word_start, col_start, word_len,
-+					 COL_TYPE, syntax_type_cpp, 9))
++					 COL_TYPE, syntax_type_cpp, 12))
 +		break;
 +
 +	      if (tui_keyword_highlight (word_start, col_start, word_len,
@@ -422,7 +463,7 @@ index c037648..f1cc8ca 100644
 +		break;
 +
 +	      if (tui_keyword_highlight (word_start, col_start, word_len,
-+					 COL_LITERAL, syntax_literal, 5))
++					 COL_LITERAL, syntax_literal, 7))
 +		break;
 +	    }
 +	  while (0);
@@ -508,7 +549,7 @@ index c037648..f1cc8ca 100644
  /* Function to display source in the source window.  */
  enum tui_status
  tui_set_source_content (struct symtab *s, 
-@@ -49,6 +516,9 @@ tui_set_source_content (struct symtab *s,
+@@ -49,6 +557,9 @@ tui_set_source_content (struct symtab *s,
        FILE *stream;
        int i, desc, c, line_width, nlines;
        char *src_line = 0;
@@ -518,7 +559,7 @@ index c037648..f1cc8ca 100644
  
        if ((ret = tui_alloc_source_buffer (TUI_SRC_WIN)) == TUI_SUCCESS)
  	{
-@@ -96,6 +566,9 @@ tui_set_source_content (struct symtab *s,
+@@ -96,6 +607,9 @@ tui_set_source_content (struct symtab *s,
                    struct tui_source_info *src
  		    = &TUI_SRC_WIN->detail.source_info;
  		  const char *s_filename = symtab_to_filename_for_display (s);
@@ -528,7 +569,7 @@ index c037648..f1cc8ca 100644
  
                    if (TUI_SRC_WIN->generic.title)
                      xfree (TUI_SRC_WIN->generic.title);
-@@ -104,19 +577,39 @@ tui_set_source_content (struct symtab *s,
+@@ -104,19 +618,39 @@ tui_set_source_content (struct symtab *s,
  		  xfree (src->fullname);
  		  src->fullname = xstrdup (symtab_to_fullname (s));
  
@@ -571,7 +612,7 @@ index c037648..f1cc8ca 100644
  		  while (cur_line < nlines)
  		    {
  		      struct tui_win_element *element
-@@ -125,9 +618,11 @@ tui_set_source_content (struct symtab *s,
+@@ -125,9 +659,11 @@ tui_set_source_content (struct symtab *s,
  		      /* Get the first character in the line.  */
  		      c = fgetc (stream);
  
@@ -586,7 +627,7 @@ index c037648..f1cc8ca 100644
  		      /* Init the line with the line number.  */
  		      sprintf (src_line, "%-6d", cur_line_no);
  		      cur_len = strlen (src_line);
-@@ -218,20 +713,37 @@ tui_set_source_content (struct symtab *s,
+@@ -218,20 +754,37 @@ tui_set_source_content (struct symtab *s,
  			}
  		      /* Now copy the line taking the offset into
  			 account.  */
@@ -633,7 +674,7 @@ index c037648..f1cc8ca 100644
  		  TUI_SRC_WIN->generic.content_size = nlines;
  		  ret = TUI_SUCCESS;
 diff --git a/gdb/tui/tui-winsource.c b/gdb/tui/tui-winsource.c
-index 3ae9c71..36b6029 100644
+index 3ae9c71229..36b6029aa4 100644
 --- a/gdb/tui/tui-winsource.c
 +++ b/gdb/tui/tui-winsource.c
 @@ -268,19 +268,72 @@ tui_erase_source_content (struct tui_win_info *win_info,
@@ -723,7 +764,7 @@ index 3ae9c71..36b6029 100644
    /*
     * Allocate the buffer for the source lines.  Do this only once
 diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
-index c918f3e..926b4a4 100644
+index c918f3e236..926b4a4d9a 100644
 --- a/gdb/tui/tui.c
 +++ b/gdb/tui/tui.c
 @@ -59,6 +59,10 @@
@@ -769,5 +810,5 @@ index c918f3e..926b4a4 100644
    else
      {
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

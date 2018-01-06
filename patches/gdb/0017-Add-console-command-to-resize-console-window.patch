@@ -1,4 +1,4 @@
-From 2e903a9d87ec4fe3f662ba4a7c545952e7902a69 Mon Sep 17 00:00:00 2001
+From 31dfd6df8006cf6213641df790ef98a281f7ce1d Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 2 Sep 2015 20:50:28 +0200
 Subject: [PATCH 17/23] Add console command to resize console window
@@ -11,7 +11,7 @@ Subject: [PATCH 17/23] Add console command to resize console window
  4 files changed, 126 insertions(+), 2 deletions(-)
 
 diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
-index 2bdad11..92a4bfc 100644
+index 2bdad115b7..92a4bfc69d 100644
 --- a/gdb/tui/tui-win.c
 +++ b/gdb/tui/tui-win.c
 @@ -917,9 +917,10 @@ tui_sigwinch_handler (int signal)
@@ -35,7 +35,7 @@ index 2bdad11..92a4bfc 100644
  /* Initialize TUI's SIGWINCH signal handler.  Note that the handler is not
     uninstalled when we exit TUI, so the handler should not assume that TUI is
 diff --git a/gdb/tui/tui-win.h b/gdb/tui/tui-win.h
-index 8505795..887bf7a 100644
+index 85057955bd..887bf7a7a8 100644
 --- a/gdb/tui/tui-win.h
 +++ b/gdb/tui/tui-win.h
 @@ -48,6 +48,7 @@ extern int tui_active_border_attrs;
@@ -47,7 +47,7 @@ index 8505795..887bf7a 100644
  
  /* Update gdb's knowledge of the terminal size.  */
 diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
-index 5277cac..48af373 100644
+index 5277cac83a..48af373e94 100644
 --- a/gdb/tui/tui.c
 +++ b/gdb/tui/tui.c
 @@ -634,6 +634,19 @@ tui_disable (void)
@@ -71,7 +71,7 @@ index 5277cac..48af373 100644
  
  /* Command wrapper for enabling tui mode.  */
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 07564d4..3b17977 100644
+index 07564d46ec..3b17977a91 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
 @@ -67,6 +67,11 @@
@@ -86,10 +86,11 @@ index 07564d4..3b17977 100644
  #define AdjustTokenPrivileges		dyn_AdjustTokenPrivileges
  #define DebugActiveProcessStop		dyn_DebugActiveProcessStop
  #define DebugBreakProcess		dyn_DebugBreakProcess
-@@ -895,6 +900,107 @@ jit_install_command (char *args, int from_tty)
+@@ -894,6 +899,107 @@ jit_install_command (char *args, int from_tty)
+     error (_("Error setting 'Debugger' registry value."));
  }
  
- static void
++static void
 +console_resize (int *wp, int *hp, int bh)
 +{
 +  HANDLE hStdout;
@@ -190,10 +191,9 @@ index 07564d4..3b17977 100644
 +  do_cleanups (cleanups);
 +}
 +
-+static void
+ static void
  jit_uninstall_command (char *args, int from_tty)
  {
-   HKEY hKey;
 @@ -3058,6 +3164,10 @@ crashed process will be supplied by the Windows JIT debugging mechanism."));
    add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
  	       _("Uninstall JIT debugger."));
@@ -206,5 +206,5 @@ index 07564d4..3b17977 100644
    add_setshow_boolean_cmd ("shell", class_support, &useshell, _("\
  Set use of shell to start subprocess."), _("\
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

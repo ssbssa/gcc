@@ -1,4 +1,4 @@
-From c8ebce304f367142e2db17946a11b0811d401701 Mon Sep 17 00:00:00 2001
+From 06592a746be7fb19ee35ac757d78dda0aeeea305 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Thu, 1 Jan 2015 15:18:08 +0100
 Subject: [PATCH 12/23] Use ctrl-left/right to move to previous/next word
@@ -8,7 +8,7 @@ Subject: [PATCH 12/23] Use ctrl-left/right to move to previous/next word
  1 file changed, 3 insertions(+)
 
 diff --git a/readline/readline.c b/readline/readline.c
-index 071e1aa..d01cee7 100644
+index 071e1aa082..d01cee7f43 100644
 --- a/readline/readline.c
 +++ b/readline/readline.c
 @@ -1163,6 +1163,9 @@ bind_arrow_keys_internal (map)
@@ -22,5 +22,5 @@ index 071e1aa..d01cee7 100644
  
    _rl_keymap = xkeymap;
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

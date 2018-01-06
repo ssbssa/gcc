@@ -1,4 +1,4 @@
-From 745c87be7fc395225d4a7e0cdac2c551653f40da Mon Sep 17 00:00:00 2001
+From 99aecc5c60262eb698e7c0870cf1ee4dd7d18664 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 9 Mar 2016 17:38:34 +0200
 Subject: [PATCH 19/23] Use mouse wheel in TUI
@@ -11,7 +11,7 @@ Subject: [PATCH 19/23] Use mouse wheel in TUI
  4 files changed, 18 insertions(+)
 
 diff --git a/gdb/ser-mingw.c b/gdb/ser-mingw.c
-index 3f12458..118d700 100644
+index 3f124582a8..118d700a65 100644
 --- a/gdb/ser-mingw.c
 +++ b/gdb/ser-mingw.c
 @@ -603,6 +603,12 @@ console_select_thread (void *arg)
@@ -28,7 +28,7 @@ index 3f12458..118d700 100644
  	  /* Otherwise discard it and wait again.  */
  	  ReadConsoleInput (h, &record, 1, &n_records);
 diff --git a/gdb/tui/tui-command.c b/gdb/tui/tui-command.c
-index 7d77b7e..7f5347f 100644
+index 7d77b7e5c6..7f5347f1fd 100644
 --- a/gdb/tui/tui-command.c
 +++ b/gdb/tui/tui-command.c
 @@ -76,6 +76,13 @@ tui_dispatch_ctrl_char (unsigned int ch)
@@ -46,7 +46,7 @@ index 7d77b7e..7f5347f 100644
        break;
      default:
 diff --git a/gdb/tui/tui-io.c b/gdb/tui/tui-io.c
-index ba1ee9a..e25c084 100644
+index ba1ee9ad27..e25c084ea2 100644
 --- a/gdb/tui/tui-io.c
 +++ b/gdb/tui/tui-io.c
 @@ -332,6 +332,8 @@ tui_prep_terminal (int notused1)
@@ -67,7 +67,7 @@ index ba1ee9a..e25c084 100644
  
  #ifdef TUI_USE_PIPE_FOR_READLINE
 diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
-index 48af373..e3a9abc 100644
+index 48af373e94..e3a9abcdf9 100644
 --- a/gdb/tui/tui.c
 +++ b/gdb/tui/tui.c
 @@ -622,6 +622,8 @@ tui_disable (void)
@@ -80,5 +80,5 @@ index 48af373..e3a9abc 100644
    endwin ();
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

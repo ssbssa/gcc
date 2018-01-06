@@ -1,4 +1,4 @@
-From 0303123d80b79a06b66c39413597e7504a1b737c Mon Sep 17 00:00:00 2001
+From 5cd294f27c79f9f1475c7c80c896dcca7fc1d027 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 12 Jan 2015 17:51:13 +0100
 Subject: [PATCH 13/23] Display cursor when moving
@@ -8,7 +8,7 @@ Subject: [PATCH 13/23] Display cursor when moving
  1 file changed, 17 insertions(+)
 
 diff --git a/readline/display.c b/readline/display.c
-index 9044305..5a4695f 100644
+index 9044305797..5a4695f8fb 100644
 --- a/readline/display.c
 +++ b/readline/display.c
 @@ -45,6 +45,10 @@
@@ -43,5 +43,5 @@ index 9044305..5a4695f 100644
  
  /* PWP: update_line() is based on finding the middle difference of each
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 
