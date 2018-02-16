@@ -1,4 +1,4 @@
-From 39db5a4af407ca29ac34e2ecf6ba7c4636d8a94e Mon Sep 17 00:00:00 2001
+From 9326986eefc0b7831436cedc0ec20a54bf856038 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Thu, 19 May 2016 17:56:43 +0200
 Subject: [PATCH 20/23] Support thread names in gdbserver
@@ -9,10 +9,10 @@ Subject: [PATCH 20/23] Support thread names in gdbserver
  2 files changed, 114 insertions(+)
 
 diff --git a/gdb/gdbserver/win32-low.c b/gdb/gdbserver/win32-low.c
-index 7b09f4b410..afa4647d0a 100644
+index b1d9b51e53..019420d983 100644
 --- a/gdb/gdbserver/win32-low.c
 +++ b/gdb/gdbserver/win32-low.c
-@@ -236,6 +236,7 @@ delete_thread_info (struct inferior_list_entry *entry)
+@@ -234,6 +234,7 @@ delete_thread_info (thread_info *thread)
  
    remove_thread (thread);
    CloseHandle (th->h);
@@ -20,7 +20,7 @@ index 7b09f4b410..afa4647d0a 100644
    free (th);
  }
  
-@@ -340,6 +341,62 @@ child_xfer_memory (CORE_ADDR memaddr, char *our, int len,
+@@ -334,6 +335,62 @@ child_xfer_memory (CORE_ADDR memaddr, char *our, int len,
      return success ? done : -1;
  }
  
@@ -83,7 +83,7 @@ index 7b09f4b410..afa4647d0a 100644
  /* Clear out any old thread list and reinitialize it to a pristine
     state. */
  static void
-@@ -1232,6 +1289,17 @@ handle_unload_dll (void)
+@@ -1223,6 +1280,17 @@ handle_unload_dll (void)
    unloaded_dll (NULL, load_addr);
  }
  
@@ -101,7 +101,7 @@ index 7b09f4b410..afa4647d0a 100644
  static void
  handle_exception (struct target_waitstatus *ourstatus)
  {
-@@ -1322,6 +1390,41 @@ handle_exception (struct target_waitstatus *ourstatus)
+@@ -1313,6 +1381,41 @@ handle_exception (struct target_waitstatus *ourstatus)
        OUTMSG2 (("EXCEPTION_NONCONTINUABLE_EXCEPTION"));
        ourstatus->value.sig = GDB_SIGNAL_ILL;
        break;
@@ -143,7 +143,7 @@ index 7b09f4b410..afa4647d0a 100644
      default:
        if (current_event.u.Exception.dwFirstChance)
  	{
-@@ -1787,6 +1890,13 @@ win32_sw_breakpoint_from_kind (int kind, int *size)
+@@ -1776,6 +1879,13 @@ win32_sw_breakpoint_from_kind (int kind, int *size)
    return the_low_target.breakpoint;
  }
  
@@ -157,7 +157,7 @@ index 7b09f4b410..afa4647d0a 100644
  static struct target_ops win32_target_ops = {
    win32_create_inferior,
    NULL,  /* post_create_inferior */
-@@ -1865,6 +1975,7 @@ static struct target_ops win32_target_ops = {
+@@ -1854,6 +1964,7 @@ static struct target_ops win32_target_ops = {
    NULL, /* multifs_readlink */
    NULL, /* breakpoint_kind_from_pc */
    win32_sw_breakpoint_from_kind,
@@ -166,7 +166,7 @@ index 7b09f4b410..afa4647d0a 100644
  
  /* Initialize the Win32 backend.  */
 diff --git a/gdb/gdbserver/win32-low.h b/gdb/gdbserver/win32-low.h
-index 789f650cbc..f3cee92edc 100644
+index 564fca6ce5..1224a1d20a 100644
 --- a/gdb/gdbserver/win32-low.h
 +++ b/gdb/gdbserver/win32-low.h
 @@ -37,6 +37,9 @@ typedef struct win32_thread_info

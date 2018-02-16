@@ -1,0 +1,48 @@
+--- ld/scripttempl/pe.sc	2018-01-13 14:31:16.000000000 +0100
++++ ld/scripttempl/pe.sc	2018-01-31 18:28:49.993888300 +0100
+@@ -98,8 +98,8 @@
+     ${RELOCATING+*(.glue_7t)}
+     ${RELOCATING+*(.glue_7)}
+     ${CONSTRUCTING+
+-       PROVIDE(___CTOR_LIST__ = .);
+-       PROVIDE(__CTOR_LIST__ = .);
++       ___CTOR_LIST__ = .;
++       __CTOR_LIST__ = .;
+        LONG (-1);
+        KEEP(*(.ctors));
+        KEEP(*(.ctor));
+@@ -107,8 +107,8 @@
+        LONG (0);
+      }
+     ${CONSTRUCTING+
+-       PROVIDE(___DTOR_LIST__ = .);
+-       PROVIDE(__DTOR_LIST__ = .);
++       ___DTOR_LIST__ = .;
++       __DTOR_LIST__ = .;
+        LONG (-1);
+        KEEP(*(.dtors));
+        KEEP(*(.dtor));
+--- ld/scripttempl/pep.sc	2018-01-13 14:31:16.000000000 +0100
++++ ld/scripttempl/pep.sc	2018-01-31 18:29:01.448543500 +0100
+@@ -99,8 +99,8 @@
+     ${RELOCATING+*(.glue_7)}
+     ${CONSTRUCTING+. = ALIGN(8);}
+     ${CONSTRUCTING+
+-       PROVIDE(___CTOR_LIST__ = .);
+-       PROVIDE(__CTOR_LIST__ = .);
++       ___CTOR_LIST__ = .;
++       __CTOR_LIST__ = .;
+        LONG (-1); LONG (-1);
+        KEEP (*(.ctors));
+        KEEP (*(.ctor));
+@@ -108,8 +108,8 @@
+        LONG (0); LONG (0);
+      }
+     ${CONSTRUCTING+
+-       PROVIDE(___DTOR_LIST__ = .);
+-       PROVIDE(__DTOR_LIST__ = .);
++       ___DTOR_LIST__ = .;
++       __DTOR_LIST__ = .;
+        LONG (-1); LONG (-1);
+        KEEP (*(.dtors));
+        KEEP (*(.dtor));

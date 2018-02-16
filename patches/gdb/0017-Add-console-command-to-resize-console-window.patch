@@ -1,20 +1,20 @@
-From 31dfd6df8006cf6213641df790ef98a281f7ce1d Mon Sep 17 00:00:00 2001
+From 5d98979a46afbed15703009a803e75a1173a4b5e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 2 Sep 2015 20:50:28 +0200
 Subject: [PATCH 17/23] Add console command to resize console window
 
 ---
- gdb/tui/tui-win.c |   4 +-
+ gdb/tui/tui-win.c |   4 +--
  gdb/tui/tui-win.h |   1 +
  gdb/tui/tui.c     |  13 +++++++
- gdb/windows-nat.c | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 126 insertions(+), 2 deletions(-)
+ gdb/windows-nat.c | 104 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 120 insertions(+), 2 deletions(-)
 
 diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
-index 2bdad115b7..92a4bfc69d 100644
+index 9fb663d68e..98efe45d1c 100644
 --- a/gdb/tui/tui-win.c
 +++ b/gdb/tui/tui-win.c
-@@ -917,9 +917,10 @@ tui_sigwinch_handler (int signal)
+@@ -912,9 +912,10 @@ tui_sigwinch_handler (int signal)
    mark_async_signal_handler (tui_sigwinch_token);
    tui_set_win_resized_to (TRUE);
  }
@@ -26,7 +26,7 @@ index 2bdad115b7..92a4bfc69d 100644
  tui_async_resize_screen (gdb_client_data arg)
  {
    rl_resize_terminal ();
-@@ -943,7 +944,6 @@ tui_async_resize_screen (gdb_client_data arg)
+@@ -938,7 +939,6 @@ tui_async_resize_screen (gdb_client_data arg)
        tui_redisplay_readline ();
      }
  }
@@ -35,7 +35,7 @@ index 2bdad115b7..92a4bfc69d 100644
  /* Initialize TUI's SIGWINCH signal handler.  Note that the handler is not
     uninstalled when we exit TUI, so the handler should not assume that TUI is
 diff --git a/gdb/tui/tui-win.h b/gdb/tui/tui-win.h
-index 85057955bd..887bf7a7a8 100644
+index bd78bc6a0c..a6ba8fac72 100644
 --- a/gdb/tui/tui-win.h
 +++ b/gdb/tui/tui-win.h
 @@ -48,6 +48,7 @@ extern int tui_active_border_attrs;
@@ -47,10 +47,10 @@ index 85057955bd..887bf7a7a8 100644
  
  /* Update gdb's knowledge of the terminal size.  */
 diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
-index 5277cac83a..48af373e94 100644
+index adf10a7f70..fc9e87192a 100644
 --- a/gdb/tui/tui.c
 +++ b/gdb/tui/tui.c
-@@ -634,6 +634,19 @@ tui_disable (void)
+@@ -636,6 +636,19 @@ tui_disable (void)
  
    tui_active = 0;
    tui_update_gdb_sizes ();
@@ -71,12 +71,12 @@ index 5277cac83a..48af373e94 100644
  
  /* Command wrapper for enabling tui mode.  */
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 07564d46ec..3b17977a91 100644
+index c37b7d6e18..d559098769 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -67,6 +67,11 @@
- #include "complaints.h"
+@@ -69,6 +69,11 @@
  #include "inf-child.h"
+ #include "gdb_tilde_expand.h"
  
 +#include "readline/readline.h"
 +#ifdef TUI
@@ -86,7 +86,7 @@ index 07564d46ec..3b17977a91 100644
  #define AdjustTokenPrivileges		dyn_AdjustTokenPrivileges
  #define DebugActiveProcessStop		dyn_DebugActiveProcessStop
  #define DebugBreakProcess		dyn_DebugBreakProcess
-@@ -894,6 +899,107 @@ jit_install_command (char *args, int from_tty)
+@@ -917,6 +922,101 @@ jit_install_command (const char *args, int from_tty)
      error (_("Error setting 'Debugger' registry value."));
  }
  
@@ -148,30 +148,26 @@ index 07564d46ec..3b17977a91 100644
 +}
 +
 +static void
-+console_resize_command (char *args, int from_tty)
++console_resize_command (const char *args, int from_tty)
 +{
-+  char **argv;
-+  struct cleanup *cleanups;
-+
 +  dont_repeat ();
 +
 +  if (args == NULL) return;
 +
-+  argv = gdb_buildargv (args);
-+  cleanups = make_cleanup_freeargv (argv);
-+
-+  if (argv[0])
++  if (args[0])
 +    {
 +      int w, h, hb;
-+      w = atoi (argv[0]);
++      w = atoi (args);
++      std::string arg0 = extract_arg (&args);
 +      h = hb = 0;
-+      if (argv[1])
++      if (args[0])
 +	{
-+	  h = atoi (argv[1]);
-+	  if (atoi(argv[2]))
-+	    hb = atoi (argv[2]);
++	  h = atoi (args);
++	  extract_arg (&args);
++	  if (args[0])
++	    hb = atoi (args);
 +	}
-+      if (strcmp (argv[0], "full") == 0)
++      if (arg0 == "full")
 +	{
 +	  if (w == 0) w = -1;
 +	  if (h == 0) h = -1;
@@ -187,14 +183,12 @@ index 07564d46ec..3b17977a91 100644
 +      rl_resize_terminal ();
 +#endif
 +    }
-+
-+  do_cleanups (cleanups);
 +}
 +
  static void
- jit_uninstall_command (char *args, int from_tty)
+ jit_uninstall_command (const char *args, int from_tty)
  {
-@@ -3058,6 +3164,10 @@ crashed process will be supplied by the Windows JIT debugging mechanism."));
+@@ -3100,6 +3200,10 @@ crashed process will be supplied by the Windows JIT debugging mechanism."));
    add_com ("jit-uninstall", class_obscure, jit_uninstall_command,
  	       _("Uninstall JIT debugger."));
  

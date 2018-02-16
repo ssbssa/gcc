@@ -1,4 +1,4 @@
-From 8b56ef0e7c0f17a1c9109e01d12eb7e7fb1588e3 Mon Sep 17 00:00:00 2001
+From 7dc3788669c7718f26a4231701db446b54b95436 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:57:39 +0100
 Subject: [PATCH 03/23] Add syntax highlighting for TUI
@@ -11,10 +11,10 @@ Subject: [PATCH 03/23] Add syntax highlighting for TUI
  4 files changed, 655 insertions(+), 17 deletions(-)
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 1d2dbaf3f7..9550655e30 100644
+index 17b71c6e7c..6a8652be18 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -344,7 +344,7 @@ SUBDIR_TUI_SRCS = \
+@@ -305,7 +305,7 @@ SUBDIR_TUI_OBS = $(patsubst %.c,%.o,$(SUBDIR_TUI_SRCS))
  
  SUBDIR_TUI_DEPS =
  SUBDIR_TUI_LDFLAGS =
@@ -24,7 +24,7 @@ index 1d2dbaf3f7..9550655e30 100644
  #
  # GCC Compile support sub-directory definitions
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index c037648800..3bd8f7358b 100644
+index 49c2136812..8fc52e59e5 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
 @@ -28,6 +28,7 @@
@@ -674,10 +674,10 @@ index c037648800..3bd8f7358b 100644
  		  TUI_SRC_WIN->generic.content_size = nlines;
  		  ret = TUI_SUCCESS;
 diff --git a/gdb/tui/tui-winsource.c b/gdb/tui/tui-winsource.c
-index 3ae9c71229..36b6029aa4 100644
+index 6c5fe5dbec..5b175177f0 100644
 --- a/gdb/tui/tui-winsource.c
 +++ b/gdb/tui/tui-winsource.c
-@@ -268,19 +268,72 @@ tui_erase_source_content (struct tui_win_info *win_info,
+@@ -267,19 +267,72 @@ tui_erase_source_content (struct tui_win_info *win_info,
  }
  
  
@@ -752,7 +752,7 @@ index 3ae9c71229..36b6029aa4 100644
    if (line->which_element.source.is_exec_point)
      wattroff (win_info->generic.handle, A_STANDOUT);
  
-@@ -609,6 +662,10 @@ tui_alloc_source_buffer (struct tui_win_info *win_info)
+@@ -608,6 +661,10 @@ tui_alloc_source_buffer (struct tui_win_info *win_info)
       content dimensions, including string null-terminators.  */
    max_lines = win_info->generic.height - 2;
    line_width = win_info->generic.width - 2 + 1;
@@ -764,7 +764,7 @@ index 3ae9c71229..36b6029aa4 100644
    /*
     * Allocate the buffer for the source lines.  Do this only once
 diff --git a/gdb/tui/tui.c b/gdb/tui/tui.c
-index c918f3e236..926b4a4d9a 100644
+index 7943a61676..81ad70c8af 100644
 --- a/gdb/tui/tui.c
 +++ b/gdb/tui/tui.c
 @@ -59,6 +59,10 @@
@@ -778,7 +778,7 @@ index c918f3e236..926b4a4d9a 100644
  
  enum tui_key_mode tui_current_key_mode = TUI_COMMAND_MODE;
  
-@@ -467,6 +471,30 @@ tui_enable (void)
+@@ -469,6 +473,30 @@ tui_enable (void)
        keypad (TUI_CMD_WIN->generic.handle, TRUE);
        wrefresh (TUI_CMD_WIN->generic.handle);
        tui_finish_init = 0;

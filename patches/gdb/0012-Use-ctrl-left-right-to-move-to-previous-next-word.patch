@@ -1,4 +1,4 @@
-From 06592a746be7fb19ee35ac757d78dda0aeeea305 Mon Sep 17 00:00:00 2001
+From 87ee1819d3278ed741ef4e991823ccbe4e339f6e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Thu, 1 Jan 2015 15:18:08 +0100
 Subject: [PATCH 12/23] Use ctrl-left/right to move to previous/next word

@@ -1,4 +1,4 @@
-From 3ac2584c7aa5ed39ddbcfefac1d0b1ecf2384790 Mon Sep 17 00:00:00 2001
+From 0111bf7673d6835d155009cda85f4e7b820a9076 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 4 Mar 2014 19:43:44 +0100
 Subject: [PATCH 01/23] Add install/uninstall commands for JIT debugger
@@ -8,15 +8,15 @@ Subject: [PATCH 01/23] Add install/uninstall commands for JIT debugger
  1 file changed, 64 insertions(+)
 
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index 805fb4358d..a6680f4c7a 100644
+index 29b983296e..11d395c9a2 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -854,6 +854,66 @@ signal_event_command (char *args, int from_tty)
+@@ -877,6 +877,66 @@ signal_event_command (const char *args, int from_tty)
    CloseHandle ((HANDLE) event_id);
  }
  
 +static void
-+jit_install_command (char *args, int from_tty)
++jit_install_command (const char *args, int from_tty)
 +{
 +  char gdb_file[MAX_PATH];
 +  char command_str[MAX_PATH + 100];
@@ -53,7 +53,7 @@ index 805fb4358d..a6680f4c7a 100644
 +}
 +
 +static void
-+jit_uninstall_command (char *args, int from_tty)
++jit_uninstall_command (const char *args, int from_tty)
 +{
 +  HKEY hKey;
 +  LONG ret;
@@ -78,7 +78,7 @@ index 805fb4358d..a6680f4c7a 100644
  /* Handle DEBUG_STRING output from child process.
     Cygwin prepends its messages with a "cygwin:".  Interpret this as
     a Cygwin signal.  Otherwise just print the string as a warning.  */
-@@ -2981,6 +3041,10 @@ This command is needed in support of setting up GDB as JIT debugger on \
+@@ -3023,6 +3083,10 @@ This command is needed in support of setting up GDB as JIT debugger on \
  MS-Windows.  The command should be invoked from the GDB command line using \
  the '-ex' command-line option.  The ID of the event that blocks the \
  crashed process will be supplied by the Windows JIT debugging mechanism."));

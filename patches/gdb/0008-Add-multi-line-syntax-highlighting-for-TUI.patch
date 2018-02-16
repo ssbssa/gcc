@@ -1,4 +1,4 @@
-From 1d1ee121527ad0a9ef6369b6f481ba033dbbc442 Mon Sep 17 00:00:00 2001
+From 43f2fb7ca030c120790ae726289b600dfe7768e1 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 9 Mar 2014 19:47:12 +0100
 Subject: [PATCH 08/23] Add multi-line syntax highlighting for TUI
@@ -9,10 +9,10 @@ Subject: [PATCH 08/23] Add multi-line syntax highlighting for TUI
  2 files changed, 153 insertions(+), 7 deletions(-)
 
 diff --git a/gdb/source.c b/gdb/source.c
-index 8926e5477e..f48546f15a 100644
+index 1f136f4cfb..f994b7e8bf 100644
 --- a/gdb/source.c
 +++ b/gdb/source.c
-@@ -1208,6 +1208,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
+@@ -1177,6 +1177,98 @@ symtab_to_filename_for_display (struct symtab *symtab)
      internal_error (__FILE__, __LINE__, _("invalid filename_display_string"));
  }
  
@@ -111,7 +111,7 @@ index 8926e5477e..f48546f15a 100644
  /* Create and initialize the table S->line_charpos that records
     the positions of the lines in the source file, which is assumed
     to be open on descriptor DESC.
-@@ -1273,13 +1365,28 @@ find_source_lines (struct symtab *s, int desc)
+@@ -1242,13 +1334,28 @@ find_source_lines (struct symtab *s, int desc)
  	    line_charpos[nlines++] = p - data;
  	  }
        }
@@ -144,7 +144,7 @@ index 8926e5477e..f48546f15a 100644
  
  
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index 3bd8f7358b..3f331a6147 100644
+index 8fc52e59e5..bade77cf80 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
 @@ -379,15 +379,51 @@ enum

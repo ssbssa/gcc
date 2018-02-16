@@ -1,7 +1,7 @@
-From 8b986bca37985404fcebf10005bd9c453eff4941 Mon Sep 17 00:00:00 2001
+From da1c302e944245b1f58e3ba81588a1bc0fa682fb Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 6 Jan 2018 15:43:23 +0100
-Subject: [PATCH] Fix scrolling in TUI
+Subject: [PATCH 23/23] Fix scrolling in TUI
 
 ---
  gdb/tui/tui-disasm.c    |  6 +++---
@@ -14,7 +14,7 @@ Subject: [PATCH] Fix scrolling in TUI
  7 files changed, 23 insertions(+), 39 deletions(-)
 
 diff --git a/gdb/tui/tui-disasm.c b/gdb/tui/tui-disasm.c
-index 123a9068f2..e4c59fbed0 100644
+index dd61d1e77c..5640a4aa27 100644
 --- a/gdb/tui/tui-disasm.c
 +++ b/gdb/tui/tui-disasm.c
 @@ -272,7 +272,7 @@ tui_show_disassem (struct gdbarch *gdbarch, CORE_ADDR start_addr)
@@ -34,7 +34,7 @@ index 123a9068f2..e4c59fbed0 100644
 +      tui_update_source_window (TUI_SRC_WIN, gdbarch, sal.symtab, val);
        if (sal.symtab)
  	{
- 	  set_current_source_symtab_and_line (&sal);
+ 	  set_current_source_symtab_and_line (sal);
 @@ -394,6 +394,6 @@ tui_vertical_disassem_scroll (enum tui_scroll_direction scroll_direction,
        val.loa = LOA_ADDRESS;
        val.u.addr = tui_find_disassembly_address (gdbarch, pc, dir);
@@ -44,7 +44,7 @@ index 123a9068f2..e4c59fbed0 100644
      }
  }
 diff --git a/gdb/tui/tui-source.c b/gdb/tui/tui-source.c
-index 76281bfb74..0d84eb1365 100644
+index a0285582bb..251befc5e6 100644
 --- a/gdb/tui/tui-source.c
 +++ b/gdb/tui/tui-source.c
 @@ -583,8 +583,7 @@ tui_syntax_highlight (enum language lang,
@@ -99,7 +99,7 @@ index 76281bfb74..0d84eb1365 100644
        print_source_lines (s, l.u.line_no, l.u.line_no + 1, 0);
      }
 diff --git a/gdb/tui/tui-source.h b/gdb/tui/tui-source.h
-index 09ce12adb6..b3e0e1182b 100644
+index 164dbbe8db..a7907d09d5 100644
 --- a/gdb/tui/tui-source.h
 +++ b/gdb/tui/tui-source.h
 @@ -31,10 +31,9 @@ extern void tui_set_source_content_nil (struct tui_win_info *,
@@ -116,10 +116,10 @@ index 09ce12adb6..b3e0e1182b 100644
  extern void tui_vertical_source_scroll (enum tui_scroll_direction,
  					int);
 diff --git a/gdb/tui/tui-stack.c b/gdb/tui/tui-stack.c
-index 4f88fc5378..6275d97de2 100644
+index d11649e6da..080701da4e 100644
 --- a/gdb/tui/tui-stack.c
 +++ b/gdb/tui/tui-stack.c
-@@ -433,7 +433,7 @@ tui_show_frame_info (struct frame_info *fi)
+@@ -432,7 +432,7 @@ tui_show_frame_info (struct frame_info *fi)
  		    && tui_line_is_displayed (item->locator.line_no,
  					      win_info, TRUE)))
  		tui_update_source_window (win_info, get_frame_arch (fi),
@@ -128,7 +128,7 @@ index 4f88fc5378..6275d97de2 100644
  	      else
  		{
  		  l.u.line_no = item->locator.line_no;
-@@ -451,7 +451,7 @@ tui_show_frame_info (struct frame_info *fi)
+@@ -450,7 +450,7 @@ tui_show_frame_info (struct frame_info *fi)
  		  if (!tui_addr_is_displayed (item->locator.addr,
  					      win_info, TRUE))
  		    tui_update_source_window (win_info, get_frame_arch (fi),
@@ -138,10 +138,10 @@ index 4f88fc5378..6275d97de2 100644
  		    {
  		      a.u.addr = item->locator.addr;
 diff --git a/gdb/tui/tui-win.c b/gdb/tui/tui-win.c
-index 92a4bfc69d..d80de68730 100644
+index 98efe45d1c..0edb1ebe87 100644
 --- a/gdb/tui/tui-win.c
 +++ b/gdb/tui/tui-win.c
-@@ -1488,7 +1488,7 @@ make_visible_with_new_height (struct tui_win_info *win_info)
+@@ -1480,7 +1480,7 @@ make_visible_with_new_height (struct tui_win_info *win_info)
  	  line_or_addr = win_info->detail.source_info.start_line_or_addr;
  	  tui_free_win_content (&win_info->generic);
  	  tui_update_source_window (win_info, gdbarch,
@@ -150,7 +150,7 @@ index 92a4bfc69d..d80de68730 100644
  	}
        else if (deprecated_safe_get_selected_frame () != NULL)
  	{
-@@ -1509,7 +1509,7 @@ make_visible_with_new_height (struct tui_win_info *win_info)
+@@ -1501,7 +1501,7 @@ make_visible_with_new_height (struct tui_win_info *win_info)
  	      line.loa = LOA_ADDRESS;
  	      find_line_pc (s, cursal.line, &line.u.addr);
  	    }
@@ -160,7 +160,7 @@ index 92a4bfc69d..d80de68730 100644
        if (tui_win_has_locator (win_info))
  	{
 diff --git a/gdb/tui/tui-winsource.c b/gdb/tui/tui-winsource.c
-index 36b6029aa4..30c6f3eca7 100644
+index 5b175177f0..346e2ea417 100644
 --- a/gdb/tui/tui-winsource.c
 +++ b/gdb/tui/tui-winsource.c
 @@ -71,11 +71,10 @@ void
@@ -193,7 +193,7 @@ index 36b6029aa4..30c6f3eca7 100644
    else
      ret = tui_set_disassem_content (gdbarch, line_or_addr.u.addr);
  
-@@ -153,7 +151,7 @@ tui_update_source_windows_with_addr (struct gdbarch *gdbarch, CORE_ADDR addr)
+@@ -152,7 +150,7 @@ tui_update_source_windows_with_addr (struct gdbarch *gdbarch, CORE_ADDR addr)
  	  sal = find_pc_line (addr, 0);
  	  l.loa = LOA_LINE;
  	  l.u.line_no = sal.line;
@@ -202,7 +202,7 @@ index 36b6029aa4..30c6f3eca7 100644
  	  break;
  	}
      }
-@@ -195,7 +193,7 @@ tui_update_source_windows_with_line (struct symtab *s, int line)
+@@ -194,7 +192,7 @@ tui_update_source_windows_with_line (struct symtab *s, int line)
      default:
        l.loa = LOA_LINE;
        l.u.line_no = line;
@@ -211,7 +211,7 @@ index 36b6029aa4..30c6f3eca7 100644
        if (tui_current_layout () == SRC_DISASSEM_COMMAND)
  	{
  	  find_line_pc (s, line, &pc);
-@@ -401,8 +399,7 @@ tui_horizontal_source_scroll (struct tui_win_info *win_info,
+@@ -400,8 +398,7 @@ tui_horizontal_source_scroll (struct tui_win_info *win_info,
        win_info->detail.source_info.horizontal_offset = offset;
        tui_update_source_window_as_is (win_info, gdbarch, s,
  				      win_info->generic.content[0]
@@ -222,7 +222,7 @@ index 36b6029aa4..30c6f3eca7 100644
  
    return;
 diff --git a/gdb/tui/tui-winsource.h b/gdb/tui/tui-winsource.h
-index 3b5d7a5d14..35de18eb9d 100644
+index 6da44b09e3..53705c50a9 100644
 --- a/gdb/tui/tui-winsource.h
 +++ b/gdb/tui/tui-winsource.h
 @@ -41,12 +41,10 @@ extern int tui_update_breakpoint_info (struct tui_win_info *win,

@@ -1,4 +1,4 @@
-From 9971c75e947252297c9f97d1450238f693fc94bd Mon Sep 17 00:00:00 2001
+From ed84cfa6727e2dd31059a89a453c04f34dc530e0 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 5 Nov 2014 19:58:33 +0100
 Subject: [PATCH 06/23] Use %USERPROFILE% as alternative to %HOME%
@@ -10,7 +10,7 @@ Subject: [PATCH 06/23] Use %USERPROFILE% as alternative to %HOME%
  3 files changed, 13 insertions(+)
 
 diff --git a/gdb/main.c b/gdb/main.c
-index df4b1110d6..7570ba65e5 100644
+index 3c98787edb..7baf9fd19d 100644
 --- a/gdb/main.c
 +++ b/gdb/main.c
 @@ -246,6 +246,10 @@ get_init_files (const char **system_gdbinit,
@@ -25,10 +25,10 @@ index df4b1110d6..7570ba65e5 100644
        /* If the .gdbinit file in the current directory is the same as
  	 the $HOME/.gdbinit file, it should not be sourced.  homebuf
 diff --git a/gdb/windows-nat.c b/gdb/windows-nat.c
-index a6680f4c7a..ae08ccb9b0 100644
+index 11d395c9a2..556ce9dd4b 100644
 --- a/gdb/windows-nat.c
 +++ b/gdb/windows-nat.c
-@@ -3193,6 +3193,10 @@ _initialize_check_for_gdb_ini (void)
+@@ -3232,6 +3232,10 @@ _initialize_check_for_gdb_ini (void)
      return;
  
    homedir = getenv ("HOME");
