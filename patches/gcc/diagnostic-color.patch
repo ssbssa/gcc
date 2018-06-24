@@ -1,11 +1,10 @@
---- gcc/diagnostic-color.c	2015-01-05 13:33:28.000000000 +0100
-+++ gcc/diagnostic-color.c	2016-03-05 12:57:08.156905200 +0100
-@@ -264,12 +264,61 @@
+--- gcc/diagnostic-color.c	2018-01-03 11:03:58.000000000 +0100
++++ gcc/diagnostic-color.c	2018-06-23 14:06:21.937426800 +0200
+@@ -196,11 +196,68 @@
+       return true;
  }
  
- #if defined(_WIN32)
--bool
--colorize_init (diagnostic_color_rule_t)
++#if defined(_WIN32)
 +#define WIN32_LEAN_AND_MEAN
 +#include <windows.h>
 +#include <winternl.h>
@@ -16,8 +15,7 @@
 +
 +static int
 +w_isatty (int num)
- {
--  return false;
++{
 +  HANDLE fh = (HANDLE)_get_osfhandle (num);
 +  if (fh == INVALID_HANDLE_VALUE)
 +    return 0;
@@ -59,15 +57,16 @@
 +  free (oni);
 +
 +  return is_a_tty;
- }
--#else
++}
 +#define isatty w_isatty
 +#endif
- 
++
  /* Return true if we should use color when in auto mode, false otherwise. */
  static bool
-@@ -298,4 +347,3 @@
-       gcc_unreachable ();
-     }
- }
--#endif
+ should_colorize (void)
+ {
+-#ifdef __MINGW32__
++#if 0
+   /* For consistency reasons, one should check the handle returned by
+      _get_osfhandle(_fileno(stderr)) because the function
+      pp_write_text_to_stream() in pretty-print.c calls fputs() on

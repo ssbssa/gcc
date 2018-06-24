@@ -37,7 +37,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=5.0.3
+MINGW_W64_VER=5.0.4
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -49,7 +49,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=7.3.0
+GCC_VER=8.1.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -75,9 +75,9 @@ MPC_VER=1.0.3
 MPC_SRC_DIR=mpc-$(MPC_VER)
 MPC_FILE=$(MPC_SRC_DIR).tar.gz
 
-ISL_VER=0.16.1
+ISL_VER=0.18
 ISL_SRC_DIR=isl-$(ISL_VER)
-ISL_FILE=$(ISL_SRC_DIR).tar.bz2
+ISL_FILE=$(ISL_SRC_DIR).tar.xz
 
 EXPAT_VER=2.2.5
 EXPAT_SRC_DIR=expat-$(EXPAT_VER)
@@ -288,7 +288,7 @@ $(SOURCE_DIR)/gcc-01-extract-04-mpc.done: | $(SOURCE_DIR)/gcc-01-extract-03-mpfr
 	@touch $@
 
 $(SOURCE_DIR)/gcc-01-extract-05-isl.done: | $(SOURCE_DIR)/gcc-01-extract-04-mpc.done pkg/$(ISL_FILE)
-	tar -C $(SOURCE_DIR)/$(GCC_SRC_DIR) -xjf pkg/$(ISL_FILE)
+	tar -C $(SOURCE_DIR)/$(GCC_SRC_DIR) -xJf pkg/$(ISL_FILE)
 	mv $(SOURCE_DIR)/$(GCC_SRC_DIR)/$(ISL_SRC_DIR) $(SOURCE_DIR)/$(GCC_SRC_DIR)/isl
 	@touch $@
 
@@ -320,11 +320,15 @@ $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color-console.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/weak-ref.patch
+$(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/negative-offsets-register-save-directives.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done
+$(SOURCE_DIR)/gcc-02-patch-09-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/function-cast.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -405,7 +409,8 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
   $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
   $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -675,7 +680,7 @@ extract-all: | \
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-07-ctor-list.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-weak-ref.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done \
   $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
   $(SOURCE_DIR)/gdb-02-patch-24-no-segment-registers-win64.done \
 

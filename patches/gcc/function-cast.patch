@@ -1,0 +1,28 @@
+--- gcc/c/c-typeck.c	2018-03-21 22:48:47.000000000 +0100
++++ gcc/c/c-typeck.c	2018-06-24 18:30:16.342797600 +0200
+@@ -5513,6 +5513,11 @@
+       TYPE_ARG_TYPES (t2) == void_list_node)
+     return true;
+ 
++  /* FARPROC  */
++  if (TREE_CODE (TYPE_MAIN_VARIANT (TREE_TYPE (t2))) == INTEGER_TYPE &&
++      TYPE_ARG_TYPES (t2) == NULL_TREE)
++    return true;
++
+   if (!c_safe_arg_type_equiv_p (TREE_TYPE (t1), TREE_TYPE (t2)))
+     return false;
+ 
+--- gcc/cp/typeck.c	2018-04-27 17:06:14.000000000 +0200
++++ gcc/cp/typeck.c	2018-06-24 18:30:17.514864600 +0200
+@@ -1214,6 +1214,11 @@
+       TYPE_ARG_TYPES (t2) == void_list_node)
+     return true;
+ 
++  /* FARPROC  */
++  if (TREE_CODE (TYPE_MAIN_VARIANT (TREE_TYPE (t2))) == INTEGER_TYPE &&
++      TYPE_ARG_TYPES (t2) == void_list_node)
++    return true;
++
+   if (!cxx_safe_arg_type_equiv_p (TREE_TYPE (t1), TREE_TYPE (t2)))
+     return false;
+ 

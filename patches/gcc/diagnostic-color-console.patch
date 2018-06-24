@@ -1,6 +1,6 @@
---- gcc/diagnostic-color.c	2016-03-06 13:56:28.359957200 +0100
-+++ gcc/diagnostic-color.c	2016-04-29 15:01:13.915202100 +0200
-@@ -272,6 +272,9 @@
+--- gcc/diagnostic-color.c	2018-06-23 14:06:21.937426800 +0200
++++ gcc/diagnostic-color.c	2018-06-23 14:06:58.892540500 +0200
+@@ -205,6 +205,9 @@
  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
  #endif
  
@@ -10,7 +10,7 @@
  static int
  w_isatty (int num)
  {
-@@ -281,8 +284,18 @@
+@@ -214,8 +217,18 @@
  
    DWORD flags;
    if (GetConsoleMode (fh, &flags))
@@ -31,11 +31,20 @@
  
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
---- gcc/pretty-print.c	2015-01-05 13:33:28.000000000 +0100
-+++ gcc/pretty-print.c	2016-04-29 15:05:18.057166200 +0200
-@@ -31,6 +31,12 @@
+--- gcc/pretty-print.c	2018-01-03 11:03:58.000000000 +0100
++++ gcc/pretty-print.c	2018-06-23 14:11:27.495903800 +0200
+@@ -30,7 +30,7 @@
  #include <iconv.h>
  #endif
+ 
+-#ifdef __MINGW32__
++#if 0
+ 
+ /* Replacement for fputs() that handles ANSI escape codes on Windows NT.
+    Contributed by: Liu Hao (lh_mouse at 126 dot com)
+@@ -690,6 +690,12 @@
+ 
+ #endif /* __MINGW32__ */
  
 +#ifdef _WIN32
 +#include <windows.h>
@@ -43,16 +52,17 @@
 +extern int console_color;
 +#endif
 +
- // Default construct an output buffer.
+ static void pp_quoted_string (pretty_printer *, const char *, size_t = -1);
  
- output_buffer::output_buffer ()
-@@ -118,7 +124,85 @@
+ /* Overwrite the given location/range within this text_info's rich_location.
+@@ -824,8 +830,84 @@
  pp_write_text_to_stream (pretty_printer *pp)
  {
    const char *text = pp_formatted_text (pp);
--  fputs (text, pp_buffer (pp)->stream);
-+
-+#ifdef _WIN32
+-#ifdef __MINGW32__
++#if 0
+   mingw_ansi_fputs (text, pp_buffer (pp)->stream);
++#elif defined _WIN32
 +  if (console_escaping)
 +    {
 +      int console_fg = console_color & 0x07;
@@ -127,9 +137,7 @@
 +	}
 +    }
 +  else
-+#endif
 +    fputs (text, pp_buffer (pp)->stream);
-+
-   pp_clear_output_area (pp);
- }
- 
+ #else
+   fputs (text, pp_buffer (pp)->stream);
+ #endif
