@@ -25,7 +25,7 @@ else
 endif
 
 
-BINUTILS_VER=2.30
+BINUTILS_VER=2.31.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -49,7 +49,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=8.1.0
+GCC_VER=8.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -104,7 +104,7 @@ PYTHON_VER=2.7.13
 PYTHON_FILE=python-$(PYTHON_VER)-w$(BUILD_BITS).tar.xz
 PYTHON_DIR=Python27
 
-GDB_VER=8.1
+GDB_VER=8.1.1
 GDB_SRC_DIR=gdb-$(GDB_VER)
 GDB_FILE=$(GDB_SRC_DIR).tar.xz
 GDB_CONF=$(SOURCE_DIR_ABS)/$(GDB_SRC_DIR)/configure \
@@ -166,11 +166,7 @@ $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/delay-load.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-07-ctor-list.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/ctor-list.patch
-	@touch $@
-
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-07-ctor-list.done
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -320,15 +316,11 @@ $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color-console.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/negative-offsets-register-save-directives.patch
-	@touch $@
-
-$(SOURCE_DIR)/gcc-02-patch-09-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done
+$(SOURCE_DIR)/gcc-02-patch-08-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/function-cast.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -400,7 +392,6 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done \
   $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done \
   $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
-  $(SOURCE_DIR)/binutils-02-patch-07-ctor-list.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
   $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done \
   $(SOURCE_DIR)/gcc-02-patch-02-relocate.done \
@@ -409,8 +400,7 @@ $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done \
   $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done \
   $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-neg-offs.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done \
   $(BUILD_DIR)/binutils-06-prefix.done \
   $(BUILD_DIR)/mingw-w64-05-headers-make-install.done \
   $(BUILD_DIR)/mingw-w64-08-crt-make-install.done \
@@ -678,9 +668,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-07-ctor-list.done \
+  $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-function-cast.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done \
   $(SOURCE_DIR)/pdcurses-02-patch-10-fix-wheel.done \
   $(SOURCE_DIR)/gdb-02-patch-24-no-segment-registers-win64.done \
 
