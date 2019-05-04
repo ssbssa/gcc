@@ -1,14 +1,14 @@
-From 25b8fe8c3243331cf507fc8581feb3b6647e17ec Mon Sep 17 00:00:00 2001
+From 037960c6228d230df99f904607b4690d231560ce Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 11 Nov 2017 15:31:20 +0100
-Subject: [PATCH 12/12] fix wscanf
+Subject: [PATCH 11/11] fix wscanf
 
 ---
  mingw-w64-crt/stdio/mingw_wvfscanf.c | 24 +++++++++++++++---------
  1 file changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/mingw-w64-crt/stdio/mingw_wvfscanf.c b/mingw-w64-crt/stdio/mingw_wvfscanf.c
-index 045aba7..043c19b 100644
+index 045aba79..043c19b4 100644
 --- a/mingw-w64-crt/stdio/mingw_wvfscanf.c
 +++ b/mingw-w64-crt/stdio/mingw_wvfscanf.c
 @@ -104,13 +104,19 @@ get_va_nth (va_list argp, unsigned int n)
@@ -89,5 +89,5 @@ index 045aba7..043c19b 100644
  		  ++rval;
  		}
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

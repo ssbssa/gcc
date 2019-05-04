@@ -1,4 +1,4 @@
-From a326b7776b8c38b88813c0f82fe0ee31c418aa84 Mon Sep 17 00:00:00 2001
+From 17d6bcc23f1ee3307c4e61758013384f11b2c655 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:30:00 +0200
 Subject: [PATCH 02/11] fix _fpreset()
@@ -8,7 +8,7 @@ Subject: [PATCH 02/11] fix _fpreset()
  1 file changed, 7 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/CRT_fp10.c b/mingw-w64-crt/crt/CRT_fp10.c
-index 41cb573..16bf049 100644
+index f39b5175..94155b35 100644
 --- a/mingw-w64-crt/crt/CRT_fp10.c
 +++ b/mingw-w64-crt/crt/CRT_fp10.c
 @@ -4,6 +4,10 @@
@@ -22,7 +22,7 @@ index 41cb573..16bf049 100644
  void _fpreset (void);
  
  void _fpreset (void)
-@@ -17,6 +21,9 @@ void _fpreset (void)
+@@ -20,6 +24,9 @@ void _fpreset (void)
  #else /* msvc: */
    __asm fninit;
  #endif
@@ -33,5 +33,5 @@ index 41cb573..16bf049 100644
  }
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

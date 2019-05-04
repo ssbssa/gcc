@@ -35,7 +35,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=5.0.4
+MINGW_W64_VER=6.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -47,7 +47,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=8.3.0
+GCC_VER=9.1.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -189,23 +189,19 @@ $(SOURCE_DIR)/mingw-w64-02-patch-08-fix-alignment.done: | $(SOURCE_DIR)/mingw-w6
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-fix-alignment-of-SETJMP_FLOAT128.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-09-dwmapi-iconic.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-fix-alignment.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-dwmapi-add-missing-Iconic-functions.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-09-printf-out-of-bounds-access.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-fix-alignment.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-fix-printf-out-of-bounds-access.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-10-printf-out-of-bounds-access.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-dwmapi-iconic.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-fix-printf-out-of-bounds-access.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-printf-out-of-bounds-access.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-add-strndup-wcsndup.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-printf-out-of-bounds-access.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-add-strndup-wcsndup.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-fix-wscanf.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-11-strndup-wcsndup.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0012-fix-wscanf.patch
-	@touch $@
-
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -277,11 +273,7 @@ $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-0
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/function-cast.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-09-allow-hard-frame-pointer.done: | $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/Allow-hard-frame-pointer.patch
-	@touch $@
-
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-allow-hard-frame-pointer.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -352,8 +344,8 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-07-symbols-discarded-section.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-12-fix-wscanf.done \
-  $(SOURCE_DIR)/gcc-02-patch-09-allow-hard-frame-pointer.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done \
+  $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

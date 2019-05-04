@@ -1,4 +1,4 @@
-From 7bd417f5244b8856e01b0b73da5d6516b883e338 Mon Sep 17 00:00:00 2001
+From b43ccc6440846bb298737f6d030a01f20a5a3ba8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
 Subject: [PATCH 03/11] fix binmode
@@ -9,7 +9,7 @@ Subject: [PATCH 03/11] fix binmode
  2 files changed, 16 insertions(+), 3 deletions(-)
 
 diff --git a/mingw-w64-crt/crt/binmode.c b/mingw-w64-crt/crt/binmode.c
-index f0473b0..2e46c2f 100644
+index f0473b08..2e46c2fd 100644
 --- a/mingw-w64-crt/crt/binmode.c
 +++ b/mingw-w64-crt/crt/binmode.c
 @@ -4,7 +4,8 @@
@@ -25,21 +25,21 @@ index f0473b0..2e46c2f 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index ae37e0f..3c43e61 100644
+index 361afd23..77f674f7 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -20,6 +20,8 @@
+@@ -24,6 +24,8 @@
  #include <tchar.h>
  #include <sect_attribs.h>
  #include <locale.h>
 +#include <stdio.h>
 +#include <fcntl.h>
  
- #ifndef __winitenv
- extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
-@@ -132,6 +134,16 @@ pre_c_init (void)
+ #if defined(__SEH__) && (!defined(__clang__) || __clang_major__ >= 7)
+ #define SEH_INLINE_ASM
+@@ -143,6 +145,16 @@ pre_c_init (void)
+   else
      __set_app_type (_CONSOLE_APP);
-   __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
  
 +  if (_fmode == _O_BINARY)
 +    {
@@ -51,9 +51,9 @@ index ae37e0f..3c43e61 100644
 +	_setmode (stderr->_file,_O_BINARY);
 +    }
 +
-   * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
+   * __p__fmode() = _fmode;
    * __MINGW_IMP_SYMBOL(_commode) = _commode;
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

@@ -1,4 +1,4 @@
-From 74ae9d4f0f75f05a658364ed85957b2ee1100c73 Mon Sep 17 00:00:00 2001
+From a5a6905f7f6a65dbf5928d36fa3fb77dfca462f6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 21 Mar 2016 19:23:39 +0100
 Subject: [PATCH 08/11] fix alignment of SETJMP_FLOAT128
@@ -8,7 +8,7 @@ Subject: [PATCH 08/11] fix alignment of SETJMP_FLOAT128
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mingw-w64-headers/crt/setjmp.h b/mingw-w64-headers/crt/setjmp.h
-index 5be566d..3572a4d 100644
+index fc79f109..f9bbcb7d 100644
 --- a/mingw-w64-headers/crt/setjmp.h
 +++ b/mingw-w64-headers/crt/setjmp.h
 @@ -109,7 +109,7 @@ extern "C" {
@@ -21,5 +21,5 @@ index 5be566d..3572a4d 100644
    } SETJMP_FLOAT128;
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

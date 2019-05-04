@@ -1,4 +1,4 @@
-From 842c8f42a55798d60f65fe36af96029ce2280d42 Mon Sep 17 00:00:00 2001
+From 2121b10d106b1efff76c3d94422bfbc472fef79e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
 Subject: [PATCH 07/11] free argv[]
@@ -8,10 +8,10 @@ Subject: [PATCH 07/11] free argv[]
  1 file changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 602c57c..1f53604 100644
+index cc38e3d4..d2517b15 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -77,6 +77,7 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
+@@ -89,6 +89,7 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
  static int argc;
  extern void __main(void);
  static _TCHAR **argv;
@@ -19,7 +19,7 @@ index 602c57c..1f53604 100644
  static _TCHAR **envp;
  
  static int argret;
-@@ -330,6 +331,8 @@ __tmainCRTStartup (void)
+@@ -335,6 +336,8 @@ __tmainCRTStartup (void)
  				    StartupInfo.wShowWindow : SW_SHOWDEFAULT;
        }
      duplicate_ppstrings (argc, &argv);
@@ -28,7 +28,7 @@ index 602c57c..1f53604 100644
      __main ();
  #ifdef WPRFLAG
      __winitenv = envp;
-@@ -342,6 +345,13 @@ __tmainCRTStartup (void)
+@@ -347,6 +350,13 @@ __tmainCRTStartup (void)
  #endif
      mainret = main (argc, argv, envp);
  #endif
@@ -43,5 +43,5 @@ index 602c57c..1f53604 100644
        exit (mainret);
  
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

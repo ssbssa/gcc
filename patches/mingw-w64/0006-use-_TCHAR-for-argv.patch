@@ -1,4 +1,4 @@
-From 1290f81b8ec15177c1257645c5fd31a2c99c4ce9 Mon Sep 17 00:00:00 2001
+From 0f8065ae2ba0ec918601c916dc28c9095963aa18 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:54:43 +0200
 Subject: [PATCH 06/11] use _TCHAR for argv
@@ -8,10 +8,10 @@ Subject: [PATCH 06/11] use _TCHAR for argv
  1 file changed, 8 insertions(+), 44 deletions(-)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 1ca378e..602c57c 100644
+index 513ebefb..cc38e3d4 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -76,13 +76,8 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
+@@ -88,13 +88,8 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
  
  static int argc;
  extern void __main(void);
@@ -27,7 +27,7 @@ index 1ca378e..602c57c 100644
  
  static int argret;
  static int mainret=0;
-@@ -93,11 +88,7 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
+@@ -105,11 +100,7 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
  
  extern void _pei386_runtime_relocator (void);
  long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
@@ -40,7 +40,7 @@ index 1ca378e..602c57c 100644
  
  static int __cdecl pre_c_init (void);
  static void __cdecl pre_cpp_init (void);
-@@ -403,46 +394,19 @@ check_managed_app (void)
+@@ -408,49 +399,22 @@ check_managed_app (void)
    return 0;
  }
  
@@ -92,6 +92,9 @@ index 1ca378e..602c57c 100644
 -	*av = n;
 -}
 -#endif
+ 
+ int __cdecl atexit (_PVFV func)
+ {
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 

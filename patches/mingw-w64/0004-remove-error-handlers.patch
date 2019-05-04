@@ -1,4 +1,4 @@
-From e6eadb6a0597060f2d745c1798a3549f7a8e549b Mon Sep 17 00:00:00 2001
+From 81c277ce2db805ff02d91329212997ffc0cd46c1 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
 Subject: [PATCH 04/11] remove error handlers
@@ -9,10 +9,10 @@ Subject: [PATCH 04/11] remove error handlers
  2 files changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 3c43e61..1ca378e 100644
+index 77f674f7..513ebefb 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -104,6 +104,7 @@ static void __cdecl pre_cpp_init (void);
+@@ -116,6 +116,7 @@ static void __cdecl pre_cpp_init (void);
  _CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
  _CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
  
@@ -20,7 +20,7 @@ index 3c43e61..1ca378e 100644
  extern int _MINGW_INSTALL_DEBUG_MATHERR;
  
  #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
-@@ -123,6 +124,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
+@@ -135,6 +136,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
    wprintf(L"Expression: %s\n", expression);
  #endif
  }
@@ -28,7 +28,7 @@ index 3c43e61..1ca378e 100644
  
  static int __cdecl
  pre_c_init (void)
-@@ -152,10 +154,12 @@ pre_c_init (void)
+@@ -163,10 +165,12 @@ pre_c_init (void)
  #else
    _setargv();
  #endif
@@ -41,8 +41,8 @@ index 3c43e61..1ca378e 100644
  
    if (__globallocalestatus == -1)
      {
-@@ -294,7 +298,9 @@ __tmainCRTStartup (void)
- #ifdef _WIN64
+@@ -299,7 +303,9 @@ __tmainCRTStartup (void)
+ #ifdef __x86_64__
      __mingw_init_ehandler ();
  #endif
 +#if 0
@@ -52,7 +52,7 @@ index 3c43e61..1ca378e 100644
      _fpreset ();
  
 diff --git a/mingw-w64-crt/crt/pseudo-reloc.c b/mingw-w64-crt/crt/pseudo-reloc.c
-index 7709208..ae8636a 100644
+index 6210368b..791f74af 100644
 --- a/mingw-w64-crt/crt/pseudo-reloc.c
 +++ b/mingw-w64-crt/crt/pseudo-reloc.c
 @@ -79,6 +79,9 @@ typedef struct {
@@ -74,5 +74,5 @@ index 7709208..ae8636a 100644
  /* For mingw-w64 we have additional helpers to get image information
     on runtime.  This allows us to cache for pseudo-relocation pass
 -- 
-1.9.4.msysgit.2
+2.15.1.windows.2
 
