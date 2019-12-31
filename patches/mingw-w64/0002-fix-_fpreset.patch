@@ -1,7 +1,7 @@
-From 17d6bcc23f1ee3307c4e61758013384f11b2c655 Mon Sep 17 00:00:00 2001
+From 8f2d06804f01cc6b6e4f65fc21020fe6d2a22811 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:30:00 +0200
-Subject: [PATCH 02/11] fix _fpreset()
+Subject: [PATCH 02/10] fix _fpreset()
 
 ---
  mingw-w64-crt/crt/CRT_fp10.c | 7 +++++++

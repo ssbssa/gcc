@@ -23,7 +23,7 @@ else
 endif
 
 
-BINUTILS_VER=2.32
+BINUTILS_VER=2.33.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -35,7 +35,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=6.0.0
+MINGW_W64_VER=7.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -47,7 +47,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=9.1.0
+GCC_VER=9.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -119,11 +119,7 @@ $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/delay-load.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-07-symbols-discarded-section.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/Check-for-symbols-defined-in-discarded-section.patch
-	@touch $@
-
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-07-symbols-discarded-section.done
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -197,11 +193,7 @@ $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-add-strndup-wcsndup.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-fix-wscanf.patch
-	@touch $@
-
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -273,7 +265,11 @@ $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-0
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/function-cast.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
+$(SOURCE_DIR)/gcc-02-patch-09-duplicate-Wformat.done: | $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/duplicate-Wformat.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-09-duplicate-Wformat.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -343,9 +339,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-07-symbols-discarded-section.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-11-fix-wscanf.done \
-  $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done \
+  $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done \
+  $(SOURCE_DIR)/gcc-02-patch-09-duplicate-Wformat.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

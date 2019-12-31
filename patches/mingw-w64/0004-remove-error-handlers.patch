@@ -1,7 +1,7 @@
-From 81c277ce2db805ff02d91329212997ffc0cd46c1 Mon Sep 17 00:00:00 2001
+From 0e72e83e5b3219a92428a82015dee361d6e29e66 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
-Subject: [PATCH 04/11] remove error handlers
+Subject: [PATCH 04/10] remove error handlers
 
 ---
  mingw-w64-crt/crt/crtexe.c       | 6 ++++++
@@ -52,7 +52,7 @@ index 77f674f7..513ebefb 100644
      _fpreset ();
  
 diff --git a/mingw-w64-crt/crt/pseudo-reloc.c b/mingw-w64-crt/crt/pseudo-reloc.c
-index 6210368b..791f74af 100644
+index 6e2a63b9..6129fa72 100644
 --- a/mingw-w64-crt/crt/pseudo-reloc.c
 +++ b/mingw-w64-crt/crt/pseudo-reloc.c
 @@ -79,6 +79,9 @@ typedef struct {
