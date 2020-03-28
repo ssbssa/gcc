@@ -23,7 +23,7 @@ else
 endif
 
 
-BINUTILS_VER=2.33.1
+BINUTILS_VER=2.34
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -47,7 +47,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=9.2.0
+GCC_VER=9.3.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -103,19 +103,11 @@ $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done: | $(SOURCE_DIR)/binutils-01-ex
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/makeinfo.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/compress-debug-sections.patch
-	@touch $@
-
-$(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done: | $(SOURCE_DIR)/binutils-02-patch-03-compress-debug-sections.done
+$(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/Don-t-gc-exported-symbols.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done: | $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/dynamic-base.patch
-	@touch $@
-
-$(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-patch-05-dynamic-base.done
+$(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/delay-load.patch
 	@touch $@
 
