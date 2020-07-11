@@ -1,0 +1,20 @@
+--- gcc/diagnostic-color.c	2020-07-11 13:01:49.369783500 +0200
++++ gcc/diagnostic-color.c	2020-07-11 14:02:25.430705000 +0200
+@@ -258,7 +258,7 @@
+       if (name_length > l1 + l2 &&
+ 	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
+ 	  !memcmp (oni->Name.Buffer + (name_length - l2), toMaster, l2 * 2))
+-	is_a_tty = 1;
++	is_a_tty = 2;
+     }
+ 
+   free (oni);
+@@ -348,7 +348,7 @@
+ auto_enable_urls ()
+ {
+ #ifdef __MINGW32__
+-  return false;
++  return w_isatty (STDERR_FILENO) == 2;
+ #else
+   const char *term, *colorterm;
+ 
