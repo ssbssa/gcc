@@ -33,7 +33,7 @@ along with GCC; see the file COPYING3.  If not see
 #include <iconv.h>
 #endif
 
-#ifdef __MINGW32__
+#if 0
 
 /* Replacement for fputs() that handles ANSI escape codes on Windows NT.
    Contributed by: Liu Hao (lh_mouse at 126 dot com)
@@ -702,6 +702,13 @@ mingw_ansi_fputs (const char *str, FILE *fp)
 
 #endif /* __MINGW32__ */
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+extern int console_escaping;
+extern int console_color;
+#endif
+
 static int
 decode_utf8_char (const unsigned char *, size_t len, unsigned int *);
 static void pp_quoted_string (pretty_printer *, const char *, size_t = -1);
@@ -873,8 +880,89 @@ void
 pp_write_text_to_stream (pretty_printer *pp)
 {
   const char *text = pp_formatted_text (pp);
-#ifdef __MINGW32__
+#if 0
   mingw_ansi_fputs (text, pp_buffer (pp)->stream);
+#elif defined _WIN32
+  HANDLE h;
+  DWORD mode;
+  if (console_escaping
+      && (h = (HANDLE) _get_osfhandle (_fileno (pp_buffer (pp)->stream)))
+      != INVALID_HANDLE_VALUE
+      && GetConsoleMode (h, &mode))
+    {
+      int console_fg = console_color & 0x07;
+      int console_bg = console_color >> 4;
+      int console_bold = (console_color & 0x08) >> 3;
+      int fg = console_fg;
+      int bg = console_bg;
+      int bold = console_bold;
+
+      HANDLE fh = (HANDLE)_get_osfhandle (STDERR_FILENO);
+      DWORD written;
+      const char *pos = text;
+      while (*pos)
+	{
+	  while (*pos && *pos != '\33') pos++;
+	  if (pos > text)
+	    WriteConsole (fh, text, pos - text, &written, NULL);
+	  if (*pos == '\33' && pos[1] == '[')
+	    {
+	      pos += 2;
+	      const char *nums = pos;
+	      while ((*pos >= '0' && *pos <= '9') || *pos == ';') pos++;
+	      if (*pos == 'm')
+		{
+		  if (*nums == 'm')
+		    {
+		      fg = console_fg;
+		      bg = console_bg;
+		      bold = console_bold;
+		    }
+		  while (*nums != 'm')
+		    {
+		      int n = 0;
+		      while (*nums >= '0' && *nums <= '9')
+			{
+			  n = 10*n + (*nums - '0');
+			  nums++;
+			}
+		      if (n == 0)
+			{
+			  fg = console_fg;
+			  bg = console_bg;
+			  bold = console_bold;
+			}
+		      else if (n == 1)
+			bold = 1;
+		      else if (n >= 30 && n <= 37)
+			{
+			  n -= 30;
+			  fg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
+			}
+		      else if (n == 39)
+			{
+			  fg = console_fg;
+			  bold = console_bold;
+			}
+		      else if (n >= 40 && n <= 47)
+			{
+			  n -= 40;
+			  bg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
+			}
+		      else if (n == 49)
+			bg = console_bg;
+		      if (*nums == ';') nums++;
+		    }
+		  int c = fg | (bold << 3) | (bg << 4);
+		  SetConsoleTextAttribute (fh, c);
+		}
+	      if (*pos) pos++;
+	      text = pos;
+	    }
+	}
+    }
+  else
+    fputs (text, pp_buffer (pp)->stream);
 #else
   fputs (text, pp_buffer (pp)->stream);
 #endif

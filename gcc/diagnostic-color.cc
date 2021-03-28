@@ -212,6 +212,9 @@ parse_gcc_colors (void)
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
 
+int console_escaping = 0;
+int console_color = 0;
+
 static int
 w_isatty (int num)
 {
@@ -221,8 +224,18 @@ w_isatty (int num)
 
   DWORD flags;
   if (GetConsoleMode (fh, &flags))
-    /* Check if console understands terminal escape sequences.  */
-    return SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    {
+      /* Check if console understands terminal escape sequences.  */
+      console_escaping =
+	!SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+      if (console_escaping)
+	{
+	  CONSOLE_SCREEN_BUFFER_INFO csbi;
+	  GetConsoleScreenBufferInfo (fh, &csbi);
+	  console_color = csbi.wAttributes & 0xff;
+	}
+      return 1;
+    }
 
   HMODULE ntdll = GetModuleHandle ("ntdll.dll");
   if (!ntdll)
