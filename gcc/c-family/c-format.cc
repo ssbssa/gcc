@@ -1319,6 +1319,8 @@ check_function_format (const_tree fn, tree attrs, int nargs,
 			     format_types[info.format_type].name);
 		}
 	    }
+
+	  break;
 	}
     }
 }
