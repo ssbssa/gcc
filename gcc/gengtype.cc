@@ -5081,7 +5081,10 @@ parse_program_options (int argc, char **argv)
 	  break;
 	case 'S':		/* --srcdir */
 	  if (optarg)
+	  {
 	    srcdir = optarg;
+	    if( srcdir[1]==':' ) srcdir += 2;
+	  }
 	  else
 	    fatal ("missing source directory");
 	  srcdir_len = strlen (srcdir);
