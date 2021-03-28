@@ -257,7 +257,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     const char* __c_mode = fopen_mode(__mode);
     if (__c_mode && !this->is_open())
       {
+#if defined(__MINGW32__)
+	if ((_M_cfile = fopen64(__name, __c_mode)))
+#else
 	if ((_M_cfile = fopen(__name, __c_mode)))
+#endif
 	  {
 	    _M_cfile_created = true;
 	    __ret = this;
@@ -391,6 +395,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 # else
       return ftell(__f->file());
 # endif
+#elif defined(__MINGW32__)
+      return lseek64(__f->fd(), 0, (int)ios_base::cur);
 #else
       return lseek(__f->fd(), 0, (int)ios_base::cur);
 #endif
@@ -417,6 +423,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	  return -1;
       }
     return __way == ios_base::beg ? __off : std::get_file_offset(this);
+#elif defined(__MINGW32__)
+    return lseek64(this->fd(), __off, __way);
 #else
     if _GLIBCXX17_CONSTEXPR (sizeof(streamoff) > sizeof(off_t))
       if (__off > numeric_limits<off_t>::max()
@@ -461,6 +469,20 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	const streamoff __off = __buffer.st_size - std::get_file_offset(this);
 	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
       }
+#elif defined(__MINGW32__)
+    struct _stati64 __buffer;
+    const int __err = _fstati64(this->fd(), &__buffer);
+    if (!__err && _GLIBCXX_ISREG(__buffer.st_mode))
+      {
+	const streamoff __off = __buffer.st_size - lseek64(this->fd(), 0,
+							   ios_base::cur);
+	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
+      }
+#else
+    struct stat __buffer;
+    const int __err = fstat(this->fd(), &__buffer);
+    if (!__err && _GLIBCXX_ISREG(__buffer.st_mode))
+      return __buffer.st_size - std::get_file_offset(this);
 #endif
     return 0;
   }
