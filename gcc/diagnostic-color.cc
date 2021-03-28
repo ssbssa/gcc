@@ -203,11 +203,71 @@ parse_gcc_colors (void)
       return true;
 }
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winternl.h>
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+
+static int
+w_isatty (int num)
+{
+  HANDLE fh = (HANDLE)_get_osfhandle (num);
+  if (fh == INVALID_HANDLE_VALUE)
+    return 0;
+
+  DWORD flags;
+  if (GetConsoleMode (fh, &flags))
+    /* Check if console understands terminal escape sequences.  */
+    return SetConsoleMode (fh, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+  HMODULE ntdll = GetModuleHandle ("ntdll.dll");
+  if (!ntdll)
+    return 0;
+
+  typedef NTSTATUS NTAPI func_NtQueryObject (HANDLE, OBJECT_INFORMATION_CLASS,
+					     PVOID, ULONG, PULONG);
+  func_NtQueryObject *fNtQueryObject =
+    (func_NtQueryObject*) GetProcAddress (ntdll, "NtQueryObject");
+  if (!fNtQueryObject)
+    return 0;
+
+  ULONG s = 0xffff * sizeof (WCHAR);
+  OBJECT_NAME_INFORMATION *oni = (OBJECT_NAME_INFORMATION*) xmalloc (s);
+  ULONG len;
+  int is_a_tty = 0;
+  /* mintty uses a named pipe like "ptyNNNN-to-master".  */
+  if (!fNtQueryObject (fh, ObjectNameInformation, oni, s, &len))
+    {
+      wchar_t namedPipe[] = L"\\Device\\NamedPipe\\";
+      size_t l1 = sizeof (namedPipe) / 2 - 1;
+      wchar_t toMaster[] = L"-to-master";
+      size_t l2 = sizeof (toMaster) / 2 - 1;
+      wchar_t toMasterNat[] = L"-to-master-nat";
+      size_t l3 = sizeof (toMasterNat) / 2 - 1;
+      USHORT nl = oni->Name.Length / 2;
+      if (nl > l1 + l3 &&
+	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
+	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
+	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
+	is_a_tty = 1;
+    }
+
+  free (oni);
+
+  return is_a_tty;
+}
+#define isatty w_isatty
+#endif
+
 /* Return true if we should use color when in auto mode, false otherwise. */
 static bool
 should_colorize (void)
 {
-#ifdef __MINGW32__
+#if 0
   /* For consistency reasons, one should check the handle returned by
      _get_osfhandle(_fileno(stderr)) because the function
      pp_write_text_to_stream() in pretty-print.cc calls fputs() on
@@ -221,6 +281,10 @@ should_colorize (void)
 	  && GetConsoleMode (h, &m);
 #else
   char const *t = getenv ("TERM");
+#ifdef __MINGW32__
+  if (t == NULL)
+    t = "";
+#endif
   /* emacs M-x shell sets TERM="dumb".  */
   return t && strcmp (t, "dumb") != 0 && isatty (STDERR_FILENO);
 #endif
