@@ -850,6 +850,10 @@ Wunused-label
 Common Var(warn_unused_label) Warning EnabledBy(Wunused)
 Warn when a label is unused.
 
+Wunused-non-trivial
+Common Var(warn_unused_non_trivial) Warning
+Warn when a non-trivial class instance is unused.
+
 Wunused-parameter
 Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
 Warn when a function parameter is unused.
