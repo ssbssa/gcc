@@ -6131,6 +6131,11 @@ c_safe_function_type_cast_p (tree t1, tree t2)
       TYPE_ARG_TYPES (t2) == void_list_node)
     return true;
 
+  /* FARPROC  */
+  if (TREE_CODE (TYPE_MAIN_VARIANT (TREE_TYPE (t2))) == INTEGER_TYPE &&
+      TYPE_ARG_TYPES (t2) == NULL_TREE)
+    return true;
+
   if (!c_safe_arg_type_equiv_p (TREE_TYPE (t1), TREE_TYPE (t2)))
     return false;
 
