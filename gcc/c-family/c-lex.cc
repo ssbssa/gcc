@@ -43,7 +43,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
 static tree interpret_integer (const cpp_token *, unsigned int,
 			       enum overflow_type *);
 static tree interpret_float (const cpp_token *, unsigned int, const char *,
-			     enum overflow_type *);
+			     enum overflow_type *, location_t *);
 static tree interpret_fixed (const cpp_token *, unsigned int);
 static enum integer_type_kind narrowest_unsigned_type
 	(const widest_int &, unsigned int);
@@ -614,7 +614,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
 	    break;
 
 	  case CPP_N_FLOATING:
-	    *value = interpret_float (tok, flags, suffix, &overflow);
+	    *value = interpret_float (tok, flags, suffix, &overflow, loc);
 	    break;
 
 	  default:
@@ -1196,7 +1196,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
    by cpplib.  For C++11 SUFFIX may contain a user-defined literal suffix.  */
 static tree
 interpret_float (const cpp_token *token, unsigned int flags,
-		 const char *suffix, enum overflow_type *overflow)
+		 const char *suffix, enum overflow_type *overflow,
+		 location_t *loc)
 {
   tree type;
   tree const_type;
@@ -1263,7 +1264,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
 	    return error_mark_node;
 	  }
 	else
-	  pedwarn (input_location, OPT_Wpedantic, "non-standard suffix on floating constant");
+	  pedwarn (loc ? *loc : input_location, OPT_Wpedantic,
+		   "non-standard suffix on floating constant");
 
 	type = c_common_type_for_mode (mode, 0);
 	/* For Q suffix, prefer float128t_type_node (__float128) type
@@ -1310,13 +1312,13 @@ interpret_float (const cpp_token *token, unsigned int flags,
 	else if (!extended)
 	  {
 	    if (cxx_dialect < cxx23 && pedantic)
-	      pedwarn (input_location, OPT_Wc__23_extensions,
+	      pedwarn (loc ? *loc : input_location, OPT_Wc__23_extensions,
 		       "%<f%d%> or %<F%d%> suffix on floating constant only "
 		       "available with %<-std=c++23%> or %<-std=gnu++23%>",
 		       n, n);
 	  }
 	else
-	  pedwarn (input_location, OPT_Wpedantic,
+	  pedwarn (loc ? *loc : input_location, OPT_Wpedantic,
 		   "non-standard suffix on floating constant");
       }
     else if ((flags & CPP_N_BFLOAT16) != 0)
@@ -1328,10 +1330,10 @@ interpret_float (const cpp_token *token, unsigned int flags,
 	    return error_mark_node;
 	  }
 	if (!c_dialect_cxx ())
-	  pedwarn (input_location, OPT_Wpedantic,
+	  pedwarn (loc ? *loc : input_location, OPT_Wpedantic,
 		   "non-standard suffix on floating constant");
 	else if (cxx_dialect < cxx23 && pedantic)
-	  pedwarn (input_location, OPT_Wc__23_extensions,
+	  pedwarn (loc ? *loc : input_location, OPT_Wc__23_extensions,
 		   "%<bf16%> or %<BF16%> suffix on floating constant only "
 		   "available with %<-std=c++23%> or %<-std=gnu++23%>");
       }
