@@ -839,6 +839,7 @@ poplevel (int keep, int reverse, int functionbody)
 	    && !name_independent_decl_p (decl)
 	    && type != error_mark_node
 	    && (!CLASS_TYPE_P (type)
+		|| warn_unused_non_trivial
 		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
 		|| lookup_attribute ("warn_unused",
 				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
@@ -21124,6 +21125,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
 
   if (cleanup
       && DECL_P (decl)
+      && !warn_unused_non_trivial
       && !lookup_attribute ("warn_unused", TYPE_ATTRIBUTES (TREE_TYPE (decl)))
       /* Treat objects with destructors as used; the destructor may do
 	 something substantive.  */
