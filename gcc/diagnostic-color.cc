@@ -266,7 +266,7 @@ w_isatty (int num)
 	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
 	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
 	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
-	is_a_tty = 1;
+	is_a_tty = 2;
     }
 
   free (oni);
@@ -360,7 +360,7 @@ static bool
 auto_enable_urls ()
 {
 #ifdef __MINGW32__
-  return false;
+  return w_isatty (STDERR_FILENO) == 2;
 #else
   const char *term, *colorterm;
 
