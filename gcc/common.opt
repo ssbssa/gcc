@@ -1886,7 +1886,7 @@ Enum(hardcfr_check_noreturn_calls) String(always) Value(HCFRNR_ALWAYS)
 ; On SVR4 targets, it also controls whether or not to emit a
 ; string identifying the compiler.
 fident
-Common Var(flag_no_ident,0)
+Common Var(flag_no_ident,0) Init(1)
 Process #ident directives.
 
 fif-conversion
