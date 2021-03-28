@@ -2007,7 +2007,7 @@ Enum(hardcfr_check_noreturn_calls) String(always) Value(HCFRNR_ALWAYS)
 ; Nonzero means do not emit .ident assembler directives and ignore
 ; `#ident' preprocessor directives.
 fident
-Common Var(flag_no_ident,0)
+Common Var(flag_no_ident,0) Init(1)
 Emit .ident assembler directives.
 
 fif-conversion
