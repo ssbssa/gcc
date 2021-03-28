@@ -1692,6 +1692,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
 		    return SAFE_CONVERSION;
 		}
 	    }
+	  else if (TREE_CODE (expr) == RSHIFT_EXPR)
+	    {
+	      tree op0 = TREE_OPERAND (expr, 0);
+	      tree op1 = TREE_OPERAND (expr, 1);
+
+	      /* Don't warn if the result of an unsigned value, right shifted
+		 by a constant, fits in the target type.  */
+	      if (TYPE_UNSIGNED (TREE_TYPE (op0))
+		  && TREE_CODE (op1) == INTEGER_CST)
+		{
+		  int prec_rshift = TYPE_PRECISION (TREE_TYPE (op0))
+		    - TREE_INT_CST_LOW (op1);
+		  int prec_res = TYPE_PRECISION (type);
+		  if (!TYPE_UNSIGNED (type))
+		    prec_res--;
+
+		  if (prec_rshift <= prec_res)
+		    return SAFE_CONVERSION;
+		}
+	    }
 	  /* Warn for integer types converted to smaller integer types.  */
 	  if (TYPE_PRECISION (type) < TYPE_PRECISION (expr_type))
 	    give_warning = UNSAFE_OTHER;
