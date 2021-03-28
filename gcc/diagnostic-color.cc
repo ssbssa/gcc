@@ -323,6 +323,8 @@ w_isatty (int num)
 	  GetConsoleScreenBufferInfo (fh, &csbi);
 	  console_color = csbi.wAttributes & 0xff;
 	}
+      else
+	return 2;
       return 1;
     }
 
@@ -355,7 +357,7 @@ w_isatty (int num)
 	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
 	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
 	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
-	is_a_tty = 1;
+	is_a_tty = 2;
     }
 
   free (oni);
@@ -465,6 +467,9 @@ parse_env_vars_for_urls ()
 static bool
 auto_enable_urls ()
 {
+#ifdef __MINGW32__
+  return w_isatty (STDERR_FILENO) == 2;
+#else
   const char *term, *colorterm;
 
   /* First check the terminal is capable of printing color escapes,
@@ -525,6 +530,7 @@ auto_enable_urls ()
     return false;
 
   return true;
+#endif
 }
 
 /* Determine if URLs should be enabled, based on RULE,
