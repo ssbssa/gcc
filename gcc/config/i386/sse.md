@@ -1952,7 +1952,8 @@
 	(vec_concat:V2DF (vec_select:DF (match_dup 2)
 					(parallel [(const_int 0)]))
 			 (match_operand:DF 3 "memory_operand")))]
-  "TARGET_SSE2 && TARGET_SSE_UNALIGNED_LOAD_OPTIMAL
+  "TARGET_SSE2
+   && (TARGET_SSE_UNALIGNED_LOAD_OPTIMAL || TARGET_NO_ALIGN_VECTOR_INSN)
    && ix86_operands_ok_for_move_multiple (operands, true, DFmode)"
   [(set (match_dup 2) (match_dup 5))]
   "operands[5] = adjust_address (operands[1], V2DFmode, 0);")
@@ -1963,7 +1964,8 @@
    (set (match_operand:V2DF 2 "sse_reg_operand")
 	(vec_concat:V2DF (match_operand:DF 4 "sse_reg_operand")
 			 (match_operand:DF 3 "memory_operand")))]
-  "TARGET_SSE2 && TARGET_SSE_UNALIGNED_LOAD_OPTIMAL
+  "TARGET_SSE2
+   && (TARGET_SSE_UNALIGNED_LOAD_OPTIMAL || TARGET_NO_ALIGN_VECTOR_INSN)
    && REGNO (operands[4]) == REGNO (operands[2])
    && ix86_operands_ok_for_move_multiple (operands, true, DFmode)"
   [(set (match_dup 2) (match_dup 5))]
@@ -1977,7 +1979,8 @@
    (set (match_operand:DF 2 "memory_operand")
 	(vec_select:DF (match_operand:V2DF 3 "sse_reg_operand")
 		       (parallel [(const_int 1)])))]
-  "TARGET_SSE2 && TARGET_SSE_UNALIGNED_STORE_OPTIMAL
+  "TARGET_SSE2
+   && (TARGET_SSE_UNALIGNED_STORE_OPTIMAL || TARGET_NO_ALIGN_VECTOR_INSN)
    && ix86_operands_ok_for_move_multiple (operands, false, DFmode)"
   [(set (match_dup 4) (match_dup 1))]
   "operands[4] = adjust_address (operands[0], V2DFmode, 0);")
@@ -11622,10 +11625,26 @@
 	(vec_select:V2SF
 	  (match_operand:V4SF 1 "nonimmediate_operand" " v,v,m")
 	  (parallel [(const_int 0) (const_int 1)])))]
-  "TARGET_SSE && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
+  "TARGET_SSE && TARGET_ALIGN_VECTOR_INSN
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
    %vmovlps\t{%1, %0|%q0, %1}
    %vmovaps\t{%1, %0|%0, %1}
+   %vmovlps\t{%1, %d0|%d0, %q1}"
+  [(set_attr "type" "ssemov")
+   (set_attr "prefix" "maybe_vex")
+   (set_attr "mode" "V2SF,V4SF,V2SF")])
+
+(define_insn "sse_storelps_unalign"
+  [(set (match_operand:V2SF 0 "nonimmediate_operand"   "=m,v,v")
+  (vec_select:V2SF
+    (match_operand:V4SF 1 "nonimmediate_operand" " v,v,m")
+    (parallel [(const_int 0) (const_int 1)])))]
+  "TARGET_SSE && TARGET_NO_ALIGN_VECTOR_INSN
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
+  "@
+   %vmovlps\t{%1, %0|%q0, %1}
+   %vmovups\t{%1, %0|%0, %1}
    %vmovlps\t{%1, %d0|%d0, %q1}"
   [(set_attr "type" "ssemov")
    (set_attr "prefix" "maybe_vex")
@@ -14662,7 +14681,7 @@
 	(vec_select:DF
 	  (match_operand:V2DF 1 "nonimmediate_operand" "x,x,m")
 	  (parallel [(const_int 0)])))]
-  "!TARGET_SSE2 && TARGET_SSE
+  "!TARGET_SSE2 && TARGET_SSE && TARGET_ALIGN_VECTOR_INSN
    && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
    movlps\t{%1, %0|%0, %1}
@@ -14678,6 +14697,20 @@
   "TARGET_SSE"
   [(set (match_dup 0)
 	(vec_select:DF (match_dup 1) (parallel [(const_int 0)])))])
+
+(define_insn "*vec_extractv2df_0_sse_unalign"
+  [(set (match_operand:DF 0 "nonimmediate_operand" "=m,x,x")
+  (vec_select:DF
+    (match_operand:V2DF 1 "nonimmediate_operand" "x,x,m")
+    (parallel [(const_int 0)])))]
+  "!TARGET_SSE2 && TARGET_SSE && TARGET_NO_ALIGN_VECTOR_INSN
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
+  "@
+   movlps\t{%1, %0|%0, %1}
+   movups\t{%1, %0|%0, %1}
+   movlps\t{%1, %0|%0, %q1}"
+  [(set_attr "type" "ssemov")
+   (set_attr "mode" "V2SF,V4SF,V2SF")])
 
 (define_expand "sse2_loadhpd_exp"
   [(set (match_operand:V2DF 0 "nonimmediate_operand")
