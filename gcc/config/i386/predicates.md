@@ -1760,7 +1760,7 @@
 ;; less than its natural alignment.
 (define_predicate "misaligned_operand"
   (and (match_code "mem")
-       (match_test "MEM_ALIGN (op) < GET_MODE_BITSIZE (mode)")))
+       (match_test "TARGET_NO_ALIGN_VECTOR_INSN || MEM_ALIGN (op) < GET_MODE_BITSIZE (mode)")))
 
 ;; Return true if OP is a parallel for an mov{d,q,dqa,ps,pd} vec_select,
 ;; where one of the two operands of the vec_concat is const0_operand.
