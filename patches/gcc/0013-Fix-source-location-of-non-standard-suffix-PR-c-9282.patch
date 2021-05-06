@@ -1,0 +1,77 @@
+From 266d3e05a5f6b0c84747d497858cff5b14cc9aae Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 16:18:05 +0200
+Subject: [PATCH 13/17] Fix source location of non-standard suffix (PR c/92826)
+
+Before:
+  $ gcc -c pr92826.c -Wpedantic
+  pr92826.c: In function 'main':
+  pr92826.c:7:3: warning: non-standard suffix on floating constant [-Wpedantic]
+      7 |   if (3.0Q > 5)
+        |   ^~
+
+After:
+  $ xgcc -c pr92826.c -Wpedantic
+  pr92826.c: In function 'main':
+  pr92826.c:7:7: warning: non-standard suffix on floating constant [-Wpedantic]
+      7 |   if (3.0Q > 5)
+        |       ^~~~
+---
+ gcc/c-family/c-lex.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/gcc/c-family/c-lex.c b/gcc/c-family/c-lex.c
+index c4fc884cf4a..ff58c173343 100644
+--- a/gcc/c-family/c-lex.c
++++ b/gcc/c-family/c-lex.c
+@@ -41,7 +41,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
+ static tree interpret_integer (const cpp_token *, unsigned int,
+ 			       enum overflow_type *);
+ static tree interpret_float (const cpp_token *, unsigned int, const char *,
+-			     enum overflow_type *);
++			     enum overflow_type *, location_t *);
+ static tree interpret_fixed (const cpp_token *, unsigned int);
+ static enum integer_type_kind narrowest_unsigned_type
+ 	(const widest_int &, unsigned int);
+@@ -489,7 +489,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
+ 	    break;
+ 
+ 	  case CPP_N_FLOATING:
+-	    *value = interpret_float (tok, flags, suffix, &overflow);
++	    *value = interpret_float (tok, flags, suffix, &overflow, loc);
+ 	    break;
+ 
+ 	  default:
+@@ -846,7 +846,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
+    by cpplib.  For C++11 SUFFIX may contain a user-defined literal suffix.  */
+ static tree
+ interpret_float (const cpp_token *token, unsigned int flags,
+-		 const char *suffix, enum overflow_type *overflow)
++		 const char *suffix, enum overflow_type *overflow,
++		 location_t *loc)
+ {
+   tree type;
+   tree const_type;
+@@ -911,7 +912,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+ 	    return error_mark_node;
+ 	  }
+ 	else
+-	  pedwarn (input_location, OPT_Wpedantic, "non-standard suffix on floating constant");
++	  pedwarn (loc ? *loc : input_location, OPT_Wpedantic,
++		   "non-standard suffix on floating constant");
+ 
+ 	type = c_common_type_for_mode (mode, 0);
+ 	gcc_assert (type);
+@@ -934,7 +936,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+ 	    return error_mark_node;
+ 	  }
+ 	else
+-	  pedwarn (input_location, OPT_Wpedantic, "non-standard suffix on floating constant");
++	  pedwarn (loc ? *loc : input_location, OPT_Wpedantic,
++		   "non-standard suffix on floating constant");
+       }
+     else if ((flags & CPP_N_WIDTH) == CPP_N_LARGE)
+       type = long_double_type_node;
+-- 
+2.15.1.windows.2
+

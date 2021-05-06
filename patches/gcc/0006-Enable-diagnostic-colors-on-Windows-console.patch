@@ -1,6 +1,18 @@
---- gcc/diagnostic-color.c	2018-06-23 14:06:21.937426800 +0200
-+++ gcc/diagnostic-color.c	2018-06-23 14:06:58.892540500 +0200
-@@ -205,6 +205,9 @@
+From 8a526a9d9d97f5514b21b49ef12dc79ce557c2e7 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 14:31:04 +0200
+Subject: [PATCH 06/17] Enable diagnostic colors on Windows console
+
+---
+ gcc/diagnostic-color.c | 17 ++++++++--
+ gcc/pretty-print.c     | 91 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 104 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
+index b38226d10d5..e9bcc8e3bc4 100644
+--- a/gcc/diagnostic-color.c
++++ b/gcc/diagnostic-color.c
+@@ -207,6 +207,9 @@ parse_gcc_colors (void)
  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
  #endif
  
@@ -10,7 +22,7 @@
  static int
  w_isatty (int num)
  {
-@@ -214,8 +217,18 @@
+@@ -216,8 +219,18 @@ w_isatty (int num)
  
    DWORD flags;
    if (GetConsoleMode (fh, &flags))
@@ -31,9 +43,11 @@
  
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
---- gcc/pretty-print.c	2020-05-07 12:50:00.000000000 +0200
-+++ gcc/pretty-print.c	2020-07-11 12:56:27.803390900 +0200
-@@ -31,7 +31,7 @@
+diff --git a/gcc/pretty-print.c b/gcc/pretty-print.c
+index 407f7300dfb..4046f140fd5 100644
+--- a/gcc/pretty-print.c
++++ b/gcc/pretty-print.c
+@@ -31,7 +31,7 @@ along with GCC; see the file COPYING3.  If not see
  #include <iconv.h>
  #endif
  
@@ -42,7 +56,7 @@
  
  /* Replacement for fputs() that handles ANSI escape codes on Windows NT.
     Contributed by: Liu Hao (lh_mouse at 126 dot com)
-@@ -700,6 +700,12 @@
+@@ -700,6 +700,12 @@ mingw_ansi_fputs (const char *str, FILE *fp)
  
  #endif /* __MINGW32__ */
  
@@ -55,7 +69,7 @@
  static int
  decode_utf8_char (const unsigned char *, size_t len, unsigned int *);
  static void pp_quoted_string (pretty_printer *, const char *, size_t = -1);
-@@ -837,8 +843,84 @@
+@@ -837,8 +843,89 @@ void
  pp_write_text_to_stream (pretty_printer *pp)
  {
    const char *text = pp_formatted_text (pp);
@@ -63,7 +77,12 @@
 +#if 0
    mingw_ansi_fputs (text, pp_buffer (pp)->stream);
 +#elif defined _WIN32
-+  if (console_escaping)
++  HANDLE h;
++  DWORD mode;
++  if (console_escaping
++      && (h = (HANDLE) _get_osfhandle (_fileno (pp_buffer (pp)->stream)))
++      != INVALID_HANDLE_VALUE
++      && GetConsoleMode (h, &mode))
 +    {
 +      int console_fg = console_color & 0x07;
 +      int console_bg = console_color >> 4;
@@ -141,3 +160,6 @@
  #else
    fputs (text, pp_buffer (pp)->stream);
  #endif
+-- 
+2.15.1.windows.2
+

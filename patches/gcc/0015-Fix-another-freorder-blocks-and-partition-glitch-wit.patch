@@ -1,0 +1,110 @@
+From 4ec80022a71cc1bf1432304cb4f78f067f4cb6f3 Mon Sep 17 00:00:00 2001
+From: Eric Botcazou <ebotcazou@adacore.com>
+Date: Mon, 19 Apr 2021 10:13:36 +0200
+Subject: [PATCH 15/17] Fix another -freorder-blocks-and-partition glitch with
+ Windows SEH
+
+Since GCC 8, the -freorder-blocks-and-partition pass can split a function
+into hot and cold parts, thus generating 2 FDEs for a single function in
+DWARF for exception purposes and doing an equivalent trick for Windows SEH.
+
+Now the Windows system unwinder does not support arbitrarily large frames
+and there is even a hard limit on the encoding of the CFI, which changes
+the stack allocation strategy when it is topped and which must be reflected
+everywhere.
+
+gcc/
+	* config/i386/winnt.c (i386_pe_seh_cold_init): Properly deal with
+	frames larger than the SEH maximum frame size.
+gcc/testsuite/
+	* gnat.dg/opt92.adb: New test.
+---
+ gcc/config/i386/winnt.c         | 16 +++++++++-------
+ gcc/testsuite/gnat.dg/opt92.adb | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+), 7 deletions(-)
+ create mode 100644 gcc/testsuite/gnat.dg/opt92.adb
+
+diff --git a/gcc/config/i386/winnt.c b/gcc/config/i386/winnt.c
+index 201f69e74c4..a39d09f06da 100644
+--- a/gcc/config/i386/winnt.c
++++ b/gcc/config/i386/winnt.c
+@@ -921,15 +921,17 @@ i386_pe_seh_cold_init (FILE *f, const char *name)
+ 
+   /* In the normal case, the frame pointer is near the bottom of the frame
+      so we can do the full stack allocation and set it afterwards.  There
+-     is an exception when the function accesses prior frames so, in this
+-     case, we need to pre-allocate a small chunk before setting it.  */
+-  if (crtl->accesses_prior_frames)
+-    alloc_offset = seh->cfa_offset;
+-  else
++     is an exception if the function overflows the SEH maximum frame size
++     or accesses prior frames so, in this case, we need to pre-allocate a
++     small chunk of stack before setting it.  */
++  offset = seh->sp_offset - INCOMING_FRAME_SP_OFFSET;
++  if (offset < SEH_MAX_FRAME_SIZE && !crtl->accesses_prior_frames)
+     alloc_offset = seh->sp_offset;
++  else
++    alloc_offset = MIN (seh->cfa_offset + 240, seh->sp_offset);
+ 
+   offset = alloc_offset - INCOMING_FRAME_SP_OFFSET;
+-  if (offset > 0 && offset < SEH_MAX_FRAME_SIZE)
++  if (offset > 0)
+     fprintf (f, "\t.seh_stackalloc\t" HOST_WIDE_INT_PRINT_DEC "\n", offset);
+ 
+   for (int regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+@@ -958,7 +960,7 @@ i386_pe_seh_cold_init (FILE *f, const char *name)
+       fprintf (f, ", " HOST_WIDE_INT_PRINT_DEC "\n", offset);
+     }
+ 
+-  if (crtl->accesses_prior_frames)
++  if (alloc_offset != seh->sp_offset)
+     {
+       offset = seh->sp_offset - alloc_offset;
+       if (offset > 0 && offset < SEH_MAX_FRAME_SIZE)
+diff --git a/gcc/testsuite/gnat.dg/opt92.adb b/gcc/testsuite/gnat.dg/opt92.adb
+new file mode 100644
+index 00000000000..f6eb6a034ec
+--- /dev/null
++++ b/gcc/testsuite/gnat.dg/opt92.adb
+@@ -0,0 +1,38 @@
++-- { dg-do compile { target { lp64 || llp64 } } }
++-- { dg-options "-O2 -gnatws" }
++
++procedure Main is
++
++   subtype Int64 is Long_Long_Integer;
++
++   type Arr is array (Int64 range <>) of Boolean;
++
++   Pow : constant := 10;
++
++   procedure Compute (B : in out Arr) is
++      Factor : Int64 := 3;
++      Num    : Int64;
++   begin
++      while Factor <= 10 ** (Pow / 2) loop
++         Num := Factor;
++         while Num < 10 ** Pow loop
++            if B (Num) then
++               Factor := Num;
++               exit;
++            end if;
++            Num := Num + 2;
++         end loop;
++         Num := Factor * Factor;
++         while Num < 10 ** Pow loop
++            B (Num) := False;
++            Num        := Num + Factor * 2;
++         end loop;
++         Factor := Factor + 2;
++      end loop;
++   end;
++
++   B : Arr (1 .. 10 ** Pow) := (others => True);
++
++begin
++   Compute (B);   
++end;
+-- 
+2.15.1.windows.2
+

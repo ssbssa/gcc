@@ -23,7 +23,7 @@ else
 endif
 
 
-BINUTILS_VER=2.35
+BINUTILS_VER=2.36.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -35,11 +35,12 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=7.0.0
+MINGW_W64_VER=8.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
 		       --build=$(MYBUILD) --host=$(MYTARGET) \
+		       --with-default-win32-winnt=0x502 \
 		       --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configure \
 		   --build=$(MYBUILD) --host=$(MYTARGET) \
@@ -47,7 +48,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=10.2.0
+GCC_VER=10.3.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -103,15 +104,23 @@ $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done: | $(SOURCE_DIR)/binutils-01-ex
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/makeinfo.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
+$(SOURCE_DIR)/binutils-02-patch-02-gc-exported-symbols.done: | $(SOURCE_DIR)/binutils-02-patch-01-makeinfo.done
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/Don-t-gc-exported-symbols.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-06-delay-load.done: | $(SOURCE_DIR)/binutils-02-patch-04-gc-exported-symbols.done
+$(SOURCE_DIR)/binutils-02-patch-03-delay-load.done: | $(SOURCE_DIR)/binutils-02-patch-02-gc-exported-symbols.done
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/delay-load.patch
 	@touch $@
 
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done
+$(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done: | $(SOURCE_DIR)/binutils-02-patch-03-delay-load.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/objcopy-large-address-aware.patch
+	@touch $@
+
+$(SOURCE_DIR)/binutils-02-patch-05-dwarf5-section-names.done: | $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/DWARF-5-section-names.patch
+	@touch $@
+
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-05-dwarf5-section-names.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -226,46 +235,74 @@ $(SOURCE_DIR)/gcc-01-extract-05-isl.done: | $(SOURCE_DIR)/gcc-01-extract-04-mpc.
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done: | $(SOURCE_DIR)/gcc-01-extract-05-isl.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/gengtype.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0001-Fix-gengtype-for-windows-paths.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-02-relocate.done: | $(SOURCE_DIR)/gcc-02-patch-01-gengtype.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/relocate.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0002-Relocatable-mingw-paths.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-03-lfs.done: | $(SOURCE_DIR)/gcc-02-patch-02-relocate.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/lfs.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0003-Mingw-LFS-support.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-04-make-rel-pref.done: | $(SOURCE_DIR)/gcc-02-patch-03-lfs.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/make-rel-pref.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0004-Fix-make-relative-prefix-for-Windows.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done: | $(SOURCE_DIR)/gcc-02-patch-04-make-rel-pref.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0005-Enable-diagnostic-colors-on-cygwin-terminal.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done: | $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/fno-ident.patch
+$(SOURCE_DIR)/gcc-02-patch-06-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc-02-patch-05-diagnostic-color.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0006-Enable-diagnostic-colors-on-Windows-console.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done: | $(SOURCE_DIR)/gcc-02-patch-06-fno-ident.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-color-console.patch
+$(SOURCE_DIR)/gcc-02-patch-07-fno-ident.done: | $(SOURCE_DIR)/gcc-02-patch-06-diagnostic-color-console.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0007-Disable-ident-directive-by-default.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-08-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-07-diagnostic-color-console.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/function-cast.patch
+$(SOURCE_DIR)/gcc-02-patch-08-function-cast.done: | $(SOURCE_DIR)/gcc-02-patch-07-fno-ident.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0008-Don-t-warn-for-function-casts-involving-FARPROC.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-09-duplicate-Wformat.done: | $(SOURCE_DIR)/gcc-02-patch-08-function-cast.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/duplicate-Wformat.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0009-Fix-duplicate-Wformat-warnings-PR-c-92292.patch
 	@touch $@
 
 $(SOURCE_DIR)/gcc-02-patch-10-diagnostic-url.done: | $(SOURCE_DIR)/gcc-02-patch-09-duplicate-Wformat.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p0 <patches/gcc/diagnostic-url.patch
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0010-Enable-diagnostic-URLs-on-cygwin-terminal.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-10-diagnostic-url.done
+$(SOURCE_DIR)/gcc-02-patch-11-Wunused-non-trivial.done: | $(SOURCE_DIR)/gcc-02-patch-10-diagnostic-url.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0011-Warn-when-a-non-trivial-class-instance-is-unused-PR-.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-12-Wconversion-rshift.done: | $(SOURCE_DIR)/gcc-02-patch-11-Wunused-non-trivial.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0012-Don-t-warn-if-the-result-of-a-right-shift-fits-in-th.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-13-loc-non-standard-suffix.done: | $(SOURCE_DIR)/gcc-02-patch-12-Wconversion-rshift.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0013-Fix-source-location-of-non-standard-suffix-PR-c-9282.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-14-ignore-case-secrel.done: | $(SOURCE_DIR)/gcc-02-patch-13-loc-non-standard-suffix.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0014-Ignore-case-when-checking-for-secrel-.debug_frame-se.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-15-fix-freorder-glitch.done: | $(SOURCE_DIR)/gcc-02-patch-14-ignore-case-secrel.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Fix-another-freorder-blocks-and-partition-glitch-wit.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-16-debug-location-cleanup.done: | $(SOURCE_DIR)/gcc-02-patch-15-fix-freorder-glitch.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-c-debug-location-of-variable-cleanups-PR88742.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-17-fix-setjmp-SEH.done: | $(SOURCE_DIR)/gcc-02-patch-16-debug-location-cleanup.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Fix-PR-target-100402.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-17-fix-setjmp-SEH.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -335,9 +372,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-06-delay-load.done \
+  $(SOURCE_DIR)/binutils-02-patch-05-dwarf5-section-names.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done \
-  $(SOURCE_DIR)/gcc-02-patch-10-diagnostic-url.done \
+  $(SOURCE_DIR)/gcc-02-patch-17-fix-setjmp-SEH.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

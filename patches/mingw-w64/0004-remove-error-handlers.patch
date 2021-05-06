@@ -1,4 +1,4 @@
-From 0e72e83e5b3219a92428a82015dee361d6e29e66 Mon Sep 17 00:00:00 2001
+From 7ebf73c5e3165930b8437bba7334083e58535595 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
 Subject: [PATCH 04/10] remove error handlers
@@ -9,10 +9,10 @@ Subject: [PATCH 04/10] remove error handlers
  2 files changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 77f674f7..513ebefb 100644
+index 069757c64..1ffeb86c9 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -116,6 +116,7 @@ static void __cdecl pre_cpp_init (void);
+@@ -114,6 +114,7 @@ static void __cdecl pre_cpp_init (void);
  _CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
  _CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
  
@@ -20,7 +20,7 @@ index 77f674f7..513ebefb 100644
  extern int _MINGW_INSTALL_DEBUG_MATHERR;
  
  #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
-@@ -135,6 +136,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
+@@ -133,6 +134,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
    wprintf(L"Expression: %s\n", expression);
  #endif
  }
@@ -28,7 +28,7 @@ index 77f674f7..513ebefb 100644
  
  static int __cdecl
  pre_c_init (void)
-@@ -163,10 +165,12 @@ pre_c_init (void)
+@@ -161,10 +163,12 @@ pre_c_init (void)
  #else
    _setargv();
  #endif
@@ -41,8 +41,8 @@ index 77f674f7..513ebefb 100644
  
    if (__globallocalestatus == -1)
      {
-@@ -299,7 +303,9 @@ __tmainCRTStartup (void)
- #ifdef __x86_64__
+@@ -293,7 +297,9 @@ __tmainCRTStartup (void)
+ #if defined(__x86_64__) && !defined(__SEH__)
      __mingw_init_ehandler ();
  #endif
 +#if 0
@@ -52,7 +52,7 @@ index 77f674f7..513ebefb 100644
      _fpreset ();
  
 diff --git a/mingw-w64-crt/crt/pseudo-reloc.c b/mingw-w64-crt/crt/pseudo-reloc.c
-index 6e2a63b9..6129fa72 100644
+index c31da9681..df34e7242 100644
 --- a/mingw-w64-crt/crt/pseudo-reloc.c
 +++ b/mingw-w64-crt/crt/pseudo-reloc.c
 @@ -79,6 +79,9 @@ typedef struct {

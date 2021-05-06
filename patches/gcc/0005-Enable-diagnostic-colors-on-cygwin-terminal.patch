@@ -1,6 +1,17 @@
---- gcc/diagnostic-color.c	2018-01-03 11:03:58.000000000 +0100
-+++ gcc/diagnostic-color.c	2018-06-23 14:06:21.937426800 +0200
-@@ -196,11 +196,68 @@
+From da2496f9070543685e9e8c42dd57b1599b34010e Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 14:27:39 +0200
+Subject: [PATCH 05/17] Enable diagnostic colors on cygwin terminal
+
+---
+ gcc/diagnostic-color.c | 66 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 65 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
+index b1baded2c9e..b38226d10d5 100644
+--- a/gcc/diagnostic-color.c
++++ b/gcc/diagnostic-color.c
+@@ -198,11 +198,71 @@ parse_gcc_colors (void)
        return true;
  }
  
@@ -47,10 +58,13 @@
 +      size_t l1 = sizeof (namedPipe) / 2 - 1;
 +      wchar_t toMaster[] = L"-to-master";
 +      size_t l2 = sizeof (toMaster) / 2 - 1;
-+      USHORT name_length = oni->Name.Length / 2;
-+      if (name_length > l1 + l2 &&
++      wchar_t toMasterNat[] = L"-to-master-nat";
++      size_t l3 = sizeof (toMasterNat) / 2 - 1;
++      USHORT nl = oni->Name.Length / 2;
++      if (nl > l1 + l3 &&
 +	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
-+	  !memcmp (oni->Name.Buffer + (name_length - l2), toMaster, l2 * 2))
++	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
++	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
 +	is_a_tty = 1;
 +    }
 +
@@ -70,3 +84,17 @@
    /* For consistency reasons, one should check the handle returned by
       _get_osfhandle(_fileno(stderr)) because the function
       pp_write_text_to_stream() in pretty-print.c calls fputs() on
+@@ -216,6 +276,10 @@ should_colorize (void)
+ 	  && GetConsoleMode (h, &m);
+ #else
+   char const *t = getenv ("TERM");
++#ifdef __MINGW32__
++  if (t == NULL)
++    t = "";
++#endif
+   /* emacs M-x shell sets TERM="dumb".  */
+   return t && strcmp (t, "dumb") != 0 && isatty (STDERR_FILENO);
+ #endif
+-- 
+2.15.1.windows.2
+

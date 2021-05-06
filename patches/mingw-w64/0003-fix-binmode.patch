@@ -1,4 +1,4 @@
-From 0e3e4bef94c6eeb1557abdcc22affdad22989f7b Mon Sep 17 00:00:00 2001
+From b7e2de9b0cc33fc0f3a3aa80e93784ce3fd0deda Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
 Subject: [PATCH 03/10] fix binmode
@@ -9,7 +9,7 @@ Subject: [PATCH 03/10] fix binmode
  2 files changed, 16 insertions(+), 3 deletions(-)
 
 diff --git a/mingw-w64-crt/crt/binmode.c b/mingw-w64-crt/crt/binmode.c
-index f0473b08..2e46c2fd 100644
+index f0473b086..2e46c2fdf 100644
 --- a/mingw-w64-crt/crt/binmode.c
 +++ b/mingw-w64-crt/crt/binmode.c
 @@ -4,7 +4,8 @@
@@ -25,7 +25,7 @@ index f0473b08..2e46c2fd 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 361afd23..77f674f7 100644
+index e78800525..069757c64 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -24,6 +24,8 @@
@@ -37,7 +37,7 @@ index 361afd23..77f674f7 100644
  
  #if defined(__SEH__) && (!defined(__clang__) || __clang_major__ >= 7)
  #define SEH_INLINE_ASM
-@@ -143,6 +145,16 @@ pre_c_init (void)
+@@ -141,6 +143,16 @@ pre_c_init (void)
    else
      __set_app_type (_CONSOLE_APP);
  
@@ -52,7 +52,7 @@ index 361afd23..77f674f7 100644
 +    }
 +
    * __p__fmode() = _fmode;
-   * __MINGW_IMP_SYMBOL(_commode) = _commode;
+   * __p__commode() = _commode;
  
 -- 
 2.15.1.windows.2

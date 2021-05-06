@@ -1,0 +1,55 @@
+--- binutils/objcopy.c	2020-07-24 11:12:19.000000000 +0200
++++ binutils/objcopy.c	2021-02-01 19:32:05.314010600 +0100
+@@ -47,6 +47,7 @@
+ static short pe_subsystem = -1;
+ static short pe_major_subsystem_version = -1;
+ static short pe_minor_subsystem_version = -1;
++static bfd_boolean pe_large_address_aware = FALSE;
+ 
+ struct is_specified_symbol_predicate_data
+ {
+@@ -335,6 +336,7 @@
+   OPTION_KEEP_FILE_SYMBOLS,
+   OPTION_KEEP_SECTION,
+   OPTION_KEEP_SYMBOLS,
++  OPTION_LARGE_ADDRESS_AWARE,
+   OPTION_LOCALIZE_HIDDEN,
+   OPTION_LOCALIZE_SYMBOLS,
+   OPTION_LONG_SECTION_NAMES,
+@@ -463,6 +465,7 @@
+   {"keep-section", required_argument, 0, OPTION_KEEP_SECTION},
+   {"keep-symbol", required_argument, 0, 'K'},
+   {"keep-symbols", required_argument, 0, OPTION_KEEP_SYMBOLS},
++  {"large-address-aware", no_argument, 0, OPTION_LARGE_ADDRESS_AWARE},
+   {"localize-hidden", no_argument, 0, OPTION_LOCALIZE_HIDDEN},
+   {"localize-symbol", required_argument, 0, 'L'},
+   {"localize-symbols", required_argument, 0, OPTION_LOCALIZE_SYMBOLS},
+@@ -672,6 +675,7 @@
+                                    <commit>\n\
+      --subsystem <name>[:<version>]\n\
+                                    Set PE subsystem to <name> [& <version>]\n\
++     --large-address-aware         Enable virtual addresses greater than 2 gigabytes\n\
+      --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi}]\n\
+                                    Compress DWARF debug sections using zlib\n\
+      --decompress-debug-sections   Decompress DWARF debug sections using zlib\n\
+@@ -2775,6 +2779,9 @@
+ 		     file_alignment, section_alignment);
+ 	}
+ 
++      if (pe_large_address_aware)
++	pe->real_flags |= IMAGE_FILE_LARGE_ADDRESS_AWARE;
++
+       if (preserve_dates
+ 	  && bfd_get_flavour (ibfd) == bfd_target_coff_flavour
+ 	  && bfd_pei_p (ibfd))
+@@ -5763,6 +5770,10 @@
+ 	  }
+ 	  break;
+ 
++	case OPTION_LARGE_ADDRESS_AWARE:
++	  pe_large_address_aware = TRUE;
++	  break;
++
+ 	case OPTION_VERILOG_DATA_WIDTH:
+ 	  VerilogDataWidth = parse_vma (optarg, "--verilog-data-width");
+ 	  if (VerilogDataWidth < 1)

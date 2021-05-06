@@ -1,0 +1,270 @@
+From ba6eb62ff0ea9843a018cfd7cd06777bd66ae0a0 Mon Sep 17 00:00:00 2001
+From: Nick Clifton <nickc@redhat.com>
+Date: Mon, 1 Mar 2021 16:25:06 +0000
+Subject: [PATCH] Add DWARF-5 section names to PE and PEP linker scripts.
+
+	PR 27268
+	* scripttempl/pe.sc: Add DWARF-5 section names.
+	* scripttempl/pep.sc: Likewise.
+---
+ ld/ChangeLog          |  7 +++++
+ ld/scripttempl/pe.sc  | 81 ++++++++++++++++++++++++++++++++++++++---------
+ ld/scripttempl/pep.sc | 87 +++++++++++++++++++++++++++++++++++++++++----------
+ 3 files changed, 144 insertions(+), 31 deletions(-)
+
+diff --git a/ld/ChangeLog b/ld/ChangeLog
+index d72d69af120..e43f7fa17a6 100644
+--- a/ld/ChangeLog
++++ b/ld/ChangeLog
+@@ -1,3 +1,10 @@
++2021-03-01  Hannes Domani  <ssbssa@sourceware.org>
++	    Nick Clifton  <nickc@redhat.com>
++
++	PR 27268
++	* scripttempl/pe.sc: Add DWARF-5 section names.
++	* scripttempl/pep.sc: Likewise.
++
+ 2021-02-06  Nick Clifton  <nickc@redhat.com>
+ 
+ 	This is the 2.36.1 release.
+diff --git a/ld/scripttempl/pe.sc b/ld/scripttempl/pe.sc
+index 4617c05ff0c..e9d1f78cb32 100644
+--- a/ld/scripttempl/pe.sc
++++ b/ld/scripttempl/pe.sc
+@@ -300,15 +300,6 @@ SECTIONS
+     *(.zdebug_pubnames)
+   }
+ 
+-  .debug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+-  {
+-    *(.debug_pubtypes)
+-  }
+-  .zdebug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+-  {
+-    *(.zdebug_pubtypes)
+-  }
+-
+   /* DWARF 2.  */
+   .debug_info ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+@@ -410,16 +401,16 @@ SECTIONS
+     *(.zdebug_varnames)
+   }
+ 
+-  .debug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  /* DWARF 3.  */
++  .debug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.debug_macro)
++    *(.debug_pubtypes)
+   }
+-  .zdebug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  .zdebug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.zdebug_macro)
++    *(.zdebug_pubtypes)
+   }
+ 
+-  /* DWARF 3.  */
+   .debug_ranges ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+     *(.debug_ranges)
+@@ -439,6 +430,68 @@ SECTIONS
+     *(.zdebug_types${RELOCATING+ .gnu.linkonce.wt.*})
+   }
+ 
++  /* DWARF 5.  */
++  .debug_addr ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_addr)
++  }
++  .zdebug_addr ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_addr)
++  }
++  .debug_line_str ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_line_str)
++  }
++  .zdebug_line_str ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_line_str)
++  }
++  .debug_loclists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_loclists)
++  }
++  .zdebug_loclists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_loclists)
++  }
++  .debug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_macro)
++  }
++  .zdebug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_macro)
++  }
++  .debug_names ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_names)
++  }
++  .zdebug_names ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_names)
++  }
++  .debug_rnglists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_rnglists)
++  }
++  .zdebug_rnglists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_rnglists)
++  }
++  .debug_str_offsets ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_str_offsets)
++  }
++  .zdebug_str_offsets ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_str_offsets)
++  }
++  .debug_sup ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_sup)
++  }
++
+   /* For Go and Rust.  */
+   .debug_gdb_scripts ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+diff --git a/ld/scripttempl/pep.sc b/ld/scripttempl/pep.sc
+index 7363205bab7..afa2d23871c 100644
+--- a/ld/scripttempl/pep.sc
++++ b/ld/scripttempl/pep.sc
+@@ -305,15 +305,6 @@ SECTIONS
+     *(.zdebug_pubnames)
+   }
+ 
+-  .debug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+-  {
+-    *(.debug_pubtypes)
+-  }
+-  .zdebug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+-  {
+-    *(.zdebug_pubtypes)
+-  }
+-
+   /* DWARF 2.  */
+   .debug_info ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+@@ -344,11 +335,11 @@ SECTIONS
+ 
+   .debug_frame ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.debug_frame)
++    *(.debug_frame*)
+   }
+   .zdebug_frame ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.zdebug_frame)
++    *(.zdebug_frame*)
+   }
+ 
+   .debug_str ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+@@ -415,16 +406,16 @@ SECTIONS
+     *(.zdebug_varnames)
+   }
+ 
+-  .debug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  /* DWARF 3.  */
++  .debug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.debug_macro)
++    *(.debug_pubtypes)
+   }
+-  .zdebug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  .zdebug_pubtypes ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.zdebug_macro)
++    *(.zdebug_pubtypes)
+   }
+ 
+-  /* DWARF 3.  */
+   .debug_ranges ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+     *(.debug_ranges)
+@@ -441,7 +432,69 @@ SECTIONS
+   }
+   .zdebug_types ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
+   {
+-    *(.zdebug_types${RELOCATING+ .zdebug.gnu.linkonce.wt.*})
++    *(.zdebug_types${RELOCATING+ .gnu.linkonce.wt.*})
++  }
++
++  /* DWARF 5.  */
++  .debug_addr ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_addr)
++  }
++  .zdebug_addr ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_addr)
++  }
++  .debug_line_str ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_line_str)
++  }
++  .zdebug_line_str ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_line_str)
++  }
++  .debug_loclists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_loclists)
++  }
++  .zdebug_loclists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_loclists)
++  }
++  .debug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_macro)
++  }
++  .zdebug_macro ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_macro)
++  }
++  .debug_names ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_names)
++  }
++  .zdebug_names ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_names)
++  }
++  .debug_rnglists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_rnglists)
++  }
++  .zdebug_rnglists ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_rnglists)
++  }
++  .debug_str_offsets ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_str_offsets)
++  }
++  .zdebug_str_offsets ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.zdebug_str_offsets)
++  }
++  .debug_sup ${RELOCATING+BLOCK(__section_alignment__)} ${RELOCATING+(NOLOAD)} :
++  {
++    *(.debug_sup)
+   }
+ 
+   /* For Go and Rust.  */
+-- 
+2.15.1.windows.2
+

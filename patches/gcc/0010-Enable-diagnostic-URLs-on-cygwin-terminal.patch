@@ -1,0 +1,34 @@
+From 72feacb696723ffcb14fa035666cae39eb7f1bac Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 14:40:33 +0200
+Subject: [PATCH 10/17] Enable diagnostic URLs on cygwin terminal
+
+---
+ gcc/diagnostic-color.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
+index e9bcc8e3bc4..411da99a3ad 100644
+--- a/gcc/diagnostic-color.c
++++ b/gcc/diagnostic-color.c
+@@ -261,7 +261,7 @@ w_isatty (int num)
+ 	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
+ 	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
+ 	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
+-	is_a_tty = 1;
++	is_a_tty = 2;
+     }
+ 
+   free (oni);
+@@ -355,7 +355,7 @@ static bool
+ auto_enable_urls ()
+ {
+ #ifdef __MINGW32__
+-  return false;
++  return w_isatty (STDERR_FILENO) == 2;
+ #else
+   const char *term, *colorterm;
+ 
+-- 
+2.15.1.windows.2
+

@@ -1,10 +1,18 @@
-# HG changeset patch
-# Parent 2a1167ee4ed20c6ff3558a104218585837e9963f
+From f8414184155f942f196e557fb668e84725b45dd5 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 14:18:03 +0200
+Subject: [PATCH 02/17] Relocatable mingw paths
 
-diff -r 2a1167ee4ed2 gcc/config/i386/mingw32.h
---- a/gcc/config/i386/mingw32.h	Mon Sep 23 10:33:18 2013 -0600
-+++ b/gcc/config/i386/mingw32.h	Sun Sep 29 07:43:21 2013 -0600
-@@ -78,7 +78,7 @@
+---
+ gcc/config/i386/mingw32.h | 9 ++-------
+ gcc/incpath.c             | 3 +--
+ 2 files changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/gcc/config/i386/mingw32.h b/gcc/config/i386/mingw32.h
+index 1bbabfe8bed..9d6a74ddfdb 100644
+--- a/gcc/config/i386/mingw32.h
++++ b/gcc/config/i386/mingw32.h
+@@ -78,7 +78,7 @@ along with GCC; see the file COPYING3.  If not see
  #endif
  
  #undef NATIVE_SYSTEM_HEADER_COMPONENT
@@ -13,7 +21,7 @@ diff -r 2a1167ee4ed2 gcc/config/i386/mingw32.h
  
  #undef CPP_SPEC
  #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
-@@ -149,17 +149,12 @@
+@@ -186,17 +186,12 @@ along with GCC; see the file COPYING3.  If not see
  
  /* Override startfile prefix defaults.  */
  #ifndef STANDARD_STARTFILE_PREFIX_1
@@ -32,10 +40,11 @@ diff -r 2a1167ee4ed2 gcc/config/i386/mingw32.h
  /* Output STRING, a string representing a filename, to FILE.
     We canonicalize it to be in Unix format (backslashes are replaced
     forward slashes.  */
-diff -r 2a1167ee4ed2 gcc/incpath.c
---- a/gcc/incpath.c	Mon Sep 23 10:33:18 2013 -0600
-+++ b/gcc/incpath.c	Sun Sep 29 07:43:21 2013 -0600
-@@ -184,8 +184,7 @@
+diff --git a/gcc/incpath.c b/gcc/incpath.c
+index 8a2bda00f80..836f04ee7bd 100644
+--- a/gcc/incpath.c
++++ b/gcc/incpath.c
+@@ -183,8 +183,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
  	      str = concat (sysroot_no_trailing_dir_separator, p->fname, NULL);
  	      free (sysroot_no_trailing_dir_separator);
  	    }
@@ -45,3 +54,6 @@ diff -r 2a1167ee4ed2 gcc/incpath.c
  	    {
   	      static const char *relocated_prefix;
  	      char *ostr;
+-- 
+2.15.1.windows.2
+

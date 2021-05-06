@@ -1,7 +1,17 @@
-diff -r ea35f212956a libiberty/make-relative-prefix.c
---- a/libiberty/make-relative-prefix.c	Mon Apr 21 08:32:11 2014 -0600
-+++ b/libiberty/make-relative-prefix.c	Mon Apr 21 15:53:37 2014 -0600
-@@ -62,6 +62,11 @@
+From 75653b1a522d0ac3a339230eefa85f63f7c16a6a Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 14:22:37 +0200
+Subject: [PATCH 04/17] Fix make-relative-prefix for Windows
+
+---
+ libiberty/make-relative-prefix.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/libiberty/make-relative-prefix.c b/libiberty/make-relative-prefix.c
+index e3f9f920df4..7cc369e25de 100644
+--- a/libiberty/make-relative-prefix.c
++++ b/libiberty/make-relative-prefix.c
+@@ -61,6 +61,11 @@ relative prefix can be found, return @code{NULL}.
  #include <sys/stat.h>
  #endif
  
@@ -13,7 +23,7 @@ diff -r ea35f212956a libiberty/make-relative-prefix.c
  #include <string.h>
  
  #include "ansidecl.h"
-@@ -214,6 +219,26 @@
+@@ -216,6 +221,26 @@ free_split_directories (char **dirs)
      }
  }
  
@@ -40,7 +50,7 @@ diff -r ea35f212956a libiberty/make-relative-prefix.c
  /* Given three strings PROGNAME, BIN_PREFIX, PREFIX, return a string that gets
     to PREFIX starting with the directory portion of PROGNAME and a relative
     pathname of the difference between BIN_PREFIX and PREFIX.
-@@ -281,11 +306,17 @@
+@@ -287,11 +312,17 @@ make_relative_prefix_1 (const char *progname, const char *bin_prefix,
  			nstore[endp - startp] = 0;
  		    }
  		  strcat (nstore, progname);
@@ -58,3 +68,6 @@ diff -r ea35f212956a libiberty/make-relative-prefix.c
  		    {
  #if defined (HAVE_SYS_STAT_H) && defined (S_ISREG)
  		      struct stat st;
+-- 
+2.15.1.windows.2
+

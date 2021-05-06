@@ -1,0 +1,100 @@
+From 71f66e1a38419e16fc866aa2013437d64072c020 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 16:10:55 +0200
+Subject: [PATCH 12/17] Don't warn if the result of a right-shift fits in the
+ target type (PR c/89807)
+
+---
+ gcc/c-family/c-common.c                    | 20 +++++++++++++
+ gcc/testsuite/gcc.dg/Wconversion-pr89807.c | 48 ++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
+ create mode 100644 gcc/testsuite/gcc.dg/Wconversion-pr89807.c
+
+diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
+index 064c2f263f0..2694e5183db 100644
+--- a/gcc/c-family/c-common.c
++++ b/gcc/c-family/c-common.c
+@@ -1489,6 +1489,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
+ 		    return SAFE_CONVERSION;
+ 		}
+ 	    }
++	  else if (TREE_CODE (expr) == RSHIFT_EXPR)
++	    {
++	      tree op0 = TREE_OPERAND (expr, 0);
++	      tree op1 = TREE_OPERAND (expr, 1);
++
++	      /* Don't warn if the result of an unsigned value, right shifted
++		 by a constant, fits in the target type.  */
++	      if (TYPE_UNSIGNED (TREE_TYPE (op0))
++		  && TREE_CODE (op1) == INTEGER_CST)
++		{
++		  int prec_rshift = TYPE_PRECISION (TREE_TYPE (op0))
++		    - TREE_INT_CST_LOW (op1);
++		  int prec_res = TYPE_PRECISION (type);
++		  if (!TYPE_UNSIGNED (type))
++		    prec_res--;
++
++		  if (prec_rshift <= prec_res)
++		    return SAFE_CONVERSION;
++		}
++	    }
+ 	  /* Warn for integer types converted to smaller integer types.  */
+ 	  if (TYPE_PRECISION (type) < TYPE_PRECISION (expr_type))
+ 	    give_warning = UNSAFE_OTHER;
+diff --git a/gcc/testsuite/gcc.dg/Wconversion-pr89807.c b/gcc/testsuite/gcc.dg/Wconversion-pr89807.c
+new file mode 100644
+index 00000000000..d7e12923845
+--- /dev/null
++++ b/gcc/testsuite/gcc.dg/Wconversion-pr89807.c
+@@ -0,0 +1,48 @@
++/* PR 89807 */
++/* { dg-do compile } */
++/* { dg-options "-Wconversion -Wsign-conversion" } */
++/* { dg-require-effective-target int32plus } */
++
++void shift(unsigned long long ull, unsigned int ui, unsigned short us,
++	   unsigned char uc)
++{
++  signed char c;
++  short s;
++  int i;
++  long long ll;
++
++  c = ull >> 56; /* { dg-warning "conversion" } */
++  c = ull >> 57;
++  c = ui >> 24; /* { dg-warning "conversion" } */
++  c = ui >> 25;
++  c = us >> 8; /* { dg-warning "conversion" } */
++  c = us >> 9;
++  c = uc >> 1;
++
++  s = ull >> 48; /* { dg-warning "conversion" } */
++  s = ull >> 49;
++  s = ui >> 16; /* { dg-warning "conversion" } */
++  s = ui >> 17;
++  s = us >> 1;
++
++  i = ull >> 32; /* { dg-warning "conversion" } */
++  i = ull >> 33;
++  i = ui >> 1;
++
++  ll = ull >> 1;
++
++  uc = ull >> 55; /* { dg-warning "conversion" } */
++  uc = ull >> 56;
++  uc = ui >> 23; /* { dg-warning "conversion" } */
++  uc = ui >> 24;
++  uc = us >> 7; /* { dg-warning "conversion" } */
++  uc = us >> 8;
++
++  us = ull >> 47; /* { dg-warning "conversion" } */
++  us = ull >> 48;
++  us = ui >> 15; /* { dg-warning "conversion" } */
++  us = ui >> 16;
++
++  ui = ull >> 31; /* { dg-warning "conversion" } */
++  ui = ull >> 32;
++}
+-- 
+2.15.1.windows.2
+

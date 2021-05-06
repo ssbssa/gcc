@@ -1,0 +1,62 @@
+From fb374619a06c59b41d8ddc45c9dd175a76b7da56 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 28 Mar 2021 15:13:14 +0200
+Subject: [PATCH 11/17] Warn when a non-trivial class instance is unused (PR
+ c++/60212)
+
+---
+ gcc/common.opt | 4 ++++
+ gcc/cp/decl.c  | 2 ++
+ gcc/cp/init.c  | 1 +
+ 3 files changed, 7 insertions(+)
+
+diff --git a/gcc/common.opt b/gcc/common.opt
+index 3d8bf7ddb7c..5c9466c223b 100644
+--- a/gcc/common.opt
++++ b/gcc/common.opt
+@@ -809,6 +809,10 @@ Wunused-label
+ Common Var(warn_unused_label) Warning EnabledBy(Wunused)
+ Warn when a label is unused.
+ 
++Wunused-non-trivial
++Common Var(warn_unused_non_trivial) Warning
++Warn when a non-trivial class instance is unused.
++
+ Wunused-parameter
+ Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
+ Warn when a function parameter is unused.
+diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
+index 4293ee6238f..196c4aa9f1e 100644
+--- a/gcc/cp/decl.c
++++ b/gcc/cp/decl.c
+@@ -657,6 +657,7 @@ poplevel (int keep, int reverse, int functionbody)
+ 		: (DECL_NAME (decl) && !DECL_ARTIFICIAL (decl)))
+ 	    && type != error_mark_node
+ 	    && (!CLASS_TYPE_P (type)
++		|| warn_unused_non_trivial
+ 		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
+ 		|| lookup_attribute ("warn_unused",
+ 				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
+@@ -17504,6 +17505,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
+ 
+   if (cleanup
+       && DECL_P (decl)
++      && !warn_unused_non_trivial
+       && !lookup_attribute ("warn_unused", TYPE_ATTRIBUTES (TREE_TYPE (decl)))
+       /* Treat objects with destructors as used; the destructor may do
+ 	 something substantive.  */
+diff --git a/gcc/cp/init.c b/gcc/cp/init.c
+index 878099ecaad..21f3e302588 100644
+--- a/gcc/cp/init.c
++++ b/gcc/cp/init.c
+@@ -1821,6 +1821,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
+ 
+   if ((VAR_P (exp) || TREE_CODE (exp) == PARM_DECL)
+       && TREE_SIDE_EFFECTS (stmt_expr)
++      && !warn_unused_non_trivial
+       && !lookup_attribute ("warn_unused", TYPE_ATTRIBUTES (type)))
+     /* Just know that we've seen something for this node.  */
+     TREE_USED (exp) = 1;
+-- 
+2.15.1.windows.2
+
