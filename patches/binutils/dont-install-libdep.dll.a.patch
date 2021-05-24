@@ -1,0 +1,58 @@
+From 22604fe675b25b3ffca56e44f2c0ff378e5c6104 Mon Sep 17 00:00:00 2001
+From: Nick Clifton <nickc@redhat.com>
+Date: Tue, 11 May 2021 11:06:53 +0100
+Subject: [PATCH] Prevent libdep.dll.a from being installed on Windows based
+ systems.
+
+	PR 27113
+	* Makefile.am (install-data-local): Also delete libdep.dll.a if it
+	is present.
+	* Makefile.in: Regenerate.
+---
+ ld/ChangeLog   | 7 +++++++
+ ld/Makefile.am | 1 +
+ ld/Makefile.in | 1 +
+ 3 files changed, 9 insertions(+)
+
+diff --git a/ld/ChangeLog b/ld/ChangeLog
+index e92638a162b..68328a8aac2 100644
+--- a/ld/ChangeLog
++++ b/ld/ChangeLog
+@@ -1,3 +1,10 @@
++2021-05-11  Nick Clifton  <nickc@redhat.com>
++
++	PR 27113
++	* Makefile.am (install-data-local): Also delete libdep.dll.a if it
++	is present.
++	* Makefile.in: Regenerate.
++
+ 2021-03-01  Hannes Domani  <ssbssa@sourceware.org>
+ 	    Nick Clifton  <nickc@redhat.com>
+ 
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index 0314a58a5a3..f8e99325361 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -1081,6 +1081,7 @@ install-data-local: install-bfdpluginLTLIBRARIES
+ 	  $(INSTALL_DATA) $$f $(DESTDIR)$(scriptdir)/$$f ; \
+ 	done
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.la
++	rm -f $(DESTDIR)$(bfdplugindir)/libdep.dll.a
+ 
+ # Stuff that should be included in a distribution.  The diststuff
+ # target is run by the taz target in ../Makefile.in.
+diff --git a/ld/Makefile.in b/ld/Makefile.in
+index 211e62000a7..ef2e99e08da 100644
+--- a/ld/Makefile.in
++++ b/ld/Makefile.in
+@@ -2680,6 +2680,7 @@ install-data-local: install-bfdpluginLTLIBRARIES
+ 	  $(INSTALL_DATA) $$f $(DESTDIR)$(scriptdir)/$$f ; \
+ 	done
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.la
++	rm -f $(DESTDIR)$(bfdplugindir)/libdep.dll.a
+ diststuff: info $(EXTRA_DIST)
+ 
+ # Both info (ld.info) and ld.1 depend on configdoc.texi.
+-- 
+2.15.1.windows.2
+

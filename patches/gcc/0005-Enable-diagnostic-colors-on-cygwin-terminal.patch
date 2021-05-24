@@ -1,14 +1,14 @@
-From da2496f9070543685e9e8c42dd57b1599b34010e Mon Sep 17 00:00:00 2001
+From f16e59100ef6bf140bf0d4efbe5e41e75a4f77ea Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:27:39 +0200
-Subject: [PATCH 05/17] Enable diagnostic colors on cygwin terminal
+Subject: [PATCH 05/15] Enable diagnostic colors on cygwin terminal
 
 ---
  gcc/diagnostic-color.c | 66 +++++++++++++++++++++++++++++++++++++++++++++++++-
  1 file changed, 65 insertions(+), 1 deletion(-)
 
 diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
-index b1baded2c9e..b38226d10d5 100644
+index 1fc5a9079c7..2aad5d375f5 100644
 --- a/gcc/diagnostic-color.c
 +++ b/gcc/diagnostic-color.c
 @@ -198,11 +198,71 @@ parse_gcc_colors (void)

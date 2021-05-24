@@ -1,7 +1,7 @@
-From 936515a1d21ee372ed1df18b35f3eb1d7401ba40 Mon Sep 17 00:00:00 2001
+From 5be3a93862a44c911cef4688e8b415db7ac61627 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
-Subject: [PATCH 03/17] Mingw LFS support
+Subject: [PATCH 03/15] Mingw LFS support
 
 ---
  libstdc++-v3/config/io/basic_file_stdio.cc    | 13 +++++++++++--
@@ -9,10 +9,10 @@ Subject: [PATCH 03/17] Mingw LFS support
  2 files changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/libstdc++-v3/config/io/basic_file_stdio.cc b/libstdc++-v3/config/io/basic_file_stdio.cc
-index ba830fb9e97..5ac76bc2a78 100644
+index ce4a6380ebb..09bac3ee3ca 100644
 --- a/libstdc++-v3/config/io/basic_file_stdio.cc
 +++ b/libstdc++-v3/config/io/basic_file_stdio.cc
-@@ -236,7 +236,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -244,7 +244,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
      const char* __c_mode = fopen_mode(__mode);
      if (__c_mode && !this->is_open())
        {
@@ -21,7 +21,7 @@ index ba830fb9e97..5ac76bc2a78 100644
  	if ((_M_cfile = fopen64(__name, __c_mode)))
  #else
  	if ((_M_cfile = fopen(__name, __c_mode)))
-@@ -344,7 +344,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -372,7 +372,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
    streamoff
    __basic_file<char>::seekoff(streamoff __off, ios_base::seekdir __way) throw ()
    {
@@ -30,7 +30,7 @@ index ba830fb9e97..5ac76bc2a78 100644
      return lseek64(this->fd(), __off, __way);
  #else
      if (__off > numeric_limits<off_t>::max()
-@@ -391,6 +391,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -423,6 +423,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  							   ios_base::cur);
  	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
        }
@@ -47,10 +47,10 @@ index ba830fb9e97..5ac76bc2a78 100644
      struct stat __buffer;
      const int __err = fstat(this->fd(), &__buffer);
 diff --git a/libstdc++-v3/include/ext/stdio_sync_filebuf.h b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
-index 5763809ea76..c89d181b985 100644
+index 90765e55831..c7efc771ed3 100644
 --- a/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 +++ b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
-@@ -202,7 +202,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -201,7 +201,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  	  __whence = SEEK_CUR;
  	else
  	  __whence = SEEK_END;

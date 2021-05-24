@@ -1,7 +1,7 @@
-From fb374619a06c59b41d8ddc45c9dd175a76b7da56 Mon Sep 17 00:00:00 2001
+From ca5d72567969f4a6d2d649bb3797121394124a84 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 15:13:14 +0200
-Subject: [PATCH 11/17] Warn when a non-trivial class instance is unused (PR
+Subject: [PATCH 11/15] Warn when a non-trivial class instance is unused (PR
  c++/60212)
 
 ---
@@ -11,10 +11,10 @@ Subject: [PATCH 11/17] Warn when a non-trivial class instance is unused (PR
  3 files changed, 7 insertions(+)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index 3d8bf7ddb7c..5c9466c223b 100644
+index 87456c711a8..311d821def9 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -809,6 +809,10 @@ Wunused-label
+@@ -810,6 +810,10 @@ Wunused-label
  Common Var(warn_unused_label) Warning EnabledBy(Wunused)
  Warn when a label is unused.
  
@@ -26,10 +26,10 @@ index 3d8bf7ddb7c..5c9466c223b 100644
  Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
  Warn when a function parameter is unused.
 diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
-index 4293ee6238f..196c4aa9f1e 100644
+index b81de8ef934..173c9b31c98 100644
 --- a/gcc/cp/decl.c
 +++ b/gcc/cp/decl.c
-@@ -657,6 +657,7 @@ poplevel (int keep, int reverse, int functionbody)
+@@ -663,6 +663,7 @@ poplevel (int keep, int reverse, int functionbody)
  		: (DECL_NAME (decl) && !DECL_ARTIFICIAL (decl)))
  	    && type != error_mark_node
  	    && (!CLASS_TYPE_P (type)
@@ -37,7 +37,7 @@ index 4293ee6238f..196c4aa9f1e 100644
  		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
  		|| lookup_attribute ("warn_unused",
  				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
-@@ -17504,6 +17505,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
+@@ -17825,6 +17826,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
  
    if (cleanup
        && DECL_P (decl)
@@ -46,10 +46,10 @@ index 4293ee6238f..196c4aa9f1e 100644
        /* Treat objects with destructors as used; the destructor may do
  	 something substantive.  */
 diff --git a/gcc/cp/init.c b/gcc/cp/init.c
-index 878099ecaad..21f3e302588 100644
+index a85f4d50750..53df3c6098e 100644
 --- a/gcc/cp/init.c
 +++ b/gcc/cp/init.c
-@@ -1821,6 +1821,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
+@@ -1847,6 +1847,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
  
    if ((VAR_P (exp) || TREE_CODE (exp) == PARM_DECL)
        && TREE_SIDE_EFFECTS (stmt_expr)

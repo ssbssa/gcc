@@ -1,7 +1,7 @@
-From c769b8d9d35537d41bf31fc0147b637e6a08fc3e Mon Sep 17 00:00:00 2001
+From 8b895abfd696bb73e6f37cba28b33b35e668bc2d Mon Sep 17 00:00:00 2001
 From: Eric Botcazou <ebotcazou@adacore.com>
 Date: Wed, 5 May 2021 22:48:51 +0200
-Subject: [PATCH 17/17] Fix PR target/100402
+Subject: [PATCH 15/15] Fix PR target/100402
 
 This is a regression for 64-bit Windows present from mainline down to the 9
 branch and introduced by the fix for PR target/99234.  Again SEH, but with
@@ -34,10 +34,10 @@ gcc/testsuite/
  create mode 100644 gcc/testsuite/gcc.c-torture/execute/20210505-1.c
 
 diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
-index 2f838840e96..06ad1b2274e 100644
+index 7c41302c75b..3bec713a0e8 100644
 --- a/gcc/config/i386/i386.c
 +++ b/gcc/config/i386/i386.c
-@@ -6356,12 +6356,29 @@ ix86_compute_frame_layout (void)
+@@ -6671,12 +6671,29 @@ ix86_compute_frame_layout (void)
  	 area, see the SEH code in config/i386/winnt.c for the rationale.  */
        frame->hard_frame_pointer_offset = frame->sse_reg_save_offset;
  

@@ -1,22 +1,22 @@
-From 12dda6679cb57ca162ad7e6a11eb17f8cb815c75 Mon Sep 17 00:00:00 2001
+From 7805d7ceed24c40f9309345939cd6c349ae7bee2 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:34:17 +0200
-Subject: [PATCH 07/17] Disable #ident directive by default
+Subject: [PATCH 07/15] Disable #ident directive by default
 
 ---
  gcc/common.opt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index ec5235c3a41..3d8bf7ddb7c 100644
+index a75b44ee47e..87456c711a8 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -1665,7 +1665,7 @@ Enable guessing of branch probabilities.
+@@ -1703,7 +1703,7 @@ Enable guessing of branch probabilities.
  ; On SVR4 targets, it also controls whether or not to emit a
  ; string identifying the compiler.
  fident
--Common Report Var(flag_no_ident,0)
-+Common Report Var(flag_no_ident,0) Init(1)
+-Common Var(flag_no_ident,0)
++Common Var(flag_no_ident,0) Init(1)
  Process #ident directives.
  
  fif-conversion

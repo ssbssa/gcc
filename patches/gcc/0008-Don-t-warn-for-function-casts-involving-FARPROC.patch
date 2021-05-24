@@ -1,7 +1,7 @@
-From f27c2c254dd368c651ae3be78500e64bd52176da Mon Sep 17 00:00:00 2001
+From 0360d8ed3d007a2737eb04454a117cdf70e913ad Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:35:56 +0200
-Subject: [PATCH 08/17] Don't warn for function casts involving FARPROC
+Subject: [PATCH 08/15] Don't warn for function casts involving FARPROC
 
 ---
  gcc/c/c-typeck.c | 5 +++++
@@ -9,10 +9,10 @@ Subject: [PATCH 08/17] Don't warn for function casts involving FARPROC
  2 files changed, 10 insertions(+)
 
 diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
-index 9342d3a071a..8c6c88fd4a2 100644
+index 51a62c800f7..5fe5049bc15 100644
 --- a/gcc/c/c-typeck.c
 +++ b/gcc/c/c-typeck.c
-@@ -5764,6 +5764,11 @@ c_safe_function_type_cast_p (tree t1, tree t2)
+@@ -5858,6 +5858,11 @@ c_safe_function_type_cast_p (tree t1, tree t2)
        TYPE_ARG_TYPES (t2) == void_list_node)
      return true;
  
@@ -25,10 +25,10 @@ index 9342d3a071a..8c6c88fd4a2 100644
      return false;
  
 diff --git a/gcc/cp/typeck.c b/gcc/cp/typeck.c
-index 6ebf6319efd..97c95af363b 100644
+index 50d0f1e6a62..31f67363a34 100644
 --- a/gcc/cp/typeck.c
 +++ b/gcc/cp/typeck.c
-@@ -1221,6 +1221,11 @@ cxx_safe_function_type_cast_p (tree t1, tree t2)
+@@ -1249,6 +1249,11 @@ cxx_safe_function_type_cast_p (tree t1, tree t2)
        TYPE_ARG_TYPES (t2) == void_list_node)
      return true;
  

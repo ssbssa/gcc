@@ -1,7 +1,7 @@
-From 266d3e05a5f6b0c84747d497858cff5b14cc9aae Mon Sep 17 00:00:00 2001
+From 3994ff6497c979b03abc9cfef5b5b0c9c85020d2 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:18:05 +0200
-Subject: [PATCH 13/17] Fix source location of non-standard suffix (PR c/92826)
+Subject: [PATCH 13/15] Fix source location of non-standard suffix (PR c/92826)
 
 Before:
   $ gcc -c pr92826.c -Wpedantic
@@ -21,7 +21,7 @@ After:
  1 file changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/gcc/c-family/c-lex.c b/gcc/c-family/c-lex.c
-index c4fc884cf4a..ff58c173343 100644
+index 6374b72ed2d..c3044a08a99 100644
 --- a/gcc/c-family/c-lex.c
 +++ b/gcc/c-family/c-lex.c
 @@ -41,7 +41,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
@@ -33,7 +33,7 @@ index c4fc884cf4a..ff58c173343 100644
  static tree interpret_fixed (const cpp_token *, unsigned int);
  static enum integer_type_kind narrowest_unsigned_type
  	(const widest_int &, unsigned int);
-@@ -489,7 +489,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
+@@ -501,7 +501,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
  	    break;
  
  	  case CPP_N_FLOATING:
@@ -42,7 +42,7 @@ index c4fc884cf4a..ff58c173343 100644
  	    break;
  
  	  default:
-@@ -846,7 +846,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
+@@ -869,7 +869,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
     by cpplib.  For C++11 SUFFIX may contain a user-defined literal suffix.  */
  static tree
  interpret_float (const cpp_token *token, unsigned int flags,
@@ -52,7 +52,7 @@ index c4fc884cf4a..ff58c173343 100644
  {
    tree type;
    tree const_type;
-@@ -911,7 +912,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -934,7 +935,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	else
@@ -62,7 +62,7 @@ index c4fc884cf4a..ff58c173343 100644
  
  	type = c_common_type_for_mode (mode, 0);
  	gcc_assert (type);
-@@ -934,7 +936,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -957,7 +959,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	else

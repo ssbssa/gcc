@@ -1,14 +1,14 @@
-From 72feacb696723ffcb14fa035666cae39eb7f1bac Mon Sep 17 00:00:00 2001
+From 6d067c389d5281a7ad8ae070ef96b2db424ce844 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
-Subject: [PATCH 10/17] Enable diagnostic URLs on cygwin terminal
+Subject: [PATCH 10/15] Enable diagnostic URLs on cygwin terminal
 
 ---
  gcc/diagnostic-color.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
-index e9bcc8e3bc4..411da99a3ad 100644
+index 04c16470831..a86e1809099 100644
 --- a/gcc/diagnostic-color.c
 +++ b/gcc/diagnostic-color.c
 @@ -261,7 +261,7 @@ w_isatty (int num)

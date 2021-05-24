@@ -1,7 +1,7 @@
-From 8a526a9d9d97f5514b21b49ef12dc79ce557c2e7 Mon Sep 17 00:00:00 2001
+From 24290e0cd3d851b8ffb26f266a5fc78a481c9f7e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
-Subject: [PATCH 06/17] Enable diagnostic colors on Windows console
+Subject: [PATCH 06/15] Enable diagnostic colors on Windows console
 
 ---
  gcc/diagnostic-color.c | 17 ++++++++--
@@ -9,7 +9,7 @@ Subject: [PATCH 06/17] Enable diagnostic colors on Windows console
  2 files changed, 104 insertions(+), 4 deletions(-)
 
 diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
-index b38226d10d5..e9bcc8e3bc4 100644
+index 2aad5d375f5..04c16470831 100644
 --- a/gcc/diagnostic-color.c
 +++ b/gcc/diagnostic-color.c
 @@ -207,6 +207,9 @@ parse_gcc_colors (void)
@@ -44,7 +44,7 @@ index b38226d10d5..e9bcc8e3bc4 100644
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
 diff --git a/gcc/pretty-print.c b/gcc/pretty-print.c
-index 407f7300dfb..4046f140fd5 100644
+index ade1933f86a..1a873720649 100644
 --- a/gcc/pretty-print.c
 +++ b/gcc/pretty-print.c
 @@ -31,7 +31,7 @@ along with GCC; see the file COPYING3.  If not see
