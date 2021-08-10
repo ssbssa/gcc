@@ -247,6 +247,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
   CPP_OPTION (pfile, warn_dollars) = 1;
   CPP_OPTION (pfile, warn_variadic_macros) = 1;
   CPP_OPTION (pfile, warn_builtin_macro_redefined) = 1;
+  CPP_OPTION (pfile, warn_macro_redefined) = 1;
   CPP_OPTION (pfile, cpp_warn_implicit_fallthrough) = 0;
   CPP_OPTION (pfile, warn_header_guard) = 0;
   /* By default, track locations of tokens resulting from macro
