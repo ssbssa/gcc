@@ -918,6 +918,10 @@ Wlong-long
 C ObjC C++ ObjC++ CPP(cpp_warn_long_long) CppReason(CPP_W_LONG_LONG) Var(warn_long_long) Init(-1) Warning LangEnabledBy(C ObjC,Wc90-c99-compat)
 Do not warn about using \"long long\" when -pedantic.
 
+Wmacro-redefined
+C ObjC C++ ObjC++ CPP(warn_macro_redefined) CppReason(CPP_W_MACRO_REDEFINED) Var(cpp_warn_macro_redefined) Init(1) Warning
+Warn when a preprocessor macro is redefined.
+
 Wmain
 C ObjC C++ ObjC++ Var(warn_main) Init(-1) Warning LangEnabledBy(C ObjC,Wall, 2, 0)
 Warn about suspicious declarations of \"main\".
