@@ -431,6 +431,9 @@ struct cpp_options
      explicitly undefined.  */
   unsigned char warn_builtin_macro_redefined;
 
+  /* Nonzero means warn about macros that are redefined.  */
+  unsigned char warn_macro_redefined;
+
   /* Different -Wimplicit-fallthrough= levels.  */
   unsigned char cpp_warn_implicit_fallthrough;
 
@@ -683,6 +686,7 @@ enum cpp_warning_reason {
   CPP_W_NUM_SIGN_CHANGE,
   CPP_W_VARIADIC_MACROS,
   CPP_W_BUILTIN_MACRO_REDEFINED,
+  CPP_W_MACRO_REDEFINED,
   CPP_W_DOLLARS,
   CPP_W_UNDEF,
   CPP_W_UNUSED_MACROS,

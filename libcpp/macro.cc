@@ -3324,7 +3324,8 @@ warn_of_redefinition (cpp_reader *pfile, cpp_hashnode *node,
     return false;
 
   if (cpp_macro *macro1 = get_deferred_or_lazy_macro (pfile, node, macro2->line))
-    return cpp_compare_macros (macro1, macro2);
+    return cpp_compare_macros (macro1, macro2) &&
+      CPP_OPTION (pfile, warn_macro_redefined);
   return false;
 }
 
@@ -3857,7 +3858,7 @@ _cpp_create_definition (cpp_reader *pfile, cpp_hashnode *node,
 	{
           const enum cpp_warning_reason reason
 	    = (cpp_builtin_macro_p (node) && !(node->flags & NODE_WARN))
-	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_NONE;
+	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_MACRO_REDEFINED;
 
 	  bool warned = 
 	    cpp_pedwarning_with_line (pfile, reason,
