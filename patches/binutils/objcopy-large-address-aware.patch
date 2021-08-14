@@ -4,22 +4,22 @@
  static short pe_subsystem = -1;
  static short pe_major_subsystem_version = -1;
  static short pe_minor_subsystem_version = -1;
-+static bfd_boolean pe_large_address_aware = FALSE;
++static bool pe_large_address_aware = false;
  
  struct is_specified_symbol_predicate_data
  {
 @@ -335,6 +336,7 @@
-   OPTION_KEEP_FILE_SYMBOLS,
    OPTION_KEEP_SECTION,
    OPTION_KEEP_SYMBOLS,
+   OPTION_KEEP_SECTION_SYMBOLS,
 +  OPTION_LARGE_ADDRESS_AWARE,
    OPTION_LOCALIZE_HIDDEN,
    OPTION_LOCALIZE_SYMBOLS,
    OPTION_LONG_SECTION_NAMES,
 @@ -463,6 +465,7 @@
-   {"keep-section", required_argument, 0, OPTION_KEEP_SECTION},
    {"keep-symbol", required_argument, 0, 'K'},
    {"keep-symbols", required_argument, 0, OPTION_KEEP_SYMBOLS},
+   {"keep-section-symbols", required_argument, 0, OPTION_KEEP_SECTION_SYMBOLS},
 +  {"large-address-aware", no_argument, 0, OPTION_LARGE_ADDRESS_AWARE},
    {"localize-hidden", no_argument, 0, OPTION_LOCALIZE_HIDDEN},
    {"localize-symbol", required_argument, 0, 'L'},
@@ -47,7 +47,7 @@
  	  break;
  
 +	case OPTION_LARGE_ADDRESS_AWARE:
-+	  pe_large_address_aware = TRUE;
++	  pe_large_address_aware = true;
 +	  break;
 +
  	case OPTION_VERILOG_DATA_WIDTH:

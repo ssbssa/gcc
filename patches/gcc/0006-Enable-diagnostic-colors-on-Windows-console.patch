@@ -1,4 +1,4 @@
-From 24290e0cd3d851b8ffb26f266a5fc78a481c9f7e Mon Sep 17 00:00:00 2001
+From ae1756e7a8fd5b7b5c01788b1fbc0f84e354bc9c Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
 Subject: [PATCH 06/15] Enable diagnostic colors on Windows console

@@ -23,7 +23,7 @@ else
 endif
 
 
-BINUTILS_VER=2.36.1
+BINUTILS_VER=2.37
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -48,7 +48,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=11.1.0
+GCC_VER=11.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -116,15 +116,11 @@ $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done: | $(SOURCE_
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/objcopy-large-address-aware.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-05-dwarf5-section-names.done: | $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/DWARF-5-section-names.patch
+$(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done: | $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done
+	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/change-uint-to-unsigned.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-06-dont-install-libdep.dll.a.done: | $(SOURCE_DIR)/binutils-02-patch-05-dwarf5-section-names.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/dont-install-libdep.dll.a.patch
-	@touch $@
-
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-06-dont-install-libdep.dll.a.done
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -294,11 +290,11 @@ $(SOURCE_DIR)/gcc-02-patch-14-ignore-case-secrel.done: | $(SOURCE_DIR)/gcc-02-pa
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0014-Ignore-case-when-checking-for-secrel-.debug_frame-se.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-15-fix-setjmp-SEH.done: | $(SOURCE_DIR)/gcc-02-patch-14-ignore-case-secrel.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Fix-PR-target-100402.patch
+$(SOURCE_DIR)/gcc-02-patch-15-redefined-macro-warning.done: | $(SOURCE_DIR)/gcc-02-patch-14-ignore-case-secrel.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Create-switch-to-control-redefined-macro-warning-PR-.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-15-fix-setjmp-SEH.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-15-redefined-macro-warning.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -368,9 +364,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-06-dont-install-libdep.dll.a.done \
+  $(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done \
-  $(SOURCE_DIR)/gcc-02-patch-15-fix-setjmp-SEH.done \
+  $(SOURCE_DIR)/gcc-02-patch-15-redefined-macro-warning.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

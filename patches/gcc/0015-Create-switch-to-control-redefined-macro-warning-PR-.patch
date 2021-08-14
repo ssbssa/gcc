@@ -1,0 +1,88 @@
+From ffa9ddbf58210fe4b3c0ef4c1fc893a643d0dcd6 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Tue, 10 Aug 2021 17:35:52 +0200
+Subject: [PATCH 15/15] Create switch to control redefined macro warning (PR
+ preprocessor/83773)
+
+---
+ gcc/c-family/c.opt      | 4 ++++
+ libcpp/include/cpplib.h | 4 ++++
+ libcpp/init.c           | 1 +
+ libcpp/macro.c          | 5 +++--
+ 4 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
+index 2005b783c68..f8636fa34bf 100644
+--- a/gcc/c-family/c.opt
++++ b/gcc/c-family/c.opt
+@@ -773,6 +773,10 @@ Wlong-long
+ C ObjC C++ ObjC++ CPP(cpp_warn_long_long) CppReason(CPP_W_LONG_LONG) Var(warn_long_long) Init(-1) Warning LangEnabledBy(C ObjC,Wc90-c99-compat)
+ Do not warn about using \"long long\" when -pedantic.
+ 
++Wmacro-redefined
++C ObjC C++ ObjC++ CPP(warn_macro_redefined) CppReason(CPP_W_MACRO_REDEFINED) Var(cpp_warn_macro_redefined) Init(1) Warning
++Warn when a preprocessor macro is redefined.
++
+ Wmain
+ C ObjC C++ ObjC++ Var(warn_main) Init(-1) Warning LangEnabledBy(C ObjC,Wall, 2, 0)
+ Warn about suspicious declarations of \"main\".
+diff --git a/libcpp/include/cpplib.h b/libcpp/include/cpplib.h
+index 41d75d9e731..b4677b0cb69 100644
+--- a/libcpp/include/cpplib.h
++++ b/libcpp/include/cpplib.h
+@@ -406,6 +406,9 @@ struct cpp_options
+      explicitly undefined.  */
+   unsigned char warn_builtin_macro_redefined;
+ 
++  /* Nonzero means warn about macros that are redefined.  */
++  unsigned char warn_macro_redefined;
++
+   /* Different -Wimplicit-fallthrough= levels.  */
+   unsigned char cpp_warn_implicit_fallthrough;
+ 
+@@ -621,6 +624,7 @@ enum cpp_warning_reason {
+   CPP_W_NUM_SIGN_CHANGE,
+   CPP_W_VARIADIC_MACROS,
+   CPP_W_BUILTIN_MACRO_REDEFINED,
++  CPP_W_MACRO_REDEFINED,
+   CPP_W_DOLLARS,
+   CPP_W_UNDEF,
+   CPP_W_UNUSED_MACROS,
+diff --git a/libcpp/init.c b/libcpp/init.c
+index 68ed2c761b9..bc21aff1a5e 100644
+--- a/libcpp/init.c
++++ b/libcpp/init.c
+@@ -206,6 +206,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
+   CPP_OPTION (pfile, warn_dollars) = 1;
+   CPP_OPTION (pfile, warn_variadic_macros) = 1;
+   CPP_OPTION (pfile, warn_builtin_macro_redefined) = 1;
++  CPP_OPTION (pfile, warn_macro_redefined) = 1;
+   CPP_OPTION (pfile, cpp_warn_implicit_fallthrough) = 0;
+   /* By default, track locations of tokens resulting from macro
+      expansion.  The '2' means, track the locations with the highest
+diff --git a/libcpp/macro.c b/libcpp/macro.c
+index dff7c98a4df..e2f0faf4bd6 100644
+--- a/libcpp/macro.c
++++ b/libcpp/macro.c
+@@ -3219,7 +3219,8 @@ warn_of_redefinition (cpp_reader *pfile, cpp_hashnode *node,
+     return false;
+ 
+   if (cpp_macro *macro1 = get_deferred_or_lazy_macro (pfile, node, macro2->line))
+-    return cpp_compare_macros (macro1, macro2);
++    return cpp_compare_macros (macro1, macro2) &&
++      CPP_OPTION (pfile, warn_macro_redefined);
+   return false;
+ }
+ 
+@@ -3741,7 +3742,7 @@ _cpp_create_definition (cpp_reader *pfile, cpp_hashnode *node)
+ 	{
+           const enum cpp_warning_reason reason
+ 	    = (cpp_builtin_macro_p (node) && !(node->flags & NODE_WARN))
+-	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_NONE;
++	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_MACRO_REDEFINED;
+ 
+ 	  bool warned = 
+ 	    cpp_pedwarning_with_line (pfile, reason,
+-- 
+2.15.1.windows.2
+

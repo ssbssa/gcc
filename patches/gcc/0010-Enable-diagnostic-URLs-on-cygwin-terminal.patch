@@ -1,4 +1,4 @@
-From 6d067c389d5281a7ad8ae070ef96b2db424ce844 Mon Sep 17 00:00:00 2001
+From 1a2781c25a83bea0d1e4ac5da8738bce60b6e864 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
 Subject: [PATCH 10/15] Enable diagnostic URLs on cygwin terminal

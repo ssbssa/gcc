@@ -1,4 +1,4 @@
-From 5be3a93862a44c911cef4688e8b415db7ac61627 Mon Sep 17 00:00:00 2001
+From ff5ca4b6c5f3dbcba8162fb2e846f6e7f5958066 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
 Subject: [PATCH 03/15] Mingw LFS support

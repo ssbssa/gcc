@@ -1,4 +1,4 @@
-From df5106e1488ee9a16fc693999958b50d5aec0b2e Mon Sep 17 00:00:00 2001
+From ad7c2924796de0ab915bf338fe83a005a7875d55 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:00:25 +0200
 Subject: [PATCH 01/15] Fix gengtype for windows paths

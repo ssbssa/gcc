@@ -1,4 +1,4 @@
-From 902afcd7655fa83a805751b21f53664b003c5ef1 Mon Sep 17 00:00:00 2001
+From 4d5ec8aeb9ae98f7db016f2104d396ab57580045 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:10:55 +0200
 Subject: [PATCH 12/15] Don't warn if the result of a right-shift fits in the

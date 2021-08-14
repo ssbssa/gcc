@@ -1,4 +1,4 @@
-From 3652a2d4296c83950666ac5a7a7dec08e1f7afd6 Mon Sep 17 00:00:00 2001
+From 0178d9a5500d98a81da5837ed4b57274a5438bab Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
 Subject: [PATCH 02/15] Relocatable mingw paths
