@@ -1,0 +1,42 @@
+From 16522846bf3fae413369596ce32ba997d6b4fae9 Mon Sep 17 00:00:00 2001
+From: Christoph Reiter <reiter.christoph@gmail.com>
+Date: Tue, 22 Dec 2020 21:47:31 +0100
+Subject: [PATCH 11/11] headers: add missing _W_* lconv struct members
+
+This seems to have been added with MSVCR100 but is also available in MSVCRT
+on Windows 7 SP1+ (at least), more info here:
+https://sourceforge.net/p/mingw-w64/mailman/message/37183101/
+
+This change is motivated by CPython starting to use these members in v3.8.7
+
+Reference: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/localeconv
+Reference: https://sourceforge.net/p/mingw-w64/bugs/870/
+Signed-off-by: Liu Hao <lh_mouse@126.com>
+---
+ mingw-w64-headers/crt/locale.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/mingw-w64-headers/crt/locale.h b/mingw-w64-headers/crt/locale.h
+index 336429fba..6c2cdac37 100644
+--- a/mingw-w64-headers/crt/locale.h
++++ b/mingw-w64-headers/crt/locale.h
+@@ -61,6 +61,16 @@ extern "C" {
+     char n_sep_by_space;
+     char p_sign_posn;
+     char n_sign_posn;
++#if __MSVCRT_VERSION__ >= 0xA00 || _WIN32_WINNT >= 0x601
++    wchar_t* _W_decimal_point;
++    wchar_t* _W_thousands_sep;
++    wchar_t* _W_int_curr_symbol;
++    wchar_t* _W_currency_symbol;
++    wchar_t* _W_mon_decimal_point;
++    wchar_t* _W_mon_thousands_sep;
++    wchar_t* _W_positive_sign;
++    wchar_t* _W_negative_sign;
++#endif
+   };
+ #endif
+ 
+-- 
+2.15.1.windows.2
+

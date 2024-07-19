@@ -1,7 +1,7 @@
-From c2bf26f05d1e8089eca49ca90867721ef840343c Mon Sep 17 00:00:00 2001
+From efe7dcfedbfbd0f5f99283c1cd77c58bf4562666 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:27:35 +0200
-Subject: [PATCH 01/10] add stpcpy/wcpcpy
+Subject: [PATCH 01/11] add stpcpy/wcpcpy
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +

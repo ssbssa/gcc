@@ -1,7 +1,7 @@
-From c6d5f1998bc0bfdc79906f27ffa846387d313349 Mon Sep 17 00:00:00 2001
+From 0cae86bd40761f5faf571f2d95ad5dbd6d0e7528 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 7 May 2017 15:09:46 +0200
-Subject: [PATCH 10/10] add strndup/wcsndup
+Subject: [PATCH 10/11] add strndup/wcsndup
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +

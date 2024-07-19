@@ -1,7 +1,7 @@
-From 1654d8d7b617d85fc9a1d19644aefc6e14bf3c5e Mon Sep 17 00:00:00 2001
+From 578829cf68f00a04b9f368d89f521ff219442076 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 2 May 2016 19:31:51 +0200
-Subject: [PATCH 09/10] fix printf out of bounds access
+Subject: [PATCH 09/11] fix printf out of bounds access
 
 If the precision is specified, no more than that many bytes are written.
 ---

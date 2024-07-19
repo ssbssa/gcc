@@ -1,7 +1,7 @@
-From 55b8b8e02736233400246b441890c90a761890fb Mon Sep 17 00:00:00 2001
+From 36240195fcd1118b00edd861f26c4ac0498e779f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:54:43 +0200
-Subject: [PATCH 06/10] use _TCHAR for argv
+Subject: [PATCH 06/11] use _TCHAR for argv
 
 ---
  mingw-w64-crt/crt/crtexe.c | 52 +++++++---------------------------------------

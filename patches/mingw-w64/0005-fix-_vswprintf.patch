@@ -1,7 +1,7 @@
-From 5e0fb4d0b8ebdc1898da7f4870473e9aa7b2e83d Mon Sep 17 00:00:00 2001
+From 1325b91d5e63b28399e8ea5245cd7a4b4db646fd Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:45 +0200
-Subject: [PATCH 05/10] fix _vswprintf
+Subject: [PATCH 05/11] fix _vswprintf
 
 ---
  mingw-w64-crt/lib-common/msvcrt.def.in | 2 +-
