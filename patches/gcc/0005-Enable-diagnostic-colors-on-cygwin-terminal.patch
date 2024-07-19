@@ -1,16 +1,16 @@
-From a2aa3f5984eb0c59a168b65ced07d2d19db90374 Mon Sep 17 00:00:00 2001
+From d48b24d6c1ed0d46bcafa16d77c5de4c4fd0e4f5 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:27:39 +0200
-Subject: [PATCH 05/15] Enable diagnostic colors on cygwin terminal
+Subject: [PATCH 05/17] Enable diagnostic colors on cygwin terminal
 
 ---
- gcc/diagnostic-color.c | 66 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ gcc/diagnostic-color.cc | 66 ++++++++++++++++++++++++++++++++++++++++-
  1 file changed, 65 insertions(+), 1 deletion(-)
 
-diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
-index 1fc5a9079c7..2aad5d375f5 100644
---- a/gcc/diagnostic-color.c
-+++ b/gcc/diagnostic-color.c
+diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
+index 640adfad558..690f1452180 100644
+--- a/gcc/diagnostic-color.cc
++++ b/gcc/diagnostic-color.cc
 @@ -198,11 +198,71 @@ parse_gcc_colors (void)
        return true;
  }
@@ -83,7 +83,7 @@ index 1fc5a9079c7..2aad5d375f5 100644
 +#if 0
    /* For consistency reasons, one should check the handle returned by
       _get_osfhandle(_fileno(stderr)) because the function
-      pp_write_text_to_stream() in pretty-print.c calls fputs() on
+      pp_write_text_to_stream() in pretty-print.cc calls fputs() on
 @@ -216,6 +276,10 @@ should_colorize (void)
  	  && GetConsoleMode (h, &m);
  #else
@@ -96,5 +96,5 @@ index 1fc5a9079c7..2aad5d375f5 100644
    return t && strcmp (t, "dumb") != 0 && isatty (STDERR_FILENO);
  #endif
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

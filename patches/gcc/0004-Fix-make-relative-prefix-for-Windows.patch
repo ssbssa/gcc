@@ -1,14 +1,14 @@
-From 8b2f477c8eaa7562397b1034f3db8a1b8e413675 Mon Sep 17 00:00:00 2001
+From 4109b4914b56bac6a569ecde0c1b525b926ab88e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:22:37 +0200
-Subject: [PATCH 04/15] Fix make-relative-prefix for Windows
+Subject: [PATCH 04/17] Fix make-relative-prefix for Windows
 
 ---
  libiberty/make-relative-prefix.c | 31 +++++++++++++++++++++++++++++++
  1 file changed, 31 insertions(+)
 
 diff --git a/libiberty/make-relative-prefix.c b/libiberty/make-relative-prefix.c
-index ef932ff022e..ebe6c124b9c 100644
+index 18d55b6bc68..bcd9a932466 100644
 --- a/libiberty/make-relative-prefix.c
 +++ b/libiberty/make-relative-prefix.c
 @@ -61,6 +61,11 @@ relative prefix can be found, return @code{NULL}.
@@ -69,5 +69,5 @@ index ef932ff022e..ebe6c124b9c 100644
  #if defined (HAVE_SYS_STAT_H) && defined (S_ISREG)
  		      struct stat st;
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

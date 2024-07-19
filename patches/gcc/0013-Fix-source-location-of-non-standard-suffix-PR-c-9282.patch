@@ -1,7 +1,7 @@
-From 23b47a150e82fb9397686fe914465ff672edc116 Mon Sep 17 00:00:00 2001
+From 0be9923c9aada87b6e543a50860eb13aea5ffb00 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:18:05 +0200
-Subject: [PATCH 13/15] Fix source location of non-standard suffix (PR c/92826)
+Subject: [PATCH 13/17] Fix source location of non-standard suffix (PR c/92826)
 
 Before:
   $ gcc -c pr92826.c -Wpedantic
@@ -17,14 +17,14 @@ After:
       7 |   if (3.0Q > 5)
         |       ^~~~
 ---
- gcc/c-family/c-lex.c | 13 ++++++++-----
+ gcc/c-family/c-lex.cc | 13 ++++++++-----
  1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/gcc/c-family/c-lex.c b/gcc/c-family/c-lex.c
-index 6374b72ed2d..c3044a08a99 100644
---- a/gcc/c-family/c-lex.c
-+++ b/gcc/c-family/c-lex.c
-@@ -41,7 +41,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
+diff --git a/gcc/c-family/c-lex.cc b/gcc/c-family/c-lex.cc
+index bd48bfc88e0..41536c835f5 100644
+--- a/gcc/c-family/c-lex.cc
++++ b/gcc/c-family/c-lex.cc
+@@ -42,7 +42,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
  static tree interpret_integer (const cpp_token *, unsigned int,
  			       enum overflow_type *);
  static tree interpret_float (const cpp_token *, unsigned int, const char *,
@@ -33,7 +33,7 @@ index 6374b72ed2d..c3044a08a99 100644
  static tree interpret_fixed (const cpp_token *, unsigned int);
  static enum integer_type_kind narrowest_unsigned_type
  	(const widest_int &, unsigned int);
-@@ -501,7 +501,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
+@@ -542,7 +542,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
  	    break;
  
  	  case CPP_N_FLOATING:
@@ -42,7 +42,7 @@ index 6374b72ed2d..c3044a08a99 100644
  	    break;
  
  	  default:
-@@ -869,7 +869,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
+@@ -914,7 +914,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
     by cpplib.  For C++11 SUFFIX may contain a user-defined literal suffix.  */
  static tree
  interpret_float (const cpp_token *token, unsigned int flags,
@@ -52,7 +52,7 @@ index 6374b72ed2d..c3044a08a99 100644
  {
    tree type;
    tree const_type;
-@@ -934,7 +935,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -979,7 +980,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	else
@@ -62,7 +62,7 @@ index 6374b72ed2d..c3044a08a99 100644
  
  	type = c_common_type_for_mode (mode, 0);
  	gcc_assert (type);
-@@ -957,7 +959,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -1002,7 +1004,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	else
@@ -73,5 +73,5 @@ index 6374b72ed2d..c3044a08a99 100644
      else if ((flags & CPP_N_WIDTH) == CPP_N_LARGE)
        type = long_double_type_node;
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

@@ -1,17 +1,17 @@
-From 36240195fcd1118b00edd861f26c4ac0498e779f Mon Sep 17 00:00:00 2001
+From 33b6b85c7be719cd7543a8630cb02ebe7e98d831 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:54:43 +0200
-Subject: [PATCH 06/11] use _TCHAR for argv
+Subject: [PATCH 06/10] use _TCHAR for argv
 
 ---
- mingw-w64-crt/crt/crtexe.c | 52 +++++++---------------------------------------
+ mingw-w64-crt/crt/crtexe.c | 52 ++++++--------------------------------
  1 file changed, 8 insertions(+), 44 deletions(-)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 1ffeb86c9..0b82fba37 100644
+index ef5d8f979..9466149eb 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -86,13 +86,8 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
+@@ -76,13 +76,8 @@ DWORD __mingw_winmain_nShowCmd = SW_SHOWDEFAULT;
  
  static int argc;
  extern void __main(void);
@@ -27,7 +27,7 @@ index 1ffeb86c9..0b82fba37 100644
  
  static int argret;
  static int mainret=0;
-@@ -103,11 +98,7 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
+@@ -93,11 +88,7 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
  
  extern void _pei386_runtime_relocator (void);
  long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
@@ -40,7 +40,7 @@ index 1ffeb86c9..0b82fba37 100644
  
  static int __cdecl pre_c_init (void);
  static void __cdecl pre_cpp_init (void);
-@@ -402,49 +393,22 @@ check_managed_app (void)
+@@ -388,49 +379,22 @@ check_managed_app (void)
    return 0;
  }
  
@@ -96,5 +96,5 @@ index 1ffeb86c9..0b82fba37 100644
  int __cdecl atexit (_PVFV func)
  {
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

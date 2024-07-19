@@ -1,7 +1,7 @@
-From ff5ca4b6c5f3dbcba8162fb2e846f6e7f5958066 Mon Sep 17 00:00:00 2001
+From 8dfb7a162c0821fb211b92641a6626bc470e6583 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
-Subject: [PATCH 03/15] Mingw LFS support
+Subject: [PATCH 03/17] Mingw LFS support
 
 ---
  libstdc++-v3/config/io/basic_file_stdio.cc    | 13 +++++++++++--
@@ -9,10 +9,10 @@ Subject: [PATCH 03/15] Mingw LFS support
  2 files changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/libstdc++-v3/config/io/basic_file_stdio.cc b/libstdc++-v3/config/io/basic_file_stdio.cc
-index ce4a6380ebb..09bac3ee3ca 100644
+index f5aec04750f..b4dd6563f07 100644
 --- a/libstdc++-v3/config/io/basic_file_stdio.cc
 +++ b/libstdc++-v3/config/io/basic_file_stdio.cc
-@@ -244,7 +244,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -250,7 +250,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
      const char* __c_mode = fopen_mode(__mode);
      if (__c_mode && !this->is_open())
        {
@@ -21,7 +21,7 @@ index ce4a6380ebb..09bac3ee3ca 100644
  	if ((_M_cfile = fopen64(__name, __c_mode)))
  #else
  	if ((_M_cfile = fopen(__name, __c_mode)))
-@@ -372,7 +372,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -378,7 +378,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
    streamoff
    __basic_file<char>::seekoff(streamoff __off, ios_base::seekdir __way) throw ()
    {
@@ -30,7 +30,7 @@ index ce4a6380ebb..09bac3ee3ca 100644
      return lseek64(this->fd(), __off, __way);
  #else
      if (__off > numeric_limits<off_t>::max()
-@@ -423,6 +423,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -429,6 +429,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  							   ios_base::cur);
  	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
        }
@@ -47,7 +47,7 @@ index ce4a6380ebb..09bac3ee3ca 100644
      struct stat __buffer;
      const int __err = fstat(this->fd(), &__buffer);
 diff --git a/libstdc++-v3/include/ext/stdio_sync_filebuf.h b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
-index 90765e55831..c7efc771ed3 100644
+index 49437c96976..4810e69937f 100644
 --- a/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 +++ b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 @@ -201,7 +201,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
@@ -60,5 +60,5 @@ index 90765e55831..c7efc771ed3 100644
  	  __ret = std::streampos(ftello64(_M_file));
  #else
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

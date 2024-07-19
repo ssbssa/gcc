@@ -1,7 +1,7 @@
-From 51388630d3083fec6766cbda2c6b0af3ed527655 Mon Sep 17 00:00:00 2001
+From 75e9ea120f808ca027c11cf59e9a73be0cacbb44 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
-Subject: [PATCH 04/11] remove error handlers
+Subject: [PATCH 04/10] remove error handlers
 
 ---
  mingw-w64-crt/crt/crtexe.c       | 6 ++++++
@@ -9,18 +9,18 @@ Subject: [PATCH 04/11] remove error handlers
  2 files changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 069757c64..1ffeb86c9 100644
+index 0f42faf04..ef5d8f979 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -114,6 +114,7 @@ static void __cdecl pre_cpp_init (void);
- _CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
- _CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
+@@ -104,6 +104,7 @@ static void __cdecl pre_cpp_init (void);
+ _CRTALLOC(".CRT$XIAA") _PIFV __mingw_pcinit = pre_c_init;
+ _CRTALLOC(".CRT$XCAA") _PVFV __mingw_pcppinit = pre_cpp_init;
  
 +#if 0
  extern int _MINGW_INSTALL_DEBUG_MATHERR;
  
  #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
-@@ -133,6 +134,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
+@@ -123,6 +124,7 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
    wprintf(L"Expression: %s\n", expression);
  #endif
  }
@@ -28,7 +28,7 @@ index 069757c64..1ffeb86c9 100644
  
  static int __cdecl
  pre_c_init (void)
-@@ -161,10 +163,12 @@ pre_c_init (void)
+@@ -151,10 +153,12 @@ pre_c_init (void)
  #else
    _setargv();
  #endif
@@ -41,7 +41,7 @@ index 069757c64..1ffeb86c9 100644
  
    if (__globallocalestatus == -1)
      {
-@@ -293,7 +297,9 @@ __tmainCRTStartup (void)
+@@ -283,7 +287,9 @@ __tmainCRTStartup (void)
  #if defined(__x86_64__) && !defined(__SEH__)
      __mingw_init_ehandler ();
  #endif
@@ -52,10 +52,10 @@ index 069757c64..1ffeb86c9 100644
      _fpreset ();
  
 diff --git a/mingw-w64-crt/crt/pseudo-reloc.c b/mingw-w64-crt/crt/pseudo-reloc.c
-index c31da9681..df34e7242 100644
+index d4589ca66..6626eda69 100644
 --- a/mingw-w64-crt/crt/pseudo-reloc.c
 +++ b/mingw-w64-crt/crt/pseudo-reloc.c
-@@ -79,6 +79,9 @@ typedef struct {
+@@ -80,6 +80,9 @@ typedef struct {
    DWORD version;
  } runtime_pseudo_reloc_v2;
  
@@ -65,7 +65,7 @@ index c31da9681..df34e7242 100644
  static void ATTRIBUTE_NORETURN
  __report_error (const char *msg, ...)
  {
-@@ -156,6 +159,7 @@ __report_error (const char *msg, ...)
+@@ -157,6 +160,7 @@ __report_error (const char *msg, ...)
    abort ();
  #endif
  }
@@ -74,5 +74,5 @@ index c31da9681..df34e7242 100644
  /* For mingw-w64 we have additional helpers to get image information
     on runtime.  This allows us to cache for pseudo-relocation pass
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

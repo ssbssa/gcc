@@ -1,20 +1,20 @@
-From 4d5ec8aeb9ae98f7db016f2104d396ab57580045 Mon Sep 17 00:00:00 2001
+From b395bd3bccf6fadb02fa2415cbab7fb6e5498cdb Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:10:55 +0200
-Subject: [PATCH 12/15] Don't warn if the result of a right-shift fits in the
+Subject: [PATCH 12/17] Don't warn if the result of a right-shift fits in the
  target type (PR c/89807)
 
 ---
- gcc/c-family/c-common.c                    | 20 +++++++++++++
- gcc/testsuite/gcc.dg/Wconversion-pr89807.c | 48 ++++++++++++++++++++++++++++++
+ gcc/c-family/c-common.cc                   | 20 +++++++++
+ gcc/testsuite/gcc.dg/Wconversion-pr89807.c | 48 ++++++++++++++++++++++
  2 files changed, 68 insertions(+)
  create mode 100644 gcc/testsuite/gcc.dg/Wconversion-pr89807.c
 
-diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
-index d227686a030..30c77fc0564 100644
---- a/gcc/c-family/c-common.c
-+++ b/gcc/c-family/c-common.c
-@@ -1505,6 +1505,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
+diff --git a/gcc/c-family/c-common.cc b/gcc/c-family/c-common.cc
+index 94bef24220b..efc29433905 100644
+--- a/gcc/c-family/c-common.cc
++++ b/gcc/c-family/c-common.cc
+@@ -1655,6 +1655,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
  		    return SAFE_CONVERSION;
  		}
  	    }
@@ -96,5 +96,5 @@ index 00000000000..d7e12923845
 +  ui = ull >> 32;
 +}
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

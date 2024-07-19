@@ -1,7 +1,7 @@
-From 534a3b24a0895ddbeb8d6fcb79250d4169414fce Mon Sep 17 00:00:00 2001
+From 95c95fe35654f7add6dedd47e3cfb83d6b513ccf Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 03/11] fix binmode
+Subject: [PATCH 03/10] fix binmode
 
 ---
  mingw-w64-crt/crt/binmode.c |  7 ++++---
@@ -25,10 +25,10 @@ index f0473b086..2e46c2fdf 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index e78800525..069757c64 100644
+index c6d43168b..0f42faf04 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -24,6 +24,8 @@
+@@ -20,6 +20,8 @@
  #include <tchar.h>
  #include <sect_attribs.h>
  #include <locale.h>
@@ -37,7 +37,7 @@ index e78800525..069757c64 100644
  
  #if defined(__SEH__) && (!defined(__clang__) || __clang_major__ >= 7)
  #define SEH_INLINE_ASM
-@@ -141,6 +143,16 @@ pre_c_init (void)
+@@ -131,6 +133,16 @@ pre_c_init (void)
    else
      __set_app_type (_CONSOLE_APP);
  
@@ -55,5 +55,5 @@ index e78800525..069757c64 100644
    * __p__commode() = _commode;
  
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

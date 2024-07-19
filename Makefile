@@ -23,7 +23,7 @@ else
 endif
 
 
-BINUTILS_VER=2.37
+BINUTILS_VER=2.38
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -35,7 +35,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=8.0.3
+MINGW_W64_VER=10.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -48,7 +48,7 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=11.5.0
+GCC_VER=12.4.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -62,19 +62,19 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
-GMP_VER=6.1.2
+GMP_VER=6.2.1
 GMP_SRC_DIR=gmp-$(GMP_VER)
 GMP_FILE=$(GMP_SRC_DIR).tar.xz
 
-MPFR_VER=3.1.6
+MPFR_VER=4.1.0
 MPFR_SRC_DIR=mpfr-$(MPFR_VER)
 MPFR_FILE=$(MPFR_SRC_DIR).tar.xz
 
-MPC_VER=1.0.3
+MPC_VER=1.2.1
 MPC_SRC_DIR=mpc-$(MPC_VER)
 MPC_FILE=$(MPC_SRC_DIR).tar.gz
 
-ISL_VER=0.18
+ISL_VER=0.24
 ISL_SRC_DIR=isl-$(ISL_VER)
 ISL_FILE=$(ISL_SRC_DIR).tar.xz
 
@@ -116,11 +116,7 @@ $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done: | $(SOURCE_
 	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p0 <patches/binutils/objcopy-large-address-aware.patch
 	@touch $@
 
-$(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done: | $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done
-	patch -d $(SOURCE_DIR)/$(BINUTILS_SRC_DIR) -p1 <patches/binutils/change-uint-to-unsigned.patch
-	@touch $@
-
-$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done
+$(BUILD_DIR)/binutils-03-configure.done: | $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done
 	@mkdir -p $(BUILD_DIR)/binutils
 	cd $(BUILD_DIR)/binutils && $(BINUTILS_CONF)
 	@touch $@
@@ -194,11 +190,7 @@ $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-add-strndup-wcsndup.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-11-lconv.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-headers-add-missing-_W_-lconv-struct-members.patch
-	@touch $@
-
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-11-lconv.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -302,7 +294,11 @@ $(SOURCE_DIR)/gcc-02-patch-16-parameter-pack.done: | $(SOURCE_DIR)/gcc-02-patch-
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-Add-name-of-parameter-pack.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-16-parameter-pack.done
+$(SOURCE_DIR)/gcc-02-patch-17-comdat.done: | $(SOURCE_DIR)/gcc-02-patch-16-parameter-pack.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Do-not-use-caller-saved-registers-for-COMDAT-functio.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-17-comdat.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -372,9 +368,9 @@ extract-all: | \
 
 
 patch-all: | \
-  $(SOURCE_DIR)/binutils-02-patch-05-change-uint-to-unsigned.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-11-lconv.done \
-  $(SOURCE_DIR)/gcc-02-patch-16-parameter-pack.done \
+  $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-10-strndup-wcsndup.done \
+  $(SOURCE_DIR)/gcc-02-patch-17-comdat.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

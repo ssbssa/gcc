@@ -1,18 +1,18 @@
-From c2e32cb649eb5eb0ed266003bcdfa9e11255d31d Mon Sep 17 00:00:00 2001
+From 7c54cf44d8373562fa5169d63abfdc1cf0f234d5 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:35:56 +0200
-Subject: [PATCH 08/15] Don't warn for function casts involving FARPROC
+Subject: [PATCH 08/17] Don't warn for function casts involving FARPROC
 
 ---
- gcc/c/c-typeck.c | 5 +++++
- gcc/cp/typeck.c  | 5 +++++
+ gcc/c/c-typeck.cc | 5 +++++
+ gcc/cp/typeck.cc  | 5 +++++
  2 files changed, 10 insertions(+)
 
-diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
-index b5d139e5d9b..2a75cdb84ac 100644
---- a/gcc/c/c-typeck.c
-+++ b/gcc/c/c-typeck.c
-@@ -5867,6 +5867,11 @@ c_safe_function_type_cast_p (tree t1, tree t2)
+diff --git a/gcc/c/c-typeck.cc b/gcc/c/c-typeck.cc
+index 603b03fe1a5..099293730a5 100644
+--- a/gcc/c/c-typeck.cc
++++ b/gcc/c/c-typeck.cc
+@@ -5891,6 +5891,11 @@ c_safe_function_type_cast_p (tree t1, tree t2)
        TYPE_ARG_TYPES (t2) == void_list_node)
      return true;
  
@@ -24,10 +24,10 @@ index b5d139e5d9b..2a75cdb84ac 100644
    if (!c_safe_arg_type_equiv_p (TREE_TYPE (t1), TREE_TYPE (t2)))
      return false;
  
-diff --git a/gcc/cp/typeck.c b/gcc/cp/typeck.c
-index 1b68c53b831..b81a3e278ae 100644
---- a/gcc/cp/typeck.c
-+++ b/gcc/cp/typeck.c
+diff --git a/gcc/cp/typeck.cc b/gcc/cp/typeck.cc
+index ff8f0ef0083..e73ace1ca4a 100644
+--- a/gcc/cp/typeck.cc
++++ b/gcc/cp/typeck.cc
 @@ -1249,6 +1249,11 @@ cxx_safe_function_type_cast_p (tree t1, tree t2)
        TYPE_ARG_TYPES (t2) == void_list_node)
      return true;
@@ -41,5 +41,5 @@ index 1b68c53b831..b81a3e278ae 100644
      return false;
  
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

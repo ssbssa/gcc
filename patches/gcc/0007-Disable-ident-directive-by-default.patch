@@ -1,17 +1,17 @@
-From 8c0432e9d6a7799090805193cf4ce88047a0339e Mon Sep 17 00:00:00 2001
+From 278967352599b91dc92363257042b7eb23c734f3 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:34:17 +0200
-Subject: [PATCH 07/15] Disable #ident directive by default
+Subject: [PATCH 07/17] Disable #ident directive by default
 
 ---
  gcc/common.opt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index a75b44ee47e..87456c711a8 100644
+index 8a0dafc522d..ce0cfd82a93 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -1703,7 +1703,7 @@ Enable guessing of branch probabilities.
+@@ -1775,7 +1775,7 @@ Harden conditional branches by checking reversed conditions.
  ; On SVR4 targets, it also controls whether or not to emit a
  ; string identifying the compiler.
  fident
@@ -21,5 +21,5 @@ index a75b44ee47e..87456c711a8 100644
  
  fif-conversion
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

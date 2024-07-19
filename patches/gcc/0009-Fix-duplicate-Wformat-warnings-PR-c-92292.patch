@@ -1,17 +1,17 @@
-From b8c62520f06c1a3489f052f8abe75c2bdaeacd39 Mon Sep 17 00:00:00 2001
+From 87d6e06f826be1e542b09a26b897c6fcc468f1be Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:37:19 +0200
-Subject: [PATCH 09/15] Fix duplicate Wformat warnings (PR c/92292)
+Subject: [PATCH 09/17] Fix duplicate Wformat warnings (PR c/92292)
 
 ---
- gcc/c-family/c-format.c | 2 ++
+ gcc/c-family/c-format.cc | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/gcc/c-family/c-format.c b/gcc/c-family/c-format.c
-index 0a63cacb0d9..fa1b2637a95 100644
---- a/gcc/c-family/c-format.c
-+++ b/gcc/c-family/c-format.c
-@@ -1241,6 +1241,8 @@ check_function_format (const_tree fntype, tree attrs, int nargs,
+diff --git a/gcc/c-family/c-format.cc b/gcc/c-family/c-format.cc
+index fe5ed48b86b..6273ed00fba 100644
+--- a/gcc/c-family/c-format.cc
++++ b/gcc/c-family/c-format.cc
+@@ -1233,6 +1233,8 @@ check_function_format (const_tree fntype, tree attrs, int nargs,
  			     format_types[info.format_type].name);
  		}
  	    }
@@ -21,5 +21,5 @@ index 0a63cacb0d9..fa1b2637a95 100644
      }
  }
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

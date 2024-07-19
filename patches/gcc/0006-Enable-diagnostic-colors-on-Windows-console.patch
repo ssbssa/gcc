@@ -1,17 +1,17 @@
-From ae1756e7a8fd5b7b5c01788b1fbc0f84e354bc9c Mon Sep 17 00:00:00 2001
+From 54acd01cf5ec8c915bba0b6b76fcc27d98c20e98 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
-Subject: [PATCH 06/15] Enable diagnostic colors on Windows console
+Subject: [PATCH 06/17] Enable diagnostic colors on Windows console
 
 ---
- gcc/diagnostic-color.c | 17 ++++++++--
- gcc/pretty-print.c     | 91 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ gcc/diagnostic-color.cc | 17 +++++++-
+ gcc/pretty-print.cc     | 91 ++++++++++++++++++++++++++++++++++++++++-
  2 files changed, 104 insertions(+), 4 deletions(-)
 
-diff --git a/gcc/diagnostic-color.c b/gcc/diagnostic-color.c
-index 2aad5d375f5..04c16470831 100644
---- a/gcc/diagnostic-color.c
-+++ b/gcc/diagnostic-color.c
+diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
+index 690f1452180..05f6b22695e 100644
+--- a/gcc/diagnostic-color.cc
++++ b/gcc/diagnostic-color.cc
 @@ -207,6 +207,9 @@ parse_gcc_colors (void)
  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
  #endif
@@ -43,10 +43,10 @@ index 2aad5d375f5..04c16470831 100644
  
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
-diff --git a/gcc/pretty-print.c b/gcc/pretty-print.c
-index ade1933f86a..1a873720649 100644
---- a/gcc/pretty-print.c
-+++ b/gcc/pretty-print.c
+diff --git a/gcc/pretty-print.cc b/gcc/pretty-print.cc
+index 3ee206d2a42..f7d2c4e47c9 100644
+--- a/gcc/pretty-print.cc
++++ b/gcc/pretty-print.cc
 @@ -31,7 +31,7 @@ along with GCC; see the file COPYING3.  If not see
  #include <iconv.h>
  #endif
@@ -161,5 +161,5 @@ index ade1933f86a..1a873720649 100644
    fputs (text, pp_buffer (pp)->stream);
  #endif
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

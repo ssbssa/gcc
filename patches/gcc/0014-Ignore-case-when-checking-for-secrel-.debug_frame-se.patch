@@ -1,7 +1,7 @@
-From 4dd2710c29e627487c7a2b39627f8989af45940a Mon Sep 17 00:00:00 2001
+From a0dc48e97b1615cda765fc92277da7ce16ad785f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 2 May 2021 16:07:05 +0200
-Subject: [PATCH 14/15] Ignore case when checking for secrel .debug_frame
+Subject: [PATCH 14/17] Ignore case when checking for secrel .debug_frame
  section (PR debug/100383)
 
 ---
@@ -10,10 +10,10 @@ Subject: [PATCH 14/15] Ignore case when checking for secrel .debug_frame
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/configure b/gcc/configure
-index 9b28369e3bf..07c9c8bb66f 100755
+index f697874f2d8..657112b3abd 100755
 --- a/gcc/configure
 +++ b/gcc/configure
-@@ -24414,7 +24414,7 @@ else
+@@ -24717,7 +24717,7 @@ else
      gcc_cv_as_cfi_sections_directive=no
      if test "x$gcc_cv_objdump" != x; then
       if $gcc_cv_objdump -j .debug_frame -r conftest.o 2>/dev/null | \
@@ -23,10 +23,10 @@ index 9b28369e3bf..07c9c8bb66f 100755
       fi
      fi
 diff --git a/gcc/configure.ac b/gcc/configure.ac
-index 162e08cbc02..9e049d6b493 100644
+index fec897c2c08..073884d56b8 100644
 --- a/gcc/configure.ac
 +++ b/gcc/configure.ac
-@@ -3268,7 +3268,7 @@ gcc_GAS_CHECK_FEATURE([cfi sections directive],
+@@ -3346,7 +3346,7 @@ gcc_GAS_CHECK_FEATURE([cfi sections directive],
      gcc_cv_as_cfi_sections_directive=no
      if test "x$gcc_cv_objdump" != x; then
       if $gcc_cv_objdump -j .debug_frame -r conftest.o 2>/dev/null | \
@@ -36,5 +36,5 @@ index 162e08cbc02..9e049d6b493 100644
       fi
      fi
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 

@@ -1,15 +1,15 @@
-From 0178d9a5500d98a81da5837ed4b57274a5438bab Mon Sep 17 00:00:00 2001
+From dbb5de7380a7ec043af846f2c27b2d357b129082 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/15] Relocatable mingw paths
+Subject: [PATCH 02/17] Relocatable mingw paths
 
 ---
  gcc/config/i386/mingw32.h | 9 ++-------
- gcc/incpath.c             | 3 +--
+ gcc/incpath.cc            | 3 +--
  2 files changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/gcc/config/i386/mingw32.h b/gcc/config/i386/mingw32.h
-index 36e7bae5e1b..2f5b12b76b6 100644
+index ddbe6a4054b..05083761fdf 100644
 --- a/gcc/config/i386/mingw32.h
 +++ b/gcc/config/i386/mingw32.h
 @@ -90,7 +90,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -21,7 +21,7 @@ index 36e7bae5e1b..2f5b12b76b6 100644
  
  #undef CPP_SPEC
  #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
-@@ -198,17 +198,12 @@ along with GCC; see the file COPYING3.  If not see
+@@ -206,17 +206,12 @@ along with GCC; see the file COPYING3.  If not see
  
  /* Override startfile prefix defaults.  */
  #ifndef STANDARD_STARTFILE_PREFIX_1
@@ -40,11 +40,11 @@ index 36e7bae5e1b..2f5b12b76b6 100644
  /* Output STRING, a string representing a filename, to FILE.
     We canonicalize it to be in Unix format (backslashes are replaced
     forward slashes.  */
-diff --git a/gcc/incpath.c b/gcc/incpath.c
-index 446d280321d..272698c7f81 100644
---- a/gcc/incpath.c
-+++ b/gcc/incpath.c
-@@ -185,8 +185,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
+diff --git a/gcc/incpath.cc b/gcc/incpath.cc
+index bd2a97938eb..1f8475057c3 100644
+--- a/gcc/incpath.cc
++++ b/gcc/incpath.cc
+@@ -189,8 +189,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
  	      str = concat (sysroot_no_trailing_dir_separator, p->fname, NULL);
  	      free (sysroot_no_trailing_dir_separator);
  	    }
@@ -55,5 +55,5 @@ index 446d280321d..272698c7f81 100644
   	      static const char *relocated_prefix;
  	      char *ostr;
 -- 
-2.15.1.windows.2
+2.39.1.windows.1
 
