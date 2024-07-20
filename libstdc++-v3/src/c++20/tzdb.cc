@@ -85,7 +85,8 @@ namespace __gnu_cxx
 #endif
 }
 
-#if ! defined _GLIBCXX_ZONEINFO_DIR && ! defined _GLIBCXX_STATIC_TZDATA
+#if (! defined _GLIBCXX_ZONEINFO_DIR && ! defined _GLIBCXX_STATIC_TZDATA) \
+  || (USE_ATOMIC_SHARED_PTR && ! defined _GLIBCXX_HAS_GTHREADS)
 # define TZDB_DISABLED
   [[noreturn]] void __throw_disabled()
   {
