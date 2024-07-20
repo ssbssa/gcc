@@ -1,7 +1,7 @@
-From fa6371b7dd25b21b8ab6c579cf191fbaced1716c Mon Sep 17 00:00:00 2001
+From 04bb3299e61119f9bf81df32817b151383ce21e8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 10 Aug 2021 17:35:52 +0200
-Subject: [PATCH 15/17] Create switch to control redefined macro warning (PR
+Subject: [PATCH 14/17] Create switch to control redefined macro warning (PR
  preprocessor/83773)
 
 ---
@@ -12,10 +12,10 @@ Subject: [PATCH 15/17] Create switch to control redefined macro warning (PR
  4 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
-index 07da40ef43b..c3a13b1c54a 100644
+index a75038930ae..e328fa874a3 100644
 --- a/gcc/c-family/c.opt
 +++ b/gcc/c-family/c.opt
-@@ -837,6 +837,10 @@ Wlong-long
+@@ -857,6 +857,10 @@ Wlong-long
  C ObjC C++ ObjC++ CPP(cpp_warn_long_long) CppReason(CPP_W_LONG_LONG) Var(warn_long_long) Init(-1) Warning LangEnabledBy(C ObjC,Wc90-c99-compat)
  Do not warn about using \"long long\" when -pedantic.
  
@@ -27,10 +27,10 @@ index 07da40ef43b..c3a13b1c54a 100644
  C ObjC C++ ObjC++ Var(warn_main) Init(-1) Warning LangEnabledBy(C ObjC,Wall, 2, 0)
  Warn about suspicious declarations of \"main\".
 diff --git a/libcpp/include/cpplib.h b/libcpp/include/cpplib.h
-index abdc207d1a1..089bff622cd 100644
+index b8e50ae15bb..3e5ad9f6169 100644
 --- a/libcpp/include/cpplib.h
 +++ b/libcpp/include/cpplib.h
-@@ -420,6 +420,9 @@ struct cpp_options
+@@ -425,6 +425,9 @@ struct cpp_options
       explicitly undefined.  */
    unsigned char warn_builtin_macro_redefined;
  
@@ -40,7 +40,7 @@ index abdc207d1a1..089bff622cd 100644
    /* Different -Wimplicit-fallthrough= levels.  */
    unsigned char cpp_warn_implicit_fallthrough;
  
-@@ -642,6 +645,7 @@ enum cpp_warning_reason {
+@@ -674,6 +677,7 @@ enum cpp_warning_reason {
    CPP_W_NUM_SIGN_CHANGE,
    CPP_W_VARIADIC_MACROS,
    CPP_W_BUILTIN_MACRO_REDEFINED,
@@ -49,10 +49,10 @@ index abdc207d1a1..089bff622cd 100644
    CPP_W_UNDEF,
    CPP_W_UNUSED_MACROS,
 diff --git a/libcpp/init.cc b/libcpp/init.cc
-index f4ab83d2145..adbf150bd24 100644
+index c508f06112a..f06292d6e44 100644
 --- a/libcpp/init.cc
 +++ b/libcpp/init.cc
-@@ -208,6 +208,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
+@@ -217,6 +217,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
    CPP_OPTION (pfile, warn_dollars) = 1;
    CPP_OPTION (pfile, warn_variadic_macros) = 1;
    CPP_OPTION (pfile, warn_builtin_macro_redefined) = 1;
@@ -61,7 +61,7 @@ index f4ab83d2145..adbf150bd24 100644
    /* By default, track locations of tokens resulting from macro
       expansion.  The '2' means, track the locations with the highest
 diff --git a/libcpp/macro.cc b/libcpp/macro.cc
-index 8ebf360c03c..27ff2de1eeb 100644
+index d4238d4f621..90ce8e6a6b2 100644
 --- a/libcpp/macro.cc
 +++ b/libcpp/macro.cc
 @@ -3315,7 +3315,8 @@ warn_of_redefinition (cpp_reader *pfile, cpp_hashnode *node,

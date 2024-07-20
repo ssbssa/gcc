@@ -1,18 +1,18 @@
-From 54acd01cf5ec8c915bba0b6b76fcc27d98c20e98 Mon Sep 17 00:00:00 2001
+From c50e4b3fa1b8c03ff8bbfb42db73c9f3c85cd416 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
 Subject: [PATCH 06/17] Enable diagnostic colors on Windows console
 
 ---
  gcc/diagnostic-color.cc | 17 +++++++-
- gcc/pretty-print.cc     | 91 ++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 104 insertions(+), 4 deletions(-)
+ gcc/pretty-print.cc     | 92 ++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 105 insertions(+), 4 deletions(-)
 
 diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
-index 690f1452180..05f6b22695e 100644
+index 4366ca4ad4f..cc2983be29e 100644
 --- a/gcc/diagnostic-color.cc
 +++ b/gcc/diagnostic-color.cc
-@@ -207,6 +207,9 @@ parse_gcc_colors (void)
+@@ -210,6 +210,9 @@ parse_gcc_colors (void)
  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
  #endif
  
@@ -22,7 +22,7 @@ index 690f1452180..05f6b22695e 100644
  static int
  w_isatty (int num)
  {
-@@ -216,8 +219,18 @@ w_isatty (int num)
+@@ -219,8 +222,18 @@ w_isatty (int num)
  
    DWORD flags;
    if (GetConsoleMode (fh, &flags))
@@ -44,7 +44,7 @@ index 690f1452180..05f6b22695e 100644
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
 diff --git a/gcc/pretty-print.cc b/gcc/pretty-print.cc
-index 3ee206d2a42..f7d2c4e47c9 100644
+index 7d294717f50..3588e7f460d 100644
 --- a/gcc/pretty-print.cc
 +++ b/gcc/pretty-print.cc
 @@ -31,7 +31,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -56,11 +56,12 @@ index 3ee206d2a42..f7d2c4e47c9 100644
  
  /* Replacement for fputs() that handles ANSI escape codes on Windows NT.
     Contributed by: Liu Hao (lh_mouse at 126 dot com)
-@@ -700,6 +700,12 @@ mingw_ansi_fputs (const char *str, FILE *fp)
+@@ -700,6 +700,13 @@ mingw_ansi_fputs (const char *str, FILE *fp)
  
  #endif /* __MINGW32__ */
  
 +#ifdef _WIN32
++#define WIN32_LEAN_AND_MEAN 1
 +#include <windows.h>
 +extern int console_escaping;
 +extern int console_color;
@@ -69,7 +70,7 @@ index 3ee206d2a42..f7d2c4e47c9 100644
  static int
  decode_utf8_char (const unsigned char *, size_t len, unsigned int *);
  static void pp_quoted_string (pretty_printer *, const char *, size_t = -1);
-@@ -837,8 +843,89 @@ void
+@@ -837,8 +844,89 @@ void
  pp_write_text_to_stream (pretty_printer *pp)
  {
    const char *text = pp_formatted_text (pp);

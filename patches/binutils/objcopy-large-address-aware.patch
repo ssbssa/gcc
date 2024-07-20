@@ -24,24 +24,24 @@
    {"localize-hidden", no_argument, 0, OPTION_LOCALIZE_HIDDEN},
    {"localize-symbol", required_argument, 0, 'L'},
    {"localize-symbols", required_argument, 0, OPTION_LOCALIZE_SYMBOLS},
-@@ -672,6 +675,7 @@
+@@ -675,6 +678,7 @@
                                     <commit>\n\
       --subsystem <name>[:<version>]\n\
                                     Set PE subsystem to <name> [& <version>]\n\
 +     --large-address-aware         Enable virtual addresses greater than 2 gigabytes\n\
-      --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi}]\n\
-                                    Compress DWARF debug sections using zlib\n\
+      --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi|zstd}]\n\
+ 				   Compress DWARF debug sections\n\
       --decompress-debug-sections   Decompress DWARF debug sections using zlib\n\
-@@ -2775,6 +2779,9 @@
- 		     file_alignment, section_alignment);
+@@ -2827,6 +2827,9 @@
+ 		     (uint64_t) pe_file_alignment,
+ 		     (uint64_t) pe_section_alignment);
  	}
- 
++
 +      if (pe_large_address_aware)
 +	pe->real_flags |= IMAGE_FILE_LARGE_ADDRESS_AWARE;
-+
-       if (preserve_dates
- 	  && bfd_get_flavour (ibfd) == bfd_target_coff_flavour
- 	  && bfd_pei_p (ibfd))
+     }
+ 
+   free (isympp);
 @@ -5763,6 +5770,10 @@
  	  }
  	  break;

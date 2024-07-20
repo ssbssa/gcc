@@ -1,0 +1,27 @@
+From c17d8da7de8c9277315df83a6845ed0df8be2ddf Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sat, 20 Jul 2024 20:14:09 +0200
+Subject: [PATCH 17/17] Set TZDB_DISABLED if _GLIBCXX_HAS_GTHREADS is not
+ available
+
+---
+ libstdc++-v3/src/c++20/tzdb.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/libstdc++-v3/src/c++20/tzdb.cc b/libstdc++-v3/src/c++20/tzdb.cc
+index e03f4a5c32a..0cbbd3357d1 100644
+--- a/libstdc++-v3/src/c++20/tzdb.cc
++++ b/libstdc++-v3/src/c++20/tzdb.cc
+@@ -84,7 +84,8 @@ namespace __gnu_cxx
+ #endif
+ }
+ 
+-#if ! defined _GLIBCXX_ZONEINFO_DIR && ! defined _GLIBCXX_STATIC_TZDATA
++#if (! defined _GLIBCXX_ZONEINFO_DIR && ! defined _GLIBCXX_STATIC_TZDATA) \
++  || (USE_ATOMIC_SHARED_PTR && ! defined _GLIBCXX_HAS_GTHREADS)
+ # define TZDB_DISABLED
+   [[noreturn]] void __throw_disabled()
+   {
+-- 
+2.39.1.windows.1
+

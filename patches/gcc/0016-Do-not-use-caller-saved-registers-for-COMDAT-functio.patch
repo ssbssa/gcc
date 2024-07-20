@@ -1,7 +1,7 @@
-From 8b1bb7a49c85f6bfba681c4ff44a9e28deb3bd78 Mon Sep 17 00:00:00 2001
+From f1be46851b3ff7e4efb1470b6c7d3845a0dfa670 Mon Sep 17 00:00:00 2001
 From: LIU Hao <lh_mouse@126.com>
 Date: Mon, 15 Jul 2024 16:55:52 +0800
-Subject: [PATCH 17/17] Do not use caller-saved registers for COMDAT functions
+Subject: [PATCH 16/17] Do not use caller-saved registers for COMDAT functions
 
 A reference to a COMDAT function may be resolved to another definition
 outside the current translation unit, so it's not eligible for `-fipa-ra`.
@@ -22,10 +22,10 @@ gcc/ChangeLog:
  1 file changed, 2 insertions(+)
 
 diff --git a/gcc/varasm.cc b/gcc/varasm.cc
-index dc9f733791a..9fa3a42bf45 100644
+index 9ad41c3dbdb..e95cef8a725 100644
 --- a/gcc/varasm.cc
 +++ b/gcc/varasm.cc
-@@ -7621,6 +7621,8 @@ decl_binds_to_current_def_p (const_tree decl)
+@@ -7632,6 +7632,8 @@ decl_binds_to_current_def_p (const_tree decl)
       for all other declaration types.  */
    if (DECL_WEAK (decl))
      return false;

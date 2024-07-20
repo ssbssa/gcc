@@ -1,4 +1,4 @@
-From b395bd3bccf6fadb02fa2415cbab7fb6e5498cdb Mon Sep 17 00:00:00 2001
+From 52752d18e564319052b37f5267667599748cdb82 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:10:55 +0200
 Subject: [PATCH 12/17] Don't warn if the result of a right-shift fits in the
@@ -11,10 +11,10 @@ Subject: [PATCH 12/17] Don't warn if the result of a right-shift fits in the
  create mode 100644 gcc/testsuite/gcc.dg/Wconversion-pr89807.c
 
 diff --git a/gcc/c-family/c-common.cc b/gcc/c-family/c-common.cc
-index 94bef24220b..efc29433905 100644
+index 303d7f1ef5d..f08279188ad 100644
 --- a/gcc/c-family/c-common.cc
 +++ b/gcc/c-family/c-common.cc
-@@ -1655,6 +1655,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
+@@ -1631,6 +1631,26 @@ unsafe_conversion_p (tree type, tree expr, tree result, bool check_sign)
  		    return SAFE_CONVERSION;
  		}
  	    }

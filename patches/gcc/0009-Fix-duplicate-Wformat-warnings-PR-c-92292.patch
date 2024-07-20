@@ -1,4 +1,4 @@
-From 87d6e06f826be1e542b09a26b897c6fcc468f1be Mon Sep 17 00:00:00 2001
+From c8042b0b914e7e361074a427b087e8362e496030 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:37:19 +0200
 Subject: [PATCH 09/17] Fix duplicate Wformat warnings (PR c/92292)
@@ -8,10 +8,10 @@ Subject: [PATCH 09/17] Fix duplicate Wformat warnings (PR c/92292)
  1 file changed, 2 insertions(+)
 
 diff --git a/gcc/c-family/c-format.cc b/gcc/c-family/c-format.cc
-index fe5ed48b86b..6273ed00fba 100644
+index 32858ef7c17..cf20ca9f240 100644
 --- a/gcc/c-family/c-format.cc
 +++ b/gcc/c-family/c-format.cc
-@@ -1233,6 +1233,8 @@ check_function_format (const_tree fntype, tree attrs, int nargs,
+@@ -1243,6 +1243,8 @@ check_function_format (const_tree fn, tree attrs, int nargs,
  			     format_types[info.format_type].name);
  		}
  	    }

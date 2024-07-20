@@ -1,11 +1,11 @@
---- bfd/doc/Makefile.in	2018-07-28 13:47:05.821726000 +0200
-+++ bfd/doc/Makefile.in	2018-07-28 13:48:09.251437500 +0200
-@@ -537,7 +537,7 @@
- clean-libtool:
- 	-rm -rf .libs _libs
+--- bfd/Makefile.in	2018-07-28 13:47:05.821726000 +0200
++++ bfd/Makefile.in	2018-07-28 13:48:09.251437500 +0200
+@@ -1873,7 +1873,7 @@
+ 	@$(MKDIR_P) doc
+ 	@: > doc/$(am__dirstamp)
  
--bfd.info: bfd.texi $(bfd_TEXINFOS)
-+bfd.info: bfd.texi | $(bfd_TEXINFOS)
+-doc/bfd.info: doc/bfd.texi $(doc_bfd_TEXINFOS)
++doc/bfd.info: doc/bfd.texi | $(doc_bfd_TEXINFOS)
+ 	@test -f doc/$(am__dirstamp) || $(MAKE) $(AM_MAKEFLAGS) doc/$(am__dirstamp)
  	$(AM_V_MAKEINFO)restore=: && backupdir="$(am__leading_dot)am$$$$" && \
  	rm -rf $$backupdir && mkdir $$backupdir && \
- 	if ($(MAKEINFO) --version) >/dev/null 2>&1; then \
