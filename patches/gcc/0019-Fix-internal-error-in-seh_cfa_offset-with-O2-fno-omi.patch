@@ -1,0 +1,70 @@
+From edc37b7b5e9d4c47ad0a18283221e68b8bca4802 Mon Sep 17 00:00:00 2001
+From: Eric Botcazou <ebotcazou@adacore.com>
+Date: Wed, 22 May 2024 18:10:39 +0200
+Subject: [PATCH 19/20] Fix internal error in seh_cfa_offset with -O2
+ -fno-omit-frame-pointer
+
+The problem directly comes from the -ffold-mem-offsets pass messing up with
+the prologue and the frame-related instructions, which is a no-no with SEH,
+so the fix simply disconnects the pass in these circumstances.
+
+gcc/
+	PR rtl-optimization/115038
+	* fold-mem-offsets.cc (fold_offsets): Return 0 if the defining
+	instruction of the register is frame related.
+
+gcc/testsuite/
+	* g++.dg/opt/fmo1.C: New test.
+---
+ gcc/fold-mem-offsets.cc         |  2 +-
+ gcc/testsuite/g++.dg/opt/fmo1.C | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 1 deletion(-)
+ create mode 100644 gcc/testsuite/g++.dg/opt/fmo1.C
+
+diff --git a/gcc/fold-mem-offsets.cc b/gcc/fold-mem-offsets.cc
+index 2e15b05529e..84b9623058b 100644
+--- a/gcc/fold-mem-offsets.cc
++++ b/gcc/fold-mem-offsets.cc
+@@ -491,7 +491,7 @@ fold_offsets (rtx_insn *insn, rtx reg, bool analyze, bitmap foldable_insns)
+ {
+   rtx_insn *def = get_single_def_in_bb (insn, reg);
+ 
+-  if (!def || GET_CODE (PATTERN (def)) != SET)
++  if (!def || RTX_FRAME_RELATED_P (def) || GET_CODE (PATTERN (def)) != SET)
+     return 0;
+ 
+   rtx dest = SET_DEST (PATTERN (def));
+diff --git a/gcc/testsuite/g++.dg/opt/fmo1.C b/gcc/testsuite/g++.dg/opt/fmo1.C
+new file mode 100644
+index 00000000000..f0ae624c61a
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/opt/fmo1.C
+@@ -0,0 +1,25 @@
++// PR rtl-optimization/115038
++// Reported by Christoph Reiter <reiter.christoph@gmail.com>
++
++// { dg-do compile }
++// { dg-options "-O2 -fno-omit-frame-pointer" }
++
++struct d {
++  d();
++};
++
++struct e {
++  e() : c(1.0) {}
++  float c;
++};
++
++class k {
++  d g;
++  e h;
++};
++
++class a {
++  k f;
++} a;
++
++k b;
+-- 
+2.39.1.windows.1
+

@@ -1,17 +1,17 @@
-From 2a3ead94f6062680446147b4e5136b251cabce12 Mon Sep 17 00:00:00 2001
+From 64da54d0c51952d21f0bf41a79ebe503bb29ebaa Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:34:17 +0200
-Subject: [PATCH 07/17] Disable #ident directive by default
+Subject: [PATCH 07/20] Disable #ident directive by default
 
 ---
  gcc/common.opt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index b055c7bd9ac..e8a425764db 100644
+index ad348844775..8ab8754aa24 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -1806,7 +1806,7 @@ Harden conditional branches by checking reversed conditions.
+@@ -1886,7 +1886,7 @@ Enum(hardcfr_check_noreturn_calls) String(always) Value(HCFRNR_ALWAYS)
  ; On SVR4 targets, it also controls whether or not to emit a
  ; string identifying the compiler.
  fident

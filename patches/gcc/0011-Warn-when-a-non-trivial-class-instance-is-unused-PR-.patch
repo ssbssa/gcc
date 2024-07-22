@@ -1,7 +1,7 @@
-From 9fd1f8dc69806ac6d27d277ed1257e27dce9d4ce Mon Sep 17 00:00:00 2001
+From 93b88fc53f6f84bb98025f35e76ab2260e82fb7f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 15:13:14 +0200
-Subject: [PATCH 11/17] Warn when a non-trivial class instance is unused (PR
+Subject: [PATCH 11/20] Warn when a non-trivial class instance is unused (PR
  c++/60212)
 
 ---
@@ -11,10 +11,10 @@ Subject: [PATCH 11/17] Warn when a non-trivial class instance is unused (PR
  3 files changed, 7 insertions(+)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index e8a425764db..12fb72f7484 100644
+index 8ab8754aa24..52ddbffdee2 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -842,6 +842,10 @@ Wunused-label
+@@ -850,6 +850,10 @@ Wunused-label
  Common Var(warn_unused_label) Warning EnabledBy(Wunused)
  Warn when a label is unused.
  
@@ -26,18 +26,18 @@ index e8a425764db..12fb72f7484 100644
  Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
  Warn when a function parameter is unused.
 diff --git a/gcc/cp/decl.cc b/gcc/cp/decl.cc
-index 0126684c789..d669d26ecdd 100644
+index 2af026d255d..546356b9eab 100644
 --- a/gcc/cp/decl.cc
 +++ b/gcc/cp/decl.cc
-@@ -680,6 +680,7 @@ poplevel (int keep, int reverse, int functionbody)
- 		: (DECL_NAME (decl) && !DECL_ARTIFICIAL (decl)))
+@@ -703,6 +703,7 @@ poplevel (int keep, int reverse, int functionbody)
+ 	    && !name_independent_decl_p (decl)
  	    && type != error_mark_node
  	    && (!CLASS_TYPE_P (type)
 +		|| warn_unused_non_trivial
  		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
  		|| lookup_attribute ("warn_unused",
  				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
-@@ -18671,6 +18672,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
+@@ -19130,6 +19131,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
  
    if (cleanup
        && DECL_P (decl)
@@ -46,10 +46,10 @@ index 0126684c789..d669d26ecdd 100644
        /* Treat objects with destructors as used; the destructor may do
  	 something substantive.  */
 diff --git a/gcc/cp/init.cc b/gcc/cp/init.cc
-index 4977ce34398..27fb8172277 100644
+index a93ce00800c..0ff0f35fc94 100644
 --- a/gcc/cp/init.cc
 +++ b/gcc/cp/init.cc
-@@ -2051,6 +2051,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
+@@ -2078,6 +2078,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
  
    if ((VAR_P (exp) || TREE_CODE (exp) == PARM_DECL)
        && TREE_SIDE_EFFECTS (stmt_expr)

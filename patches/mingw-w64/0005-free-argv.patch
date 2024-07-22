@@ -1,17 +1,17 @@
-From 618f2904bccf3555244500a03b3e3760ea9a7cdb Mon Sep 17 00:00:00 2001
+From cfab824f86b10ec6127a04b58f2711be749c42b1 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
-Subject: [PATCH 6/9] free argv[]
+Subject: [PATCH 5/8] free argv[]
 
 ---
  mingw-w64-crt/crt/crtexe.c | 10 ++++++++++
  1 file changed, 10 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 9cef4e1fb..3abc8ea52 100644
+index 9aca06e66..0a5248d3a 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -71,6 +71,7 @@ extern int __mingw_app_type;
+@@ -66,6 +66,7 @@ extern int __mingw_app_type;
  static int argc;
  extern void __main(void);
  static _TCHAR **argv;
@@ -19,7 +19,7 @@ index 9cef4e1fb..3abc8ea52 100644
  static _TCHAR **envp;
  
  static int argret;
-@@ -281,6 +282,8 @@ __tmainCRTStartup (void)
+@@ -276,6 +277,8 @@ __tmainCRTStartup (void)
      _fpreset ();
  
      duplicate_ppstrings (argc, &argv);
@@ -28,7 +28,7 @@ index 9cef4e1fb..3abc8ea52 100644
      __main (); /* C++ initialization. */
  #ifdef _UNICODE
      __winitenv = envp;
-@@ -288,6 +291,13 @@ __tmainCRTStartup (void)
+@@ -283,6 +286,13 @@ __tmainCRTStartup (void)
      __initenv = envp;
  #endif
      mainret = _tmain (argc, argv, envp);

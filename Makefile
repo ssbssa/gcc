@@ -25,7 +25,7 @@ else
 endif
 
 
-BINUTILS_VER=2.40
+BINUTILS_VER=2.41
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -37,20 +37,22 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --enable-lto --enable-plugins
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=11.0.1
+MINGW_W64_VER=12.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
 		       --build=$(MYBUILD) --host=$(MYTARGET) \
 		       --with-default-win32-winnt=0x502 \
+		       --with-default-msvcrt=msvcrt \
 		       --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configure \
 		   --build=$(MYBUILD) --host=$(MYTARGET) \
 		   --with-sysroot=$(GCC_DIR) \
+		   --with-default-msvcrt=msvcrt \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=13.3.0
+GCC_VER=14.1.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -168,27 +170,23 @@ $(SOURCE_DIR)/mingw-w64-02-patch-04-remove-error-handlers.done: | $(SOURCE_DIR)/
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0004-remove-error-handlers.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-05-_vswprintf.done: | $(SOURCE_DIR)/mingw-w64-02-patch-04-remove-error-handlers.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0005-fix-_vswprintf.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-05-free-argv.done: | $(SOURCE_DIR)/mingw-w64-02-patch-04-remove-error-handlers.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0005-free-argv.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-06-free-argv.done: | $(SOURCE_DIR)/mingw-w64-02-patch-05-_vswprintf.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0006-free-argv.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-06-fix-alignment.done: | $(SOURCE_DIR)/mingw-w64-02-patch-05-free-argv.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0006-fix-alignment-of-SETJMP_FLOAT128.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-07-fix-alignment.done: | $(SOURCE_DIR)/mingw-w64-02-patch-06-free-argv.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0007-fix-alignment-of-SETJMP_FLOAT128.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-07-printf-out-of-bounds-access.done: | $(SOURCE_DIR)/mingw-w64-02-patch-06-fix-alignment.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0007-fix-printf-out-of-bounds-access.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-08-printf-out-of-bounds-access.done: | $(SOURCE_DIR)/mingw-w64-02-patch-07-fix-alignment.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-fix-printf-out-of-bounds-access.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-w64-02-patch-07-printf-out-of-bounds-access.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-add-strndup-wcsndup.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-09-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-printf-out-of-bounds-access.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-add-strndup-wcsndup.patch
-	@touch $@
-
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-09-strndup-wcsndup.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -296,7 +294,19 @@ $(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done: | $(SOURCE_DIR)/gcc-02-patch-1
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Set-TZDB_DISABLED-if-_GLIBCXX_HAS_GTHREADS-is-not-av.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done
+$(SOURCE_DIR)/gcc-02-patch-18-dtor-hooks-atexit.done: | $(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0018-c-mingw-Fix-up-types-of-dtor-hooks-to-__cxa_-thread_.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-19-ice-seh_cfa_offset.done: | $(SOURCE_DIR)/gcc-02-patch-18-dtor-hooks-atexit.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0019-Fix-internal-error-in-seh_cfa_offset-with-O2-fno-omi.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done: | $(SOURCE_DIR)/gcc-02-patch-19-ice-seh_cfa_offset.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0020-preprocessor-Create-the-parser-before-handling-comma.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -367,8 +377,8 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-09-strndup-wcsndup.done \
-  $(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done \
+  $(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done

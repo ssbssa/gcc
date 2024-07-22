@@ -1,7 +1,7 @@
-From 5ecc45598189c3cec44ed6f127a267ccb1880f96 Mon Sep 17 00:00:00 2001
+From 46200164910858c1e93a3b80de488aaa0031e02e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 3/9] fix binmode
+Subject: [PATCH 3/8] fix binmode
 
 ---
  mingw-w64-crt/crt/binmode.c |  7 ++++---
@@ -25,7 +25,7 @@ index f0473b086..2e46c2fdf 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index e4a180a3a..651b63478 100644
+index 9d5126878..08e30de55 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -20,6 +20,8 @@
@@ -37,7 +37,7 @@ index e4a180a3a..651b63478 100644
  
  #if defined(__SEH__) && (!defined(__clang__) || __clang_major__ >= 7)
  #define SEH_INLINE_ASM
-@@ -116,6 +118,16 @@ pre_c_init (void)
+@@ -111,6 +113,16 @@ pre_c_init (void)
    else
      __set_app_type (_CONSOLE_APP);
  

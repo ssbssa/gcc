@@ -1,45 +1,48 @@
-From ff3fd6de9b355b5bf6145fbbd9858267179ad958 Mon Sep 17 00:00:00 2001
+From 1b025d862b0e07084bc679d70dedaa0df156be79 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
-Subject: [PATCH 03/17] Mingw LFS support
+Subject: [PATCH 03/20] Mingw LFS support
 
 ---
- libstdc++-v3/config/io/basic_file_stdio.cc    | 15 ++++++++++++---
+ libstdc++-v3/config/io/basic_file_stdio.cc    | 22 +++++++++++++++++++
  libstdc++-v3/include/ext/stdio_sync_filebuf.h |  2 +-
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/libstdc++-v3/config/io/basic_file_stdio.cc b/libstdc++-v3/config/io/basic_file_stdio.cc
-index 27c2ad2afe3..4e00bd60beb 100644
+index 9b529490f08..46859c726c4 100644
 --- a/libstdc++-v3/config/io/basic_file_stdio.cc
 +++ b/libstdc++-v3/config/io/basic_file_stdio.cc
-@@ -251,7 +251,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -257,7 +257,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
      const char* __c_mode = fopen_mode(__mode);
      if (__c_mode && !this->is_open())
        {
--#ifdef _GLIBCXX_USE_LFS
-+#if defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
- 	if ((_M_cfile = fopen64(__name, __c_mode)))
- #else
++#if defined(__MINGW32__)
++	if ((_M_cfile = fopen64(__name, __c_mode)))
++#else
  	if ((_M_cfile = fopen(__name, __c_mode)))
-@@ -389,7 +389,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
++#endif
+ 	  {
+ 	    _M_cfile_created = true;
+ 	    __ret = this;
+@@ -391,6 +395,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  # else
        return ftell(__f->file());
  # endif
--#elif defined(_GLIBCXX_USE_LFS)
-+#elif defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
-       return lseek64(__f->fd(), 0, (int)ios_base::cur);
++#elif defined(__MINGW32__)
++      return lseek64(__f->fd(), 0, (int)ios_base::cur);
  #else
        return lseek(__f->fd(), 0, (int)ios_base::cur);
-@@ -417,7 +417,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+ #endif
+@@ -417,6 +423,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  	  return -1;
        }
      return __way == ios_base::beg ? __off : std::get_file_offset(this);
--#elif defined(_GLIBCXX_USE_LFS)
-+#elif defined(_GLIBCXX_USE_LFS) || defined(__MINGW32__)
-     return lseek64(this->fd(), __off, __way);
++#elif defined(__MINGW32__)
++    return lseek64(this->fd(), __off, __way);
  #else
-     if (__off > numeric_limits<off_t>::max()
-@@ -463,6 +463,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     if _GLIBCXX17_CONSTEXPR (sizeof(streamoff) > sizeof(off_t))
+       if (__off > numeric_limits<off_t>::max()
+@@ -461,6 +469,20 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  	const streamoff __off = __buffer.st_size - std::get_file_offset(this);
  	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
        }
@@ -52,11 +55,16 @@ index 27c2ad2afe3..4e00bd60beb 100644
 +							   ios_base::cur);
 +	return std::min(__off, streamoff(numeric_limits<streamsize>::max()));
 +      }
- #else
-     struct stat __buffer;
-     const int __err = fstat(this->fd(), &__buffer);
++#else
++    struct stat __buffer;
++    const int __err = fstat(this->fd(), &__buffer);
++    if (!__err && _GLIBCXX_ISREG(__buffer.st_mode))
++      return __buffer.st_size - std::get_file_offset(this);
+ #endif
+     return 0;
+   }
 diff --git a/libstdc++-v3/include/ext/stdio_sync_filebuf.h b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
-index aff9f5f204b..3b6ccc23688 100644
+index f8993ad521a..b999a5ff44d 100644
 --- a/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 +++ b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 @@ -203,7 +203,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION

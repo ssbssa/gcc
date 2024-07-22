@@ -1,7 +1,7 @@
-From dc09e289e7bbc0d84a30b975dfa00ec884790f46 Mon Sep 17 00:00:00 2001
+From 357b3d1a9999dd0fbf466abe16cff0f8ff46509e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/17] Relocatable mingw paths
+Subject: [PATCH 02/20] Relocatable mingw paths
 
 ---
  gcc/config/i386/mingw32.h | 9 ++-------
@@ -9,7 +9,7 @@ Subject: [PATCH 02/17] Relocatable mingw paths
  2 files changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/gcc/config/i386/mingw32.h b/gcc/config/i386/mingw32.h
-index 6a55baaa458..39149e4f082 100644
+index 58304fc55f6..35b53e84b70 100644
 --- a/gcc/config/i386/mingw32.h
 +++ b/gcc/config/i386/mingw32.h
 @@ -84,7 +84,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -21,7 +21,7 @@ index 6a55baaa458..39149e4f082 100644
  
  #undef CPP_SPEC
  #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
-@@ -205,17 +205,12 @@ along with GCC; see the file COPYING3.  If not see
+@@ -225,17 +225,12 @@ along with GCC; see the file COPYING3.  If not see
  
  /* Override startfile prefix defaults.  */
  #ifndef STANDARD_STARTFILE_PREFIX_1
@@ -41,7 +41,7 @@ index 6a55baaa458..39149e4f082 100644
     We canonicalize it to be in Unix format (backslashes are replaced
     forward slashes.  */
 diff --git a/gcc/incpath.cc b/gcc/incpath.cc
-index 4d44321183f..d5104d1e21e 100644
+index 64cdd2f4a1b..5cd099b9949 100644
 --- a/gcc/incpath.cc
 +++ b/gcc/incpath.cc
 @@ -189,8 +189,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
