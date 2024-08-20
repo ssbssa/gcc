@@ -116,7 +116,7 @@ __gthr_win32_join (__gthread_t thr, void **value_ptr)
 {
   int status = 0;
 
-  if (GetThreadId ((HANDLE) thr) == GetCurrentThreadId ())
+  if (__gthr_win32_get_thread_id (thr) == GetCurrentThreadId ())
     return 1;
 
   if (WaitForSingleObject ((HANDLE) thr, INFINITE) == WAIT_OBJECT_0)
@@ -135,6 +135,79 @@ __gthr_win32_join (__gthread_t thr, void **value_ptr)
 
   CloseHandle ((HANDLE) thr);
   return status;
+}
+
+/* The initialization device for the GetThreadId replacement.  */
+static __gthread_once_t __gthr_win32_GetThreadId_once = __GTHREAD_ONCE_INIT;
+
+typedef LONG NTAPI __gthr_win32f_NtQueryInformationThread
+(HANDLE, INT, PVOID, ULONG, PULONG);
+static __gthr_win32f_NtQueryInformationThread *
+__gthr_win32_NtQueryInformationThread;
+
+typedef DWORD WINAPI __gthr_win32f_GetThreadId (HANDLE);
+static __gthr_win32f_GetThreadId *__gthr_win32_GetThreadId;
+
+static DWORD WINAPI
+__gthr_win32_GetThreadId_dummy (HANDLE thr ATTRIBUTE_UNUSED)
+{
+  return 0;
+}
+
+static DWORD WINAPI
+__gthr_win32_GetThreadId_replacement (HANDLE thr)
+{
+  struct __gthr_win32_THREAD_BASIC_INFORMATION
+  {
+    LONG ExitStatus;
+    PVOID TebBaseAddress;
+    DWORD_PTR UniqueProcess;
+    DWORD_PTR UniqueThread;
+    ULONG_PTR AffinityMask;
+    DWORD Priority;
+    DWORD BasePriority;
+  } tbi;
+  if (__gthr_win32_NtQueryInformationThread (thr, 0, &tbi,
+					     sizeof (tbi), NULL) == 0)
+    return tbi.UniqueThread;
+
+  return 0;
+}
+
+static void
+__gthr_win32_GetThreadId_init (void)
+{
+  HMODULE kernel32 = GetModuleHandle ("kernel32.dll");
+  if (kernel32 != NULL)
+    {
+      __gthr_win32_GetThreadId = (__gthr_win32f_GetThreadId *)
+	GetProcAddress (kernel32, "GetThreadId");
+      if (__gthr_win32_GetThreadId != NULL)
+	return;
+    }
+
+  __gthr_win32_GetThreadId = __gthr_win32_GetThreadId_dummy;
+
+  HMODULE ntdll = GetModuleHandle ("ntdll.dll");
+  if (ntdll == NULL)
+    return;
+
+  __gthr_win32_NtQueryInformationThread
+    = (__gthr_win32f_NtQueryInformationThread *)
+    GetProcAddress (ntdll, "NtQueryInformationThread");
+  if (__gthr_win32_NtQueryInformationThread != NULL)
+    __gthr_win32_GetThreadId = __gthr_win32_GetThreadId_replacement;
+}
+
+/* Implement the __gthr_win32_get_thread_id routine.  */
+
+__gthr_win32_DWORD
+__gthr_win32_get_thread_id (__gthread_t thr)
+{
+  __gthread_once (&__gthr_win32_GetThreadId_once,
+		  __gthr_win32_GetThreadId_init);
+
+  return __gthr_win32_GetThreadId ((HANDLE) thr);
 }
 
 /* Implement the __gthread_self routine.  */
