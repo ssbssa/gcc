@@ -414,6 +414,7 @@ __gthread_active_p (void)
 
 extern int __gthr_win32_create (__gthread_t *, void *(*) (void*), void *);
 extern int __gthr_win32_join (__gthread_t, void **);
+extern __gthr_win32_DWORD __gthr_win32_get_thread_id (__gthread_t);
 extern __gthread_t __gthr_win32_self (void);
 extern int __gthr_win32_once (__gthread_once_t *, void (*) (void));
 extern int __gthr_win32_detach (__gthread_t);
@@ -625,7 +626,7 @@ __gthread_detach (__gthread_t __thr)
 __GTHREAD_WIN32_INLINE int
 __gthread_equal (__gthread_t __t1, __gthread_t __t2)
 {
-  return GetThreadId ((HANDLE) __t1) == GetThreadId ((HANDLE) __t2);
+  return __gthr_win32_get_thread_id (__t1) == __gthr_win32_get_thread_id (__t2);
 }
 
 __GTHREAD_WIN32_INLINE int
