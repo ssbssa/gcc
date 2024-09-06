@@ -7720,8 +7720,8 @@ files_equal_p (char *file1, char *file2)
   const int bufsize = 8192;
   char *buf = XNEWVEC (char, bufsize);
 
-  fd1 = open (file1, O_RDONLY);
-  fd2 = open (file2, O_RDONLY);
+  fd1 = open (file1, O_RDONLY | O_BINARY);
+  fd2 = open (file2, O_RDONLY | O_BINARY);
 
   if (fd1 < 0 || fd2 < 0)
     goto error;
