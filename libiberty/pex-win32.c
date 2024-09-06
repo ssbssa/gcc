@@ -130,10 +130,9 @@ pex_win32_open_write (struct pex_obj *obj ATTRIBUTE_UNUSED, const char *name,
 {
   /* Note that we can't use O_EXCL here because gcc may have already
      created the temporary file via make_temp_file.  */
-  if (append)
-    return -1;
   return _open (name,
-		(_O_WRONLY | _O_CREAT | _O_TRUNC
+		(_O_WRONLY | _O_CREAT
+		 | (append ? _O_APPEND : _O_TRUNC)
 		 | (binary ? _O_BINARY : _O_TEXT)),
 		_S_IREAD | _S_IWRITE);
 }
