@@ -793,6 +793,9 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
   return success;
 }
 
+static fd_t old_console_fd;
+static int console_color;
+
 bool SupportsColoredOutput(fd_t fd) {
   // Map the conventional Unix fds 1 and 2 to Windows handles. They might be
   // closed, in which case this will fail.
@@ -804,11 +807,17 @@ bool SupportsColoredOutput(fd_t fd) {
   }
 
   DWORD flags;
-  if (GetConsoleMode(fd, &flags) &&
-      SetConsoleMode(fd, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+  if (!GetConsoleMode(fd, &flags))
+    return false;
+
+  if (SetConsoleMode(fd, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
     return true;
 
-  return false;
+  old_console_fd = fd;
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo (fd, &csbi);
+  console_color = csbi.wAttributes & 0xff;
+  return true;
 }
 
 bool WriteToFile(fd_t fd, const void *buff, uptr buff_size, uptr *bytes_written,
@@ -832,6 +841,86 @@ bool WriteToFile(fd_t fd, const void *buff, uptr buff_size, uptr *bytes_written,
     if (fd == 0) {
       *error_p = ERROR_INVALID_HANDLE;
       return false;
+    }
+
+    if (fd == old_console_fd)
+    {
+      int console_fg = console_color & 0x07;
+      int console_bg = console_color >> 4;
+      int console_bold = (console_color & 0x08) >> 3;
+      int fg = console_fg;
+      int bg = console_bg;
+      int bold = console_bold;
+      const char *text = (const char *) buff;
+      const char *text_end = text + buff_size;
+
+      DWORD written;
+      const char *pos = text;
+      while (pos < text_end)
+      {
+        while (pos < text_end && *pos != '\33') pos++;
+        if (pos > text)
+          WriteConsole (fd, text, pos - text, &written, NULL);
+        if (*pos == '\33' && pos + 1 < text_end && pos[1] == '[')
+        {
+          pos += 2;
+          const char *nums = pos;
+          while (pos < text_end
+		 && ((*pos >= '0' && *pos <= '9') || *pos == ';'))
+	    pos++;
+          if (pos < text_end && *pos == 'm')
+          {
+            if (*nums == 'm')
+            {
+              fg = console_fg;
+              bg = console_bg;
+              bold = console_bold;
+            }
+            while (*nums != 'm')
+            {
+              int n = 0;
+              while (*nums >= '0' && *nums <= '9')
+              {
+                n = 10*n + (*nums - '0');
+                nums++;
+              }
+              if (n == 0)
+              {
+                fg = console_fg;
+                bg = console_bg;
+                bold = console_bold;
+              }
+              else if (n == 1)
+                bold = 1;
+              else if (n >= 30 && n <= 37)
+              {
+                n -= 30;
+                fg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
+              }
+              else if (n == 39)
+              {
+                fg = console_fg;
+                bold = console_bold;
+              }
+              else if (n >= 40 && n <= 47)
+              {
+                n -= 40;
+                bg = ((n & 4) >> 2) | (n & 2) | ((n & 1) << 2);
+              }
+              else if (n == 49)
+                bg = console_bg;
+              if (*nums == ';') nums++;
+            }
+            int c = fg | (bold << 3) | (bg << 4);
+            SetConsoleTextAttribute (fd, c);
+          }
+          if (pos < text_end) pos++;
+          text = pos;
+        }
+      }
+
+      *bytes_written = buff_size;
+      return true;
     }
   }
 
