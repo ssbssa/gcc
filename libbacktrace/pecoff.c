@@ -48,7 +48,6 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #define NOMINMAX
 #endif
 
-#define PSAPI_VERSION 2
 #include <windows.h>
 #include <psapi.h>
 
@@ -91,6 +90,9 @@ typedef VOID (CALLBACK *LDR_DLL_NOTIFICATION)(ULONG,
 typedef NTSTATUS (NTAPI *LDR_REGISTER_FUNCTION)(ULONG,
 						LDR_DLL_NOTIFICATION, PVOID,
 						PVOID*);
+
+typedef WINBOOL WINAPI func_EnumProcessModules(HANDLE, HMODULE *,
+					       DWORD, LPDWORD);
 #endif
 
 /* Coff file header.  */
@@ -1065,10 +1067,27 @@ backtrace_initialize (struct backtrace_state *state,
 #endif
 
 #ifdef HAVE_WINDOWS_H
+  func_EnumProcessModules *fEnumProcessModules = NULL;
+
+  HMODULE kernel32 = GetModuleHandle ("kernel32.dll");
+  if (kernel32 != NULL)
+    fEnumProcessModules = (func_EnumProcessModules *)
+      GetProcAddress (kernel32, "K32EnumProcessModules");
+  if (fEnumProcessModules == NULL)
+    {
+      HMODULE psapi = GetModuleHandle ("psapi.dll");
+      if (psapi == NULL)
+	psapi = LoadLibraryA ("psapi.dll");
+      if (psapi != NULL)
+	fEnumProcessModules = (func_EnumProcessModules *)
+	  GetProcAddress (psapi, "EnumProcessModules");
+    }
+
   HMODULE modarr[1000];
   DWORD modcnt = 0;
-  if (EnumProcessModules (GetCurrentProcess (),
-			  modarr, sizeof (modarr), &modcnt))
+  if (fEnumProcessModules != NULL
+      && fEnumProcessModules (GetCurrentProcess (),
+			      modarr, sizeof (modarr), &modcnt))
     {
       DWORD i;
       char modname[MAX_PATH];
