@@ -869,7 +869,7 @@ namespace __ubsan {
 
 #ifdef UBSAN_CAN_USE_CXXABI
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
 
 extern "C" void __ubsan_handle_cfi_bad_type_default(CFICheckFailData *Data,
                                                     ValueHandle Vtable,

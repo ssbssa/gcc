@@ -153,11 +153,12 @@ libasan_la_DEPENDENCIES =  \
 	$(am__append_3) $(am__DEPENDENCIES_1)
 am__objects_1 = asan_activation.lo asan_allocator.lo asan_debugging.lo \
 	asan_descriptions.lo asan_errors.lo asan_fake_stack.lo \
-	asan_flags.lo asan_globals.lo asan_interceptors.lo \
-	asan_interceptors_memintrinsics.lo asan_linux.lo asan_mac.lo \
-	asan_malloc_linux.lo asan_malloc_mac.lo asan_malloc_win.lo \
-	asan_memory_profile.lo asan_new_delete.lo asan_poisoning.lo \
-	asan_posix.lo asan_premap_shadow.lo asan_report.lo asan_rtl.lo \
+	asan_flags.lo asan_globals.lo asan_globals_win.lo \
+	asan_interceptors.lo asan_interceptors_memintrinsics.lo \
+	asan_linux.lo asan_mac.lo asan_malloc_linux.lo \
+	asan_malloc_mac.lo asan_malloc_win.lo asan_memory_profile.lo \
+	asan_new_delete.lo asan_poisoning.lo asan_posix.lo \
+	asan_premap_shadow.lo asan_report.lo asan_rtl.lo \
 	asan_shadow_setup.lo asan_stack.lo asan_stats.lo \
 	asan_suppressions.lo asan_thread.lo asan_win.lo \
 	asan_win_dll_thunk.lo asan_win_dynamic_runtime_thunk.lo \
@@ -437,6 +438,7 @@ asan_files = \
 	asan_fake_stack.cpp \
 	asan_flags.cpp \
 	asan_globals.cpp \
+	asan_globals_win.cpp \
 	asan_interceptors.cpp \
 	asan_interceptors_memintrinsics.cpp \
 	asan_linux.cpp \
@@ -598,6 +600,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_fake_stack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_flags.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_globals.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_globals_win.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors_memintrinsics.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors_vfork.Plo@am__quote@
