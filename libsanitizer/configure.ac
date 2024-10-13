@@ -247,6 +247,7 @@ libsanitizer_cv_sys_filetype=$filetype])
 FORMAT_FILE=
 case "$libsanitizer_cv_sys_filetype" in
 elf*) FORMAT_FILE="elf.lo" ;;
+pecoff) FORMAT_FILE="pecoff.lo" ;;
 *) AC_MSG_WARN([could not determine output file type])
    FORMAT_FILE="unknown.lo"
    backtrace_supported=no
@@ -319,6 +320,8 @@ fi
 if test "$have_dl_iterate_phdr" = "yes"; then
   AC_DEFINE(HAVE_DL_ITERATE_PHDR, 1, [Define if dl_iterate_phdr is available.])
 fi
+
+AC_CHECK_HEADERS(windows.h)
 
 # Check for the fcntl function.
 if test -n "${with_target_subdir}"; then
