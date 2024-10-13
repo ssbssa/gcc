@@ -16046,6 +16046,10 @@ done
 # Common libraries that we need to link against for all sanitizer libs.
 link_sanitizer_common='-lpthread -lm'
 
+case "$target" in
+  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
+esac
+
 # At least for glibc, shm_open is in librt.  But don't pull that
 # in if it still doesn't give us the function we want.  This
 # test is copied from libgomp.
