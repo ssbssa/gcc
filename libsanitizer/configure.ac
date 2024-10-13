@@ -111,7 +111,7 @@ AC_CHECK_FUNCS(clock_getres clock_gettime clock_settime lstat readlink)
 link_sanitizer_common='-lpthread -lm'
 
 case "$target" in
-  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
+  *-*-mingw*) link_sanitizer_common='' ;;
 esac
 
 # At least for glibc, shm_open is in librt.  But don't pull that

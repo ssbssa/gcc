@@ -876,14 +876,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
 void internal_join_thread(void *th) { }
 
 void FutexWait(atomic_uint32_t *p, u32 cmp) {
-  WaitOnAddress(p, &cmp, sizeof(cmp), INFINITE);
+  Sleep(0);
 }
 
 void FutexWake(atomic_uint32_t *p, u32 count) {
-  if (count == 1)
-    WakeByAddressSingle(p);
-  else
-    WakeByAddressAll(p);
 }
 
 uptr GetTlsSize() {
