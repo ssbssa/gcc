@@ -745,7 +745,7 @@ static int RunAtexit() {
 }
 
 #pragma section(".CRT$XID", long, read)
-__declspec(allocate(".CRT$XID")) int (*__run_atexit)() = RunAtexit;
+IN_SECTION(".CRT$XID") int (*__run_atexit)() = RunAtexit;
 #endif
 
 // ------------------ sanitizer_libc.h

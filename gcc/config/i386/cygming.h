@@ -474,3 +474,5 @@ do {						\
   (ix86_cmodel == CM_LARGE_PIC || ix86_cmodel == CM_MEDIUM_PIC)
 
 #define HAVE_64BIT_POINTERS TARGET_64BIT_DEFAULT
+
+#define TARGET_ASAN_DYNAMIC_SHADOW_OFFSET_P hook_bool_void_true
