@@ -470,4 +470,4 @@ do {						\
 
 #undef SUBTARGET_SHADOW_OFFSET
 #define SUBTARGET_SHADOW_OFFSET	    \
-  (TARGET_64BIT ? HOST_WIDE_INT_1 << 45 : 0)
+  (TARGET_64BIT ? (unsigned HOST_WIDE_INT) -1 : 0)
