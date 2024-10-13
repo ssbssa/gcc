@@ -7058,7 +7058,13 @@ INTERCEPTOR(SIZE_T, wcslen, const wchar_t *s) {
   COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * (res + 1));
   return res;
 }
+#define INIT_WCSLEN                  \
+  COMMON_INTERCEPT_FUNCTION(wcslen);
+#else
+#define INIT_WCSLEN
+#endif
 
+#if SANITIZER_INTERCEPT_WCSNLEN
 INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
   void *ctx;
   COMMON_INTERCEPTOR_ENTER(ctx, wcsnlen, s, n);
@@ -7066,11 +7072,10 @@ INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
   COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * Min(res + 1, n));
   return res;
 }
-#define INIT_WCSLEN                  \
-  COMMON_INTERCEPT_FUNCTION(wcslen); \
+#define INIT_WCSNLEN                  \
   COMMON_INTERCEPT_FUNCTION(wcsnlen);
 #else
-#define INIT_WCSLEN
+#define INIT_WCSNLEN
 #endif
 
 #if SANITIZER_INTERCEPT_WCSCAT
@@ -10504,6 +10509,7 @@ static void InitializeCommonInterceptors() {
   INIT_UTMPX;
   INIT_GETLOADAVG;
   INIT_WCSLEN;
+  INIT_WCSNLEN;
   INIT_WCSCAT;
   INIT_WCSDUP;
   INIT_WCSXFRM;
