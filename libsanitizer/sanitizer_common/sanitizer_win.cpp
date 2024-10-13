@@ -794,7 +794,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
 }
 
 bool SupportsColoredOutput(fd_t fd) {
-  // FIXME: support colored output.
+  // Map the conventional Unix fds 1 and 2 to Windows handles. They might be
+  // closed, in which case this will fail.
+  if (fd == kStdoutFd || fd == kStderrFd) {
+    fd = GetStdHandle(fd == kStdoutFd ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
+    if (fd == 0) {
+      return false;
+    }
+  }
+
+  DWORD flags;
+  if (GetConsoleMode(fd, &flags) &&
+      SetConsoleMode(fd, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+    return true;
+
   return false;
 }
 

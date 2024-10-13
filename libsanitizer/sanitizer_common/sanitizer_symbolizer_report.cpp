@@ -60,11 +60,6 @@ static inline bool ReportSupportsColors() { return true; }
 #endif  // !SANITIZER_FUCHSIA
 
 bool ColorizeReports() {
-  // FIXME: Add proper Windows support to AnsiColorDecorator and re-enable color
-  // printing on Windows.
-  if (SANITIZER_WINDOWS)
-    return false;
-
   const char *flag = common_flags()->color;
   return internal_strcmp(flag, "always") == 0 ||
          (internal_strcmp(flag, "auto") == 0 && ReportSupportsColors());
