@@ -26,6 +26,7 @@ asan_files = \
 	asan_fake_stack.cpp \
 	asan_flags.cpp \
 	asan_globals.cpp \
+	asan_globals_win.cpp \
 	asan_interceptors.cpp \
 	asan_interceptors_memintrinsics.cpp \
 	asan_linux.cpp \

@@ -228,7 +228,24 @@ void FlushUnneededASanShadowMemory(uptr p, uptr size) {
 // ---------------------- TSD ---------------- {{{
 static bool tsd_key_inited = false;
 
+#ifndef __GNUC__
 static __declspec(thread) void *fake_tsd = 0;
+#else
+struct TlsVoidPtr
+{
+  operator void *()
+  {
+    return TlsGetValue(tls_index);
+  }
+  void operator=(void *v)
+  {
+    TlsSetValue(tls_index, v);
+  }
+
+  DWORD tls_index;
+};
+static TlsVoidPtr fake_tsd;
+#endif
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/winternl/ns-winternl-_teb
 // "[This structure may be altered in future versions of Windows. Applications
@@ -261,7 +278,7 @@ void AsanTSDInit(void (*destructor)(void *tsd)) {
 
 void *AsanTSDGet() {
   CHECK(tsd_key_inited);
-  return IsTlsInitialized() ? fake_tsd : nullptr;
+  return IsTlsInitialized() ? (void *) fake_tsd : nullptr;
 }
 
 void AsanTSDSet(void *tsd) {
@@ -332,6 +349,11 @@ ShadowExceptionHandler(PEXCEPTION_POINTERS exception_pointers) {
 #endif
 
 void InitializePlatformExceptionHandlers() {
+#ifdef __GNUC__
+  fake_tsd.tls_index = TlsAlloc();
+  CHECK(fake_tsd.tls_index != TLS_OUT_OF_INDEXES);
+#endif
+
 #if SANITIZER_WINDOWS64
   // On Win64, we map memory on demand with access violation handler.
   // Install our exception handler.
@@ -340,7 +362,15 @@ void InitializePlatformExceptionHandlers() {
 }
 
 bool IsSystemHeapAddress(uptr addr) {
-  return ::HeapValidate(GetProcessHeap(), 0, (void *)addr) != FALSE;
+  HANDLE process_heap = GetProcessHeap();
+  if (::HeapValidate(process_heap, 0, (void *)addr))
+    return true;
+
+  HANDLE crt_heap = (HANDLE) _get_heap_handle();
+  if (crt_heap == process_heap)
+    return false;
+
+  return ::HeapValidate(crt_heap, 0, (void *)addr) != FALSE;
 }
 
 // We want to install our own exception handler (EH) to print helpful reports
@@ -385,7 +415,7 @@ bool HandleDlopenInit() {
 // immediately after the CRT runs. This way, our exception filter is called
 // first and we can delegate to their filter if appropriate.
 #pragma section(".CRT$XCAB", long, read)
-__declspec(allocate(".CRT$XCAB")) int (*__intercept_seh)() =
+IN_SECTION(".CRT$XCAB") int (*__intercept_seh)() =
     __asan_set_seh_filter;
 
 // Piggyback on the TLS initialization callback directory to initialize asan as
@@ -398,7 +428,7 @@ static void NTAPI asan_thread_init(void *module, DWORD reason, void *reserved) {
 }
 
 #pragma section(".CRT$XLAB", long, read)
-__declspec(allocate(".CRT$XLAB")) void(NTAPI *__asan_tls_init)(
+IN_SECTION(".CRT$XLAB") void(NTAPI *__asan_tls_init)(
     void *, unsigned long, void *) = asan_thread_init;
 #endif
 
@@ -412,7 +442,7 @@ static void NTAPI asan_thread_exit(void *module, DWORD reason, void *reserved) {
 }
 
 #pragma section(".CRT$XLY", long, read)
-__declspec(allocate(".CRT$XLY")) void(NTAPI *__asan_tls_exit)(
+IN_SECTION(".CRT$XLY") void(NTAPI *__asan_tls_exit)(
     void *, unsigned long, void *) = asan_thread_exit;
 
 WIN_FORCE_LINK(__asan_dso_reg_hook)

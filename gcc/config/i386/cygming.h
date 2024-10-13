@@ -502,3 +502,5 @@ do {						\
 /* For now, do not handle .res because some packages pass
 COFF files named .res to gcc directly, expecting them to
 be passed to the linker, not windres. See PR123504.  */
+
+#define TARGET_ASAN_DYNAMIC_SHADOW_OFFSET_P hook_bool_void_true
