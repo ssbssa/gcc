@@ -16837,6 +16837,12 @@ ac_config_commands="$ac_config_commands gstdint.h"
 
 
 
+case "$target" in
+  *-*-mingw*)
+    VIEW_FILE=mmapio.lo
+    ALLOC_FILE=mmap.lo
+    ;;
+  *)
 for ac_header in sys/mman.h alloca.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
@@ -16888,6 +16894,8 @@ else
 fi
 rm -f conftest.err conftest.i conftest.$ac_ext
 fi
+;;
+esac
 
 
 

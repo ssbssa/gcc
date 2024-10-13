@@ -37,10 +37,14 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
 
 #include "backtrace.h"
 #include "internal.h"
+
+#ifndef _WIN32
 
 #ifndef HAVE_DECL_GETPAGESIZE
 extern int getpagesize (void);
@@ -56,6 +60,20 @@ extern int getpagesize (void);
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)
+#endif
+
+#else
+
+#define PROT_READ     1
+#define PROT_WRITE    2
+#define MAP_PRIVATE   1
+#define MAP_ANONYMOUS 2
+#define MAP_FAILED    NULL
+
+int getpagesize(void);
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+int munmap(void *addr, size_t length);
+
 #endif
 
 /* A list of free memory blocks.  */

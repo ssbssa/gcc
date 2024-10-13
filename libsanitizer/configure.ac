@@ -271,6 +271,12 @@ AC_SUBST(BACKTRACE_SUPPORTED)
 
 GCC_HEADER_STDINT(gstdint.h)
 
+case "$target" in
+  *-*-mingw*)
+    VIEW_FILE=mmapio.lo
+    ALLOC_FILE=mmap.lo
+    ;;
+  *)
 AC_CHECK_HEADERS(sys/mman.h alloca.h)
 if test "$ac_cv_header_sys_mman_h" = "no"; then
   have_mmap=no
@@ -295,6 +301,8 @@ else
 #endif
 ])], [ALLOC_FILE=mmap.lo], [ALLOC_FILE=alloc.lo])
 fi
+;;
+esac
 AC_SUBST(VIEW_FILE)
 AC_SUBST(ALLOC_FILE)
 
