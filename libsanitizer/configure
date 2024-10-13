@@ -16408,6 +16408,7 @@ $as_echo "$libsanitizer_cv_sys_filetype" >&6; }
 FORMAT_FILE=
 case "$libsanitizer_cv_sys_filetype" in
 elf*) FORMAT_FILE="elf.lo" ;;
+pecoff) FORMAT_FILE="pecoff.lo" ;;
 *) { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: could not determine output file type" >&5
 $as_echo "$as_me: WARNING: could not determine output file type" >&2;}
    FORMAT_FILE="unknown.lo"
@@ -16936,6 +16937,19 @@ if test "$have_dl_iterate_phdr" = "yes"; then
 $as_echo "#define HAVE_DL_ITERATE_PHDR 1" >>confdefs.h
 
 fi
+
+for ac_header in windows.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "windows.h" "ac_cv_header_windows_h" "$ac_includes_default"
+if test "x$ac_cv_header_windows_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_WINDOWS_H 1
+_ACEOF
+
+fi
+
+done
+
 
 # Check for the fcntl function.
 if test -n "${with_target_subdir}"; then

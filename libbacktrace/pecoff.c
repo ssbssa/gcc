@@ -48,9 +48,11 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #define NOMINMAX
 #endif
 
+#define PSAPI_VERSION 2
 #include <windows.h>
+#include <psapi.h>
 
-#ifdef HAVE_TLHELP32_H
+#if 0 // ifdef HAVE_TLHELP32_H
 #include <tlhelp32.h>
 
 #ifdef UNICODE
@@ -503,7 +505,9 @@ coff_initialize_syminfo (struct backtrace_state *state,
 
   /* End of symbols marker.  */
   coff_sym->name = NULL;
-  coff_sym->address = -1;
+  coff_sym->address = sects_num > 0
+    ? base_address.m + sects[sects_num - 1].virtual_address + sects[sects_num - 1].size_of_raw_data
+    : (uintptr_t) -1;
 
   backtrace_qsort (coff_symbols, coff_symbol_count,
 		   sizeof (struct coff_symbol), coff_symbol_compare);
@@ -1004,7 +1008,7 @@ backtrace_initialize (struct backtrace_state *state,
   int found_dwarf;
   fileline coff_fileline_fn;
   uintptr_t module_handle = 0;
-#ifdef HAVE_TLHELP32_H
+#if 0 // ifdef HAVE_TLHELP32_H
   fileline module_fileline_fn;
   int module_found_sym;
   HANDLE snapshot;
@@ -1021,7 +1025,7 @@ backtrace_initialize (struct backtrace_state *state,
   if (!ret)
     return 0;
 
-#ifdef HAVE_TLHELP32_H
+#if 0 // ifdef HAVE_TLHELP32_H
   do
     {
       snapshot = CreateToolhelp32Snapshot (TH32CS_SNAPMODULE, 0);
@@ -1061,6 +1065,46 @@ backtrace_initialize (struct backtrace_state *state,
 #endif
 
 #ifdef HAVE_WINDOWS_H
+  HMODULE modarr[1000];
+  DWORD modcnt = 0;
+  if (EnumProcessModules (GetCurrentProcess (),
+			  modarr, sizeof (modarr), &modcnt))
+    {
+      DWORD i;
+      char modname[MAX_PATH];
+
+      modcnt /= sizeof (HMODULE);
+      if (modcnt > 1000)
+	modcnt = 1000;
+
+      for (i = 1; i < modcnt; i++)
+	{
+	  if (GetModuleFileName (modarr[i], modname, MAX_PATH))
+	    {
+	      int descriptor;
+	      int does_not_exist;
+	      fileline mod_fileline_fn;
+	      int mod_found_dwarf;
+
+	      descriptor = backtrace_open (modname, error_callback,
+					   data, &does_not_exist);
+	      if (descriptor < 0)
+		continue;
+
+	      if (coff_add (state, descriptor, error_callback, data,
+			    &mod_fileline_fn, &found_sym, &mod_found_dwarf,
+			    (uintptr_t) modarr[i]))
+		{
+		  if (mod_found_dwarf)
+		    {
+		      found_dwarf = 1;
+		      coff_fileline_fn = mod_fileline_fn;
+		    }
+		}
+	    }
+	}
+    }
+
   nt_dll_handle = GetModuleHandleW (L"ntdll.dll");
   if (nt_dll_handle)
     {
