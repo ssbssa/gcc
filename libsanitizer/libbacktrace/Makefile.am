@@ -58,6 +58,7 @@ libsanitizer_libbacktrace_la_SOURCES = \
 
 FORMAT_FILES = \
 	../../libbacktrace/elf.c \
+	../../libbacktrace/pecoff.c \
 	../../libbacktrace/unknown.c
 
 VIEW_FILES = \

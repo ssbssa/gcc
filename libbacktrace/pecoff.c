@@ -48,7 +48,9 @@ POSSIBILITY OF SUCH DAMAGE.  */
 #define NOMINMAX
 #endif
 
+#define PSAPI_VERSION 2
 #include <windows.h>
+#include <psapi.h>
 #endif
 
 /* Coff file header.  */
@@ -461,7 +463,9 @@ coff_initialize_syminfo (struct backtrace_state *state,
 
   /* End of symbols marker.  */
   coff_sym->name = NULL;
-  coff_sym->address = -1;
+  coff_sym->address = sects_num > 0
+    ? base_address + sects[sects_num - 1].virtual_address + sects[sects_num - 1].size_of_raw_data
+    : (uintptr_t) -1;
 
   backtrace_qsort (coff_symbols, coff_symbol_count,
 		   sizeof (struct coff_symbol), coff_symbol_compare);
@@ -592,7 +596,8 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
 static int
 coff_add (struct backtrace_state *state, int descriptor,
 	  backtrace_error_callback error_callback, void *data,
-	  fileline *fileline_fn, int *found_sym, int *found_dwarf)
+	  fileline *fileline_fn, int *found_sym, int *found_dwarf,
+	  uintptr_t module_handle)
 {
   struct backtrace_view fhdr_view;
   off_t fhdr_off;
@@ -869,14 +874,8 @@ coff_add (struct backtrace_state *state, int descriptor,
 				  + (sections[i].offset - min_offset));
     }
 
-#ifdef HAVE_WINDOWS_H
-  {
-    uintptr_t module_handle;
-
-    module_handle = (uintptr_t) GetModuleHandle (NULL);
+  if (module_handle)
     base_address = module_handle - image_base;
-  }
-#endif
 
   if (!backtrace_dwarf_add (state, base_address, &dwarf_sections,
 			    0, /* FIXME: is_bigendian */
@@ -917,11 +916,59 @@ backtrace_initialize (struct backtrace_state *state,
   int found_sym;
   int found_dwarf;
   fileline coff_fileline_fn;
+  uintptr_t module_handle = 0;
+
+#ifdef HAVE_WINDOWS_H
+  module_handle = (uintptr_t) GetModuleHandle (NULL);
+#endif
 
   ret = coff_add (state, descriptor, error_callback, data,
-		  &coff_fileline_fn, &found_sym, &found_dwarf);
+		  &coff_fileline_fn, &found_sym, &found_dwarf,
+		  module_handle);
   if (!ret)
     return 0;
+
+#ifdef HAVE_WINDOWS_H
+  HMODULE modarr[1000];
+  DWORD modcnt = 0;
+  if (EnumProcessModules (GetCurrentProcess (),
+			  modarr, sizeof (modarr), &modcnt))
+    {
+      DWORD i;
+      char modname[MAX_PATH];
+
+      modcnt /= sizeof (HMODULE);
+      if (modcnt > 1000)
+	modcnt = 1000;
+
+      for (i = 1; i < modcnt; i++)
+	{
+	  if (GetModuleFileName (modarr[i], modname, MAX_PATH))
+	    {
+	      int descriptor;
+	      int does_not_exist;
+	      fileline mod_fileline_fn;
+	      int mod_found_dwarf;
+
+	      descriptor = backtrace_open (modname, error_callback,
+					   data, &does_not_exist);
+	      if (descriptor < 0)
+		continue;
+
+	      if (coff_add (state, descriptor, error_callback, data,
+			    &mod_fileline_fn, &found_sym, &mod_found_dwarf,
+			    (uintptr_t) modarr[i]))
+		{
+		  if (mod_found_dwarf)
+		    {
+		      found_dwarf = 1;
+		      coff_fileline_fn = mod_fileline_fn;
+		    }
+		}
+	    }
+	}
+    }
+#endif
 
   if (!state->threaded)
     {
