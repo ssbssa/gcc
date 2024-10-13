@@ -40,6 +40,14 @@ constexpr unsigned long HEAP_FREE_UNSUPPORTED_FLAGS =
 constexpr unsigned long HEAP_REALLOC_UNSUPPORTED_FLAGS =
     (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
 
+#ifndef WINAPI
+#if defined(_M_IX86) || defined(__i386__)
+#define WINAPI __stdcall
+#else
+#define WINAPI
+#endif
+#endif
+
 
 extern "C" {
 LPVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, size_t dwBytes);
