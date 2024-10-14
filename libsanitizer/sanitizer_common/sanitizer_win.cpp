@@ -651,9 +651,26 @@ static uptr GetPreferredBase(const char *modname, char *buf, size_t buf_size) {
   return (uptr)pe_header->ImageBase;
 }
 
+namespace {
+typedef WINBOOL WINAPI func_EnumProcessModules(HANDLE, HMODULE *,
+					       DWORD, LPDWORD);
+typedef WINBOOL WINAPI func_GetModuleInformation(HANDLE, HMODULE,
+						 LPMODULEINFO, DWORD);
+typedef WINBOOL WINAPI func_GetProcessMemoryInfo(HANDLE,
+						 PPROCESS_MEMORY_COUNTERS,
+						 DWORD);
+}
+
+static func_EnumProcessModules *fEnumProcessModules = NULL;
+static func_GetModuleInformation *fGetModuleInformation = NULL;
+static func_GetProcessMemoryInfo *fGetProcessMemoryInfo = NULL;
+
 void ListOfModules::init() {
   clearOrInit();
   HANDLE cur_process = GetCurrentProcess();
+
+  if (fEnumProcessModules == NULL || fGetModuleInformation == NULL)
+    return;
 
   // Query the list of modules.  Start by assuming there are no more than 256
   // modules and retry if that's not sufficient.
@@ -662,7 +679,7 @@ void ListOfModules::init() {
   DWORD bytes_required;
   while (!hmodules) {
     hmodules = (HMODULE *)MmapOrDie(modules_buffer_size, __FUNCTION__);
-    CHECK(EnumProcessModules(cur_process, hmodules, modules_buffer_size,
+    CHECK(fEnumProcessModules(cur_process, hmodules, modules_buffer_size,
                              &bytes_required));
     if (bytes_required > modules_buffer_size) {
       // Either there turned out to be more than 256 hmodules, or new hmodules
@@ -682,7 +699,7 @@ void ListOfModules::init() {
   for (size_t i = 0; i < num_modules; ++i) {
     HMODULE handle = hmodules[i];
     MODULEINFO mi;
-    if (!GetModuleInformation(cur_process, handle, &mi, sizeof(mi)))
+    if (!fGetModuleInformation(cur_process, handle, &mi, sizeof(mi)))
       continue;
 
     // Get the UTF-16 path and convert to UTF-8.
@@ -955,8 +972,10 @@ uptr internal_ftruncate(fd_t fd, uptr size) {
 }
 
 uptr GetRSS() {
+  if (fGetProcessMemoryInfo == NULL)
+    return 0;
   PROCESS_MEMORY_COUNTERS counters;
-  if (!GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters)))
+  if (!fGetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters)))
     return 0;
   return counters.WorkingSetSize;
 }
@@ -1216,7 +1235,32 @@ void CheckVMASize() {
 }
 
 void InitializePlatformEarly() {
-  // Do nothing.
+  HMODULE kernel32 = GetModuleHandle("kernel32.dll");
+  if (kernel32 != NULL)
+  {
+    fEnumProcessModules = (func_EnumProcessModules *)
+      GetProcAddress(kernel32, "K32EnumProcessModules");
+    fGetModuleInformation = (func_GetModuleInformation *)
+      GetProcAddress(kernel32, "K32GetModuleInformation");
+    fGetProcessMemoryInfo = (func_GetProcessMemoryInfo *)
+      GetProcAddress(kernel32, "K32GetProcessMemoryInfo");
+  }
+  if (fEnumProcessModules == NULL || fGetModuleInformation == NULL ||
+      fGetProcessMemoryInfo == NULL)
+  {
+    HMODULE psapi = GetModuleHandle("psapi.dll");
+    if (psapi == NULL)
+      psapi = LoadLibraryA("psapi.dll");
+    if (psapi != NULL)
+    {
+      fEnumProcessModules = (func_EnumProcessModules *)
+	GetProcAddress(psapi, "EnumProcessModules");
+      fGetModuleInformation = (func_GetModuleInformation *)
+	GetProcAddress(psapi, "GetModuleInformation");
+      fGetProcessMemoryInfo = (func_GetProcessMemoryInfo *)
+	GetProcAddress(psapi, "GetProcessMemoryInfo");
+    }
+  }
 }
 
 void CheckASLR() {
