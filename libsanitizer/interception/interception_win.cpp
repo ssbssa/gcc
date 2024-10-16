@@ -792,8 +792,12 @@ bool OverrideFunctionWithRedirectJump(
   // relative indirect jump
   if (old_u8[0] == 0xff && old_u8[1] == 0x25)
   {
+#if SANITIZER_WINDOWS64
     sptr relative_offset = *(s32 *)(old_func + 2);
     uptr *absolute_target_ptr = (uptr *)(old_func + 6 + relative_offset);
+#else
+    uptr *absolute_target_ptr = *(uptr **)(old_func + 2);
+#endif
     if (orig_old_func)
       *orig_old_func = *absolute_target_ptr;
 
