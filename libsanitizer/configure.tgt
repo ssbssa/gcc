@@ -85,7 +85,7 @@ case "${target}" in
 		TSAN_TARGET_DEPENDENT_OBJECTS=tsan_rtl_loongarch64.lo
 	fi
 	;;
-  x86_64-*-mingw*)
+  x86_64-*-mingw* | i?86-*-mingw*)
 	;;
   *)
 	UNSUPPORTED=1
