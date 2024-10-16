@@ -216,7 +216,7 @@ static void RenderText(InternalScopedString *Buffer, const char *Message,
       // FIXME: Support floating-point formatting in sanitizer_common's
       //        printf, and stop using snprintf here.
       char FloatBuffer[32];
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS && !defined(__GNUC__)
       // On MSVC platforms, long doubles are equal to regular doubles.
       // In MinGW environments on x86, long doubles are 80 bit, but here,
       // we're calling an MS CRT provided printf function which considers
