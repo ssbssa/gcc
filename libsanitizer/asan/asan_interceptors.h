@@ -77,7 +77,8 @@ void InitializePlatformInterceptors();
 #endif
 
 #if ASAN_HAS_EXCEPTIONS && !SANITIZER_SOLARIS && !SANITIZER_NETBSD && \
-    (!SANITIZER_WINDOWS || (defined(__MINGW32__) && defined(__i386__)))
+    (!SANITIZER_WINDOWS || \
+     (defined(__MINGW32__) && defined(__i386__) && !defined(__GNUC__)))
 # define ASAN_INTERCEPT___CXA_THROW 1
 # if ! defined(ASAN_HAS_CXA_RETHROW_PRIMARY_EXCEPTION) \
      || ASAN_HAS_CXA_RETHROW_PRIMARY_EXCEPTION
