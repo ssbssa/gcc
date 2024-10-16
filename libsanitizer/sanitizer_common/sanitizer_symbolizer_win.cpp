@@ -72,6 +72,11 @@ void InitializeDbgHelpIfNeeded() {
           (void *)GetProcAddress(dbghelp, #name)); \
       CHECK(name != nullptr);                      \
     } while (0)
+#  define DBGHELP_IMPORT_NOCHECK(name)             \
+    do {                                           \
+      name = reinterpret_cast<decltype(::name) *>( \
+          (void *)GetProcAddress(dbghelp, #name)); \
+    } while (0)
 
   DBGHELP_IMPORT(StackWalk64);
   DBGHELP_IMPORT(SymCleanup);
@@ -79,10 +84,10 @@ void InitializeDbgHelpIfNeeded() {
   DBGHELP_IMPORT(SymFunctionTableAccess64);
   DBGHELP_IMPORT(SymGetLineFromAddr64);
   DBGHELP_IMPORT(SymGetModuleBase64);
-  DBGHELP_IMPORT(SymGetSearchPathW);
+  DBGHELP_IMPORT_NOCHECK(SymGetSearchPathW);
   DBGHELP_IMPORT(SymInitialize);
   DBGHELP_IMPORT(SymSetOptions);
-  DBGHELP_IMPORT(SymSetSearchPathW);
+  DBGHELP_IMPORT_NOCHECK(SymSetSearchPathW);
   DBGHELP_IMPORT(UnDecorateSymbolName);
 #undef DBGHELP_IMPORT
 
@@ -104,6 +109,9 @@ void InitializeDbgHelpIfNeeded() {
   }
   is_dbghelp_initialized = true;
 
+  if (SymGetSearchPathW == NULL || SymSetSearchPathW == NULL)
+    return;
+
   // When an executable is run from a location different from the one where it
   // was originally built, we may not see the nearby PDB files.
   // To work around this, let's append the directory of the main module
@@ -116,7 +124,7 @@ void InitializeDbgHelpIfNeeded() {
   }
   size_t sz = wcslen(path_buffer);
   if (sz) {
-    CHECK_EQ(0, wcscat_s(path_buffer, L";"));
+    wcscat(path_buffer, L";");
     sz++;
   }
   DWORD res = GetModuleFileNameW(NULL, path_buffer + sz, MAX_PATH);
