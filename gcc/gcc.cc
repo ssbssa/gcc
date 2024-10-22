@@ -838,7 +838,7 @@ proper position among the other output files.  */
   " %{static-libubsan|static:%:include(libsanitizer.spec)%(link_libubsan)}"
 #ifdef HAVE_LD_STATIC_DYNAMIC
 #define LIBUBSAN_SPEC "%{static-libubsan:" LD_STATIC_OPTION \
-		     "} -lubsan %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
+		     "} -lubsan -lstdc++ %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
 		     STATIC_LIBUBSAN_LIBS
 #else
 #define LIBUBSAN_SPEC "-lubsan" STATIC_LIBUBSAN_LIBS
