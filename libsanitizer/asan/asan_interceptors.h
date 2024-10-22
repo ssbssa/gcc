@@ -110,6 +110,12 @@ void InitializePlatformInterceptors();
 # define ASAN_INTERCEPT_ATEXIT 0
 #endif
 
+#if SANITIZER_WINDOWS && defined(__GNUC__)
+# define ASAN_INTERCEPT__STRDUP 1
+#else
+# define ASAN_INTERCEPT__STRDUP 0
+#endif
+
 #if SANITIZER_GLIBC
 # define ASAN_INTERCEPT___STRDUP 1
 #else
