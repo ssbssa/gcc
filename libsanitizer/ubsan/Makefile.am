@@ -12,7 +12,7 @@ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
 AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 ACLOCAL_AMFLAGS = -I m4
 
-toolexeclib_LTLIBRARIES = libubsan.la
+toolexeclib_LTLIBRARIES = libubsan.la libubsan_dll_thunk.la
 
 ubsan_plugin_files = \
 	ubsan_diag.cpp \
@@ -43,6 +43,13 @@ libubsan_darwin_rpath += -Wl,-rpath,@loader_path
 endif
 libubsan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 	$(link_libubsan) $(libubsan_darwin_rpath)
+
+libubsan_dll_thunk_la_SOURCES = \
+	ubsan_win_dll_thunk.cpp \
+	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
+	../interception/interception_win.cpp
+libubsan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS)
+libubsan_dll_thunk_la_CPPFLAGS += -DSANITIZER_DLL_THUNK
 
 # Use special rules for files that require RTTI support.
 ubsan_handlers_cxx.% ubsan_type_hash.% ubsan_type_hash_itanium.% : AM_CXXFLAGS += -frtti

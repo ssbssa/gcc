@@ -73,4 +73,8 @@ void __ubsan::InitAsPlugin() {
   }
 }
 
+#if SANITIZER_WINDOWS && defined(__GNUC__)
+void *__link___sandbox_on_notify = (void *) &__sanitizer_sandbox_on_notify;
+#endif
+
 #endif  // CAN_SANITIZE_UB
