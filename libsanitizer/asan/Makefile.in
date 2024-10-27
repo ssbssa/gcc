@@ -161,8 +161,7 @@ am__objects_1 = asan_activation.lo asan_allocator.lo asan_debugging.lo \
 	asan_premap_shadow.lo asan_report.lo asan_rtl.lo \
 	asan_shadow_setup.lo asan_stack.lo asan_stats.lo \
 	asan_suppressions.lo asan_thread.lo asan_win.lo \
-	asan_win_dll_thunk.lo asan_win_dynamic_runtime_thunk.lo \
-	asan_interceptors_vfork.lo
+	asan_win_dynamic_runtime_thunk.lo asan_interceptors_vfork.lo
 am_libasan_la_OBJECTS = $(am__objects_1)
 libasan_la_OBJECTS = $(am_libasan_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -172,6 +171,13 @@ am__v_lt_1 =
 libasan_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libasan_la_LDFLAGS) $(LDFLAGS) -o $@
+libasan_dll_thunk_la_LIBADD =
+am_libasan_dll_thunk_la_OBJECTS =  \
+	libasan_dll_thunk_la-asan_globals_win.lo \
+	libasan_dll_thunk_la-asan_win_dll_thunk.lo \
+	libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo \
+	libasan_dll_thunk_la-interception_win.lo
+libasan_dll_thunk_la_OBJECTS = $(am_libasan_dll_thunk_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -234,7 +240,7 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libasan_la_SOURCES)
+SOURCES = $(libasan_la_SOURCES) $(libasan_dll_thunk_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -428,7 +434,7 @@ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
 	$(LIBSTDCXX_RAW_CXX_CXXFLAGS) -std=gnu++14 $(EXTRA_CXXFLAGS)
 AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 ACLOCAL_AMFLAGS = -I $(top_srcdir) -I $(top_srcdir)/config
-toolexeclib_LTLIBRARIES = libasan.la
+toolexeclib_LTLIBRARIES = libasan.la libasan_dll_thunk.la
 nodist_toolexeclib_HEADERS = libasan_preinit.o
 asan_files = \
 	asan_activation.cpp \
@@ -460,7 +466,6 @@ asan_files = \
 	asan_suppressions.cpp \
 	asan_thread.cpp \
 	asan_win.cpp \
-	asan_win_dll_thunk.cpp \
 	asan_win_dynamic_runtime_thunk.cpp \
   asan_interceptors_vfork.S
 
@@ -475,6 +480,13 @@ libasan_la_LIBADD =  \
 libasan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 	$(link_libasan) $(libasan_darwin_rpath)
 
+libasan_dll_thunk_la_SOURCES = \
+	asan_globals_win.cpp \
+	asan_win_dll_thunk.cpp \
+	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
+	../interception/interception_win.cpp
+
+libasan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS) -DSANITIZER_DLL_THUNK
 
 # Work around what appears to be a GNU make bug handling MAKEFLAGS
 # values defined in terms of make variables, as is the case for CC and
@@ -587,6 +599,9 @@ clean-toolexeclibLTLIBRARIES:
 libasan.la: $(libasan_la_OBJECTS) $(libasan_la_DEPENDENCIES) $(EXTRA_libasan_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libasan_la_LINK) -rpath $(toolexeclibdir) $(libasan_la_OBJECTS) $(libasan_la_LIBADD) $(LIBS)
 
+libasan_dll_thunk.la: $(libasan_dll_thunk_la_OBJECTS) $(libasan_dll_thunk_la_DEPENDENCIES) $(EXTRA_libasan_dll_thunk_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(toolexeclibdir) $(libasan_dll_thunk_la_OBJECTS) $(libasan_dll_thunk_la_LIBADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -623,8 +638,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_suppressions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_win.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_win_dll_thunk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_win_dynamic_runtime_thunk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libasan_dll_thunk_la-asan_globals_win.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libasan_dll_thunk_la-asan_win_dll_thunk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libasan_dll_thunk_la-interception_win.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libasan_dll_thunk_la-sanitizer_win_dll_thunk.Plo@am__quote@
 
 .S.o:
 @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CPPASCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -667,6 +685,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+libasan_dll_thunk_la-asan_globals_win.lo: asan_globals_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libasan_dll_thunk_la-asan_globals_win.lo -MD -MP -MF $(DEPDIR)/libasan_dll_thunk_la-asan_globals_win.Tpo -c -o libasan_dll_thunk_la-asan_globals_win.lo `test -f 'asan_globals_win.cpp' || echo '$(srcdir)/'`asan_globals_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libasan_dll_thunk_la-asan_globals_win.Tpo $(DEPDIR)/libasan_dll_thunk_la-asan_globals_win.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='asan_globals_win.cpp' object='libasan_dll_thunk_la-asan_globals_win.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libasan_dll_thunk_la-asan_globals_win.lo `test -f 'asan_globals_win.cpp' || echo '$(srcdir)/'`asan_globals_win.cpp
+
+libasan_dll_thunk_la-asan_win_dll_thunk.lo: asan_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libasan_dll_thunk_la-asan_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libasan_dll_thunk_la-asan_win_dll_thunk.Tpo -c -o libasan_dll_thunk_la-asan_win_dll_thunk.lo `test -f 'asan_win_dll_thunk.cpp' || echo '$(srcdir)/'`asan_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libasan_dll_thunk_la-asan_win_dll_thunk.Tpo $(DEPDIR)/libasan_dll_thunk_la-asan_win_dll_thunk.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='asan_win_dll_thunk.cpp' object='libasan_dll_thunk_la-asan_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libasan_dll_thunk_la-asan_win_dll_thunk.lo `test -f 'asan_win_dll_thunk.cpp' || echo '$(srcdir)/'`asan_win_dll_thunk.cpp
+
+libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo: ../sanitizer_common/sanitizer_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libasan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo -c -o libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libasan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo $(DEPDIR)/libasan_dll_thunk_la-sanitizer_win_dll_thunk.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../sanitizer_common/sanitizer_win_dll_thunk.cpp' object='libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libasan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
+
+libasan_dll_thunk_la-interception_win.lo: ../interception/interception_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libasan_dll_thunk_la-interception_win.lo -MD -MP -MF $(DEPDIR)/libasan_dll_thunk_la-interception_win.Tpo -c -o libasan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libasan_dll_thunk_la-interception_win.Tpo $(DEPDIR)/libasan_dll_thunk_la-interception_win.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../interception/interception_win.cpp' object='libasan_dll_thunk_la-interception_win.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libasan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libasan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

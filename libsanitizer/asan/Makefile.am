@@ -15,7 +15,7 @@ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
 AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 ACLOCAL_AMFLAGS = -I $(top_srcdir) -I $(top_srcdir)/config
 
-toolexeclib_LTLIBRARIES = libasan.la
+toolexeclib_LTLIBRARIES = libasan.la libasan_dll_thunk.la
 nodist_toolexeclib_HEADERS = libasan_preinit.o
 
 asan_files = \
@@ -48,7 +48,6 @@ asan_files = \
 	asan_suppressions.cpp \
 	asan_thread.cpp \
 	asan_win.cpp \
-	asan_win_dll_thunk.cpp \
 	asan_win_dynamic_runtime_thunk.cpp \
   asan_interceptors_vfork.S
 
@@ -71,6 +70,14 @@ libasan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 
 libasan_preinit.o: asan_preinit.o
 	cp $< $@
+
+libasan_dll_thunk_la_SOURCES = \
+	asan_globals_win.cpp \
+	asan_win_dll_thunk.cpp \
+	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
+	../interception/interception_win.cpp
+libasan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS)
+libasan_dll_thunk_la_CPPFLAGS += -DSANITIZER_DLL_THUNK
 
 # Work around what appears to be a GNU make bug handling MAKEFLAGS
 # values defined in terms of make variables, as is the case for CC and

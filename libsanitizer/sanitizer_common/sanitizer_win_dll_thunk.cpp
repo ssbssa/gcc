@@ -59,8 +59,8 @@ int dllThunkInterceptWhenPossible(const char* main_function,
 
 typedef void (*DllThunkCB)();
 extern "C" {
-__declspec(allocate(".DLLTH$A")) DllThunkCB __start_dll_thunk;
-__declspec(allocate(".DLLTH$Z")) DllThunkCB __stop_dll_thunk;
+IN_SECTION(".DLLTH$A") DllThunkCB __start_dll_thunk;
+IN_SECTION(".DLLTH$Z") DllThunkCB __stop_dll_thunk;
 }
 
 // Disable compiler warnings that show up if we declare our own version
@@ -86,7 +86,7 @@ extern "C" int __dll_thunk_init() {
 // We want to call dll_thunk_init before C/C++ initializers / constructors are
 // executed, otherwise functions like memset might be invoked.
 #pragma section(".CRT$XIB", long, read)
-__declspec(allocate(".CRT$XIB")) int (*__dll_thunk_preinit)() =
+IN_SECTION(".CRT$XIB") int (*__dll_thunk_preinit)() =
     __dll_thunk_init;
 
 static void WINAPI dll_thunk_thread_init(void *mod, unsigned long reason,
@@ -95,7 +95,7 @@ static void WINAPI dll_thunk_thread_init(void *mod, unsigned long reason,
 }
 
 #pragma section(".CRT$XLAB", long, read)
-__declspec(allocate(".CRT$XLAB")) void (WINAPI *__dll_thunk_tls_init)(void *,
+IN_SECTION(".CRT$XLAB") void (WINAPI *__dll_thunk_tls_init)(void *,
     unsigned long, void *) = dll_thunk_thread_init;
 
 #endif // SANITIZER_DLL_THUNK
