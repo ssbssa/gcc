@@ -13,6 +13,8 @@
 #ifndef SANITIZER_WIN_DLL_THUNK_H
 #define SANITIZER_WIN_DLL_THUNK_H
 #include "sanitizer_internal_defs.h"
+#include "sanitizer_win_defs.h"
+#include <_mingw.h>
 
 namespace __sanitizer {
 uptr dllThunkGetRealAddrOrDie(const char *name);
@@ -25,6 +27,12 @@ int dllThunkInterceptWhenPossible(const char* main_function,
 
 extern "C" int __dll_thunk_init();
 
+#ifndef __GNUC__
+#define PRAGMA_SECTION(n, t, a) __pragma(section(n, t, a))
+#else
+#define PRAGMA_SECTION(n, t, a)
+#endif
+
 // ----------------- Function interception helper macros -------------------- //
 // Override dll_function with main_function from main executable.
 #define INTERCEPT_OR_DIE(main_function, dll_function)                          \
@@ -32,8 +40,8 @@ extern "C" int __dll_thunk_init();
     return __sanitizer::dllThunkIntercept(main_function, (__sanitizer::uptr)   \
         dll_function);                                                         \
   }                                                                            \
-  __pragma(section(".DLLTH$M", long, read))                                    \
-  __declspec(allocate(".DLLTH$M")) int (*__dll_thunk_##dll_function)() =       \
+  PRAGMA_SECTION(".DLLTH$M", long, read)                                       \
+  IN_SECTION(".DLLTH$M") int (*__dll_thunk_##dll_function)() =		       \
     intercept_##dll_function;
 
 // Try to override dll_function with main_function from main executable.
@@ -43,8 +51,8 @@ extern "C" int __dll_thunk_init();
     return __sanitizer::dllThunkInterceptWhenPossible(main_function,           \
         default_function, (__sanitizer::uptr)dll_function);                    \
   }                                                                            \
-  __pragma(section(".DLLTH$M", long, read))                                    \
-  __declspec(allocate(".DLLTH$M")) int (*__dll_thunk_##dll_function)() =       \
+  PRAGMA_SECTION(".DLLTH$M", long, read)                                       \
+  IN_SECTION(".DLLTH$M") int (*__dll_thunk_##dll_function)() =		       \
     intercept_##dll_function;
 
 // -------------------- Function interception macros ------------------------ //

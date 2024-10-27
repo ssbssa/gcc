@@ -768,7 +768,8 @@ proper position among the other output files.  */
 #define LIBASAN_SPEC STATIC_LIBASAN_LIBS
 #elif defined(HAVE_LD_STATIC_DYNAMIC)
 #define LIBASAN_SPEC "%{static-libasan:" LD_STATIC_OPTION \
-		     "} -lasan %{static-libasan:" LD_DYNAMIC_OPTION "}" \
+		     "} %{shared:-lasan_dll_thunk -lstdc++;:-lasan}" \
+		     " %{static-libasan:" LD_DYNAMIC_OPTION "}" \
 		     STATIC_LIBASAN_LIBS
 #else
 #define LIBASAN_SPEC "-lasan" STATIC_LIBASAN_LIBS
