@@ -161,6 +161,12 @@ am__v_lt_1 =
 libubsan_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libubsan_la_LDFLAGS) $(LDFLAGS) -o $@
+libubsan_dll_thunk_la_LIBADD =
+am_libubsan_dll_thunk_la_OBJECTS =  \
+	libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo \
+	libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo \
+	libubsan_dll_thunk_la-interception_win.lo
+libubsan_dll_thunk_la_OBJECTS = $(am_libubsan_dll_thunk_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -195,7 +201,7 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libubsan_la_SOURCES)
+SOURCES = $(libubsan_la_SOURCES) $(libubsan_dll_thunk_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -384,7 +390,7 @@ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
 	-std=gnu++14 $(EXTRA_CXXFLAGS)
 AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 ACLOCAL_AMFLAGS = -I m4
-toolexeclib_LTLIBRARIES = libubsan.la
+toolexeclib_LTLIBRARIES = libubsan.la libubsan_dll_thunk.la
 ubsan_plugin_files = \
 	ubsan_diag.cpp \
 	ubsan_flags.cpp \
@@ -408,6 +414,12 @@ libubsan_la_LIBADD =  \
 libubsan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 	$(link_libubsan) $(libubsan_darwin_rpath)
 
+libubsan_dll_thunk_la_SOURCES = \
+	ubsan_win_dll_thunk.cpp \
+	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
+	../interception/interception_win.cpp
+
+libubsan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS) -DSANITIZER_DLL_THUNK
 
 # Work around what appears to be a GNU make bug handling MAKEFLAGS
 # values defined in terms of make variables, as is the case for CC and
@@ -520,12 +532,18 @@ clean-toolexeclibLTLIBRARIES:
 libubsan.la: $(libubsan_la_OBJECTS) $(libubsan_la_DEPENDENCIES) $(EXTRA_libubsan_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libubsan_la_LINK) -rpath $(toolexeclibdir) $(libubsan_la_OBJECTS) $(libubsan_la_LIBADD) $(LIBS)
 
+libubsan_dll_thunk.la: $(libubsan_dll_thunk_la_OBJECTS) $(libubsan_dll_thunk_la_DEPENDENCIES) $(EXTRA_libubsan_dll_thunk_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(toolexeclibdir) $(libubsan_dll_thunk_la_OBJECTS) $(libubsan_dll_thunk_la_LIBADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-interception_win.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_diag.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_flags.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_handlers.Plo@am__quote@
@@ -557,6 +575,27 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo: ubsan_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Tpo -c -o libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo `test -f 'ubsan_win_dll_thunk.cpp' || echo '$(srcdir)/'`ubsan_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Tpo $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='ubsan_win_dll_thunk.cpp' object='libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo `test -f 'ubsan_win_dll_thunk.cpp' || echo '$(srcdir)/'`ubsan_win_dll_thunk.cpp
+
+libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo: ../sanitizer_common/sanitizer_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo -c -o libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../sanitizer_common/sanitizer_win_dll_thunk.cpp' object='libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
+
+libubsan_dll_thunk_la-interception_win.lo: ../interception/interception_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-interception_win.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Tpo -c -o libubsan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Tpo $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../interception/interception_win.cpp' object='libubsan_dll_thunk_la-interception_win.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo
