@@ -66,7 +66,9 @@ INTERCEPT_WRAP_W_W(_expand_dbg)
 INTERCEPT_LIBRARY_FUNCTION(atoi);
 INTERCEPT_LIBRARY_FUNCTION(atol);
 INTERCEPT_LIBRARY_FUNCTION(atoll);
+#if SANITIZER_INTERCEPT_FREXP
 INTERCEPT_LIBRARY_FUNCTION(frexp);
+#endif
 INTERCEPT_LIBRARY_FUNCTION(longjmp);
 #if SANITIZER_INTERCEPT_MEMCHR
 INTERCEPT_LIBRARY_FUNCTION(memchr);
@@ -85,7 +87,9 @@ INTERCEPT_LIBRARY_FUNCTION(strlen);
 INTERCEPT_LIBRARY_FUNCTION(strncat);
 INTERCEPT_LIBRARY_FUNCTION(strncmp);
 INTERCEPT_LIBRARY_FUNCTION(strncpy);
+#if SANITIZER_INTERCEPT_STRNLEN
 INTERCEPT_LIBRARY_FUNCTION(strnlen);
+#endif
 INTERCEPT_LIBRARY_FUNCTION(strpbrk);
 INTERCEPT_LIBRARY_FUNCTION(strrchr);
 INTERCEPT_LIBRARY_FUNCTION(strspn);
@@ -94,7 +98,9 @@ INTERCEPT_LIBRARY_FUNCTION(strtok);
 INTERCEPT_LIBRARY_FUNCTION(strtol);
 INTERCEPT_LIBRARY_FUNCTION(strtoll);
 INTERCEPT_LIBRARY_FUNCTION(wcslen);
+#if SANITIZER_INTERCEPT_WCSNLEN
 INTERCEPT_LIBRARY_FUNCTION(wcsnlen);
+#endif
 
 #  if defined(_MSC_VER) && !defined(__clang__)
 #    pragma warning(pop)
@@ -104,12 +110,14 @@ INTERCEPT_LIBRARY_FUNCTION(wcsnlen);
 INTERCEPT_LIBRARY_FUNCTION(__C_specific_handler);
 #else
 INTERCEPT_LIBRARY_FUNCTION(_except_handler3);
+#ifndef __GNUC__
 // _except_handler4 checks -GS cookie which is different for each module, so we
 // can't use INTERCEPT_LIBRARY_FUNCTION(_except_handler4).
 INTERCEPTOR(int, _except_handler4, void *a, void *b, void *c, void *d) {
   __asan_handle_no_return();
   return REAL(_except_handler4)(a, b, c, d);
 }
+#endif
 #endif
 
 // Windows specific functions not included in asan_interface.inc.
@@ -140,7 +148,7 @@ static int asan_dll_thunk_init() {
   __asan_shadow_memory_dynamic_address =
       (uptr)__asan_get_shadow_memory_dynamic_address();
 
-#ifndef _WIN64
+#if !defined(_WIN64) && !defined(__GNUC__)
   INTERCEPT_FUNCTION(_except_handler4);
 #endif
   // In DLLs, the callbacks are expected to return 0,
@@ -149,7 +157,7 @@ static int asan_dll_thunk_init() {
 }
 
 #pragma section(".CRT$XIB", long, read)
-__declspec(allocate(".CRT$XIB")) int (*__asan_preinit)() = asan_dll_thunk_init;
+IN_SECTION(".CRT$XIB") int (*__asan_preinit)() = asan_dll_thunk_init;
 
 static void WINAPI asan_thread_init(void *mod, unsigned long reason,
                                     void *reserved) {
@@ -157,7 +165,7 @@ static void WINAPI asan_thread_init(void *mod, unsigned long reason,
 }
 
 #pragma section(".CRT$XLAB", long, read)
-__declspec(allocate(".CRT$XLAB")) void (WINAPI *__asan_tls_init)(void *,
+IN_SECTION(".CRT$XLAB") void (WINAPI *__asan_tls_init)(void *,
     unsigned long, void *) = asan_thread_init;
 
 WIN_FORCE_LINK(__asan_dso_reg_hook)
