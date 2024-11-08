@@ -1,7 +1,7 @@
-From 93b88fc53f6f84bb98025f35e76ab2260e82fb7f Mon Sep 17 00:00:00 2001
+From cc7db9ac100e40192e7b9dda6382598b46eabfa1 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 15:13:14 +0200
-Subject: [PATCH 11/20] Warn when a non-trivial class instance is unused (PR
+Subject: [PATCH 11/36] Warn when a non-trivial class instance is unused (PR
  c++/60212)
 
 ---
@@ -26,7 +26,7 @@ index 8ab8754aa24..52ddbffdee2 100644
  Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
  Warn when a function parameter is unused.
 diff --git a/gcc/cp/decl.cc b/gcc/cp/decl.cc
-index 2af026d255d..546356b9eab 100644
+index ca00e9aea20..29c9dc2688f 100644
 --- a/gcc/cp/decl.cc
 +++ b/gcc/cp/decl.cc
 @@ -703,6 +703,7 @@ poplevel (int keep, int reverse, int functionbody)
@@ -37,7 +37,7 @@ index 2af026d255d..546356b9eab 100644
  		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
  		|| lookup_attribute ("warn_unused",
  				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
-@@ -19130,6 +19131,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
+@@ -19136,6 +19137,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
  
    if (cleanup
        && DECL_P (decl)
@@ -46,7 +46,7 @@ index 2af026d255d..546356b9eab 100644
        /* Treat objects with destructors as used; the destructor may do
  	 something substantive.  */
 diff --git a/gcc/cp/init.cc b/gcc/cp/init.cc
-index a93ce00800c..0ff0f35fc94 100644
+index c5ba82c8664..14d961a022d 100644
 --- a/gcc/cp/init.cc
 +++ b/gcc/cp/init.cc
 @@ -2078,6 +2078,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)

@@ -1,7 +1,7 @@
-From 1b025d862b0e07084bc679d70dedaa0df156be79 Mon Sep 17 00:00:00 2001
+From 3d21fea855d5204ca451e9a35a950b6640dd9e1b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
-Subject: [PATCH 03/20] Mingw LFS support
+Subject: [PATCH 03/36] Mingw LFS support
 
 ---
  libstdc++-v3/config/io/basic_file_stdio.cc    | 22 +++++++++++++++++++

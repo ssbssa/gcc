@@ -1,7 +1,7 @@
-From 2c63edab2cd8156bea0723af99cec16b044c0258 Mon Sep 17 00:00:00 2001
+From 5acb75d1a0bdf376464338ba7f7eaf418cd6562a Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 10 Aug 2021 17:35:52 +0200
-Subject: [PATCH 14/20] Create switch to control redefined macro warning (PR
+Subject: [PATCH 14/36] Create switch to control redefined macro warning (PR
  preprocessor/83773)
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH 14/20] Create switch to control redefined macro warning (PR
  4 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
-index 403abc1f26e..9be0197343d 100644
+index b310b40d857..e71bce321a5 100644
 --- a/gcc/c-family/c.opt
 +++ b/gcc/c-family/c.opt
 @@ -918,6 +918,10 @@ Wlong-long

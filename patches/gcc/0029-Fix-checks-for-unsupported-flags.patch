@@ -1,0 +1,43 @@
+From 2a527f6aeee90e65ad12b2927c27e93b580a0d2b Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 19:07:55 +0200
+Subject: [PATCH 29/36] Fix checks for unsupported flags
+
+---
+ libsanitizer/asan/asan_malloc_win.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libsanitizer/asan/asan_malloc_win.cpp b/libsanitizer/asan/asan_malloc_win.cpp
+index fc797e44480..94bf9e31e36 100644
+--- a/libsanitizer/asan/asan_malloc_win.cpp
++++ b/libsanitizer/asan/asan_malloc_win.cpp
+@@ -242,7 +242,7 @@ INTERCEPTOR_WINAPI(LPVOID, HeapAlloc, HANDLE hHeap, DWORD dwFlags,
+     // In the case that we don't hook the rtl allocators,
+     // this becomes an assert since there is no failover to the original
+     // allocator.
+-    CHECK((HEAP_ALLOCATE_UNSUPPORTED_FLAGS & dwFlags) != 0 &&
++    CHECK((HEAP_ALLOCATE_UNSUPPORTED_FLAGS & dwFlags) == 0 &&
+           "unsupported flags");
+   }
+   GET_STACK_TRACE_MALLOC;
+@@ -267,7 +267,7 @@ INTERCEPTOR_WINAPI(BOOL, HeapFree, HANDLE hHeap, DWORD dwFlags, LPVOID lpMem) {
+     if (OWNED_BY_RTL(hHeap, lpMem))
+       return REAL(HeapFree)(hHeap, dwFlags, lpMem);
+   } else {
+-    CHECK((HEAP_FREE_UNSUPPORTED_FLAGS & dwFlags) != 0 && "unsupported flags");
++    CHECK((HEAP_FREE_UNSUPPORTED_FLAGS & dwFlags) == 0 && "unsupported flags");
+   }
+   GET_STACK_TRACE_FREE;
+   asan_free(lpMem, &stack, FROM_MALLOC);
+@@ -361,7 +361,7 @@ void *SharedReAlloc(ReAllocFunction reallocFunc, SizeFunction heapSizeFunc,
+     // Pass through even when it's neither since this could be a null realloc or
+     // UAF that ASAN needs to catch.
+   } else {
+-    CHECK((HEAP_REALLOC_UNSUPPORTED_FLAGS & dwFlags) != 0 &&
++    CHECK((HEAP_REALLOC_UNSUPPORTED_FLAGS & dwFlags) == 0 &&
+           "unsupported flags");
+   }
+   // asan_realloc will never reallocate in place, so for now this flag is
+-- 
+2.39.1.windows.1
+

@@ -1,0 +1,59 @@
+From 0a2828b6be93a3011f001fcf7ad13cd879d64749 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 18:27:04 +0200
+Subject: [PATCH 26/36] Fix EnumProcessModules for Win7
+
+---
+ libbacktrace/pecoff.c | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
+index 0ef81e39db3..3cce2a0cab6 100644
+--- a/libbacktrace/pecoff.c
++++ b/libbacktrace/pecoff.c
+@@ -48,9 +48,11 @@ POSSIBILITY OF SUCH DAMAGE.  */
+ #define NOMINMAX
+ #endif
+ 
+-#define PSAPI_VERSION 2
+ #include <windows.h>
+ #include <psapi.h>
++
++typedef WINBOOL WINAPI func_EnumProcessModules(HANDLE, HMODULE *,
++					       DWORD, LPDWORD);
+ #endif
+ 
+ /* Coff file header.  */
+@@ -929,10 +931,27 @@ backtrace_initialize (struct backtrace_state *state,
+     return 0;
+ 
+ #ifdef HAVE_WINDOWS_H
++  func_EnumProcessModules *fEnumProcessModules = NULL;
++
++  HMODULE kernel32 = GetModuleHandle ("kernel32.dll");
++  if (kernel32 != NULL)
++    fEnumProcessModules = (func_EnumProcessModules *)
++      GetProcAddress (kernel32, "K32EnumProcessModules");
++  if (fEnumProcessModules == NULL)
++    {
++      HMODULE psapi = GetModuleHandle ("psapi.dll");
++      if (psapi == NULL)
++	psapi = LoadLibraryA ("psapi.dll");
++      if (psapi != NULL)
++	fEnumProcessModules = (func_EnumProcessModules *)
++	  GetProcAddress (psapi, "EnumProcessModules");
++    }
++
+   HMODULE modarr[1000];
+   DWORD modcnt = 0;
+-  if (EnumProcessModules (GetCurrentProcess (),
+-			  modarr, sizeof (modarr), &modcnt))
++  if (fEnumProcessModules != NULL
++      && fEnumProcessModules (GetCurrentProcess (),
++			      modarr, sizeof (modarr), &modcnt))
+     {
+       DWORD i;
+       char modname[MAX_PATH];
+-- 
+2.39.1.windows.1
+

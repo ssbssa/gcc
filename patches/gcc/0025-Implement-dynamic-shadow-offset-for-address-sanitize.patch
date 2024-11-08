@@ -1,0 +1,116 @@
+From 2b7a69f9fc4b754241451eddc70b3c09cdb58bec Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 18:15:34 +0200
+Subject: [PATCH 25/36] Implement dynamic shadow offset for address sanitizer
+
+---
+ gcc/asan.cc                      | 50 ++++++++++++++++++++++++++++----
+ gcc/config/i386/cygming.h        |  2 +-
+ libsanitizer/asan/asan_mapping.h |  6 +---
+ 3 files changed, 47 insertions(+), 11 deletions(-)
+
+diff --git a/gcc/asan.cc b/gcc/asan.cc
+index 9e0f51b1477..23837d160d1 100644
+--- a/gcc/asan.cc
++++ b/gcc/asan.cc
+@@ -457,6 +457,33 @@ asan_shadow_offset ()
+   return asan_shadow_offset_value;
+ }
+ 
++static GTY(()) tree asan_shadow_memory_dynamic_address;
++
++static bool
++has_asan_shadow_memory_dynamic_address ()
++{
++  if (asan_shadow_offset () != (unsigned HOST_WIDE_INT) -1)
++    return false;
++
++  if (asan_shadow_memory_dynamic_address == NULL_TREE)
++    {
++      tree id = get_identifier ("__asan_shadow_memory_dynamic_address");
++      tree decl = build_decl (BUILTINS_LOCATION, VAR_DECL, id,
++			      pointer_sized_int_node);
++      SET_DECL_ASSEMBLER_NAME (decl, id);
++      TREE_ADDRESSABLE (decl) = 1;
++      DECL_ARTIFICIAL (decl) = 1;
++      DECL_IGNORED_P (decl) = 1;
++      DECL_EXTERNAL (decl) = 1;
++      TREE_STATIC (decl) = 1;
++      TREE_PUBLIC (decl) = 1;
++      TREE_USED (decl) = 1;
++      asan_shadow_memory_dynamic_address = decl;
++    }
++
++  return true;
++}
++
+ /* Returns Asan shadow offset has been set.  */
+ bool
+ asan_shadow_offset_set_p ()
+@@ -2033,10 +2060,20 @@ asan_emit_stack_protection (rtx base, rtx pbase, unsigned int alignb,
+   shadow_base = expand_binop (Pmode, lshr_optab, base,
+ 			      gen_int_shift_amount (Pmode, ASAN_SHADOW_SHIFT),
+ 			      NULL_RTX, 1, OPTAB_DIRECT);
+-  shadow_base
+-    = plus_constant (Pmode, shadow_base,
+-		     asan_shadow_offset ()
+-		     + (base_align_bias >> ASAN_SHADOW_SHIFT));
++  if (!has_asan_shadow_memory_dynamic_address ())
++    shadow_base
++      = plus_constant (Pmode, shadow_base,
++		       asan_shadow_offset ()
++		       + (base_align_bias >> ASAN_SHADOW_SHIFT));
++  else
++    {
++      ret = expand_normal (asan_shadow_memory_dynamic_address);
++      shadow_base = expand_binop (Pmode, add_optab, shadow_base,
++				  ret, NULL_RTX, 1, OPTAB_DIRECT);
++      shadow_base
++	= plus_constant (Pmode, shadow_base,
++			 base_align_bias >> ASAN_SHADOW_SHIFT);
++    }
+   gcc_assert (asan_shadow_set != -1
+ 	      && (ASAN_RED_ZONE_SIZE >> ASAN_SHADOW_SHIFT) == 4);
+   shadow_mem = gen_rtx_MEM (SImode, shadow_base);
+@@ -2558,7 +2595,10 @@ build_shadow_mem_access (gimple_stmt_iterator *gsi, location_t location,
+   gimple_set_location (g, location);
+   gsi_insert_after (gsi, g, GSI_NEW_STMT);
+ 
+-  t = build_int_cst (uintptr_type, asan_shadow_offset ());
++  if (!has_asan_shadow_memory_dynamic_address ())
++    t = build_int_cst (uintptr_type, asan_shadow_offset ());
++  else
++    t = asan_shadow_memory_dynamic_address;
+   g = gimple_build_assign (make_ssa_name (uintptr_type), PLUS_EXPR,
+ 			   gimple_assign_lhs (g), t);
+   gimple_set_location (g, location);
+diff --git a/gcc/config/i386/cygming.h b/gcc/config/i386/cygming.h
+index e261e4df290..7c991e75a59 100644
+--- a/gcc/config/i386/cygming.h
++++ b/gcc/config/i386/cygming.h
+@@ -470,4 +470,4 @@ do {						\
+ 
+ #undef SUBTARGET_SHADOW_OFFSET
+ #define SUBTARGET_SHADOW_OFFSET	    \
+-  (TARGET_64BIT ? HOST_WIDE_INT_1 << 45 : 0)
++  (TARGET_64BIT ? (unsigned HOST_WIDE_INT) -1 : 0)
+diff --git a/libsanitizer/asan/asan_mapping.h b/libsanitizer/asan/asan_mapping.h
+index 8b384b08b64..47ccf8444d3 100644
+--- a/libsanitizer/asan/asan_mapping.h
++++ b/libsanitizer/asan/asan_mapping.h
+@@ -206,11 +206,7 @@
+ #  elif SANITIZER_LOONGARCH64
+ #    define ASAN_SHADOW_OFFSET_CONST 0x0000400000000000
+ #  elif SANITIZER_WINDOWS64
+-#    ifdef __GNUC__
+-#      define ASAN_SHADOW_OFFSET_CONST 0x0000200000000000
+-#    else
+-#      define ASAN_SHADOW_OFFSET_DYNAMIC
+-#    endif
++#    define ASAN_SHADOW_OFFSET_DYNAMIC
+ #  else
+ #    if ASAN_SHADOW_SCALE != 3
+ #      error "Value below is based on shadow scale = 3."
+-- 
+2.39.1.windows.1
+

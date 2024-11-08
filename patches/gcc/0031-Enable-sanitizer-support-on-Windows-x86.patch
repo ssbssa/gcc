@@ -1,0 +1,228 @@
+From 0b4610430c547d24ebd681f0f3a65736900cbd45 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 16 Oct 2024 17:06:57 +0200
+Subject: [PATCH 31/36] Enable sanitizer support on Windows x86
+
+---
+ gcc/config/i386/cygming.h                      | 2 +-
+ libsanitizer/asan/Makefile.am                  | 3 ++-
+ libsanitizer/asan/Makefile.in                  | 3 ++-
+ libsanitizer/asan/asan_interceptors.h          | 3 ++-
+ libsanitizer/asan/asan_win.cpp                 | 4 ++++
+ libsanitizer/configure.tgt                     | 2 +-
+ libsanitizer/interception/Makefile.am          | 3 ++-
+ libsanitizer/interception/Makefile.in          | 3 ++-
+ libsanitizer/interception/interception_win.cpp | 4 ++++
+ libsanitizer/sanitizer_common/Makefile.am      | 3 ++-
+ libsanitizer/sanitizer_common/Makefile.in      | 3 ++-
+ libsanitizer/ubsan/Makefile.am                 | 3 ++-
+ libsanitizer/ubsan/Makefile.in                 | 3 ++-
+ 13 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/gcc/config/i386/cygming.h b/gcc/config/i386/cygming.h
+index 7c991e75a59..8ae9ed52249 100644
+--- a/gcc/config/i386/cygming.h
++++ b/gcc/config/i386/cygming.h
+@@ -470,4 +470,4 @@ do {						\
+ 
+ #undef SUBTARGET_SHADOW_OFFSET
+ #define SUBTARGET_SHADOW_OFFSET	    \
+-  (TARGET_64BIT ? (unsigned HOST_WIDE_INT) -1 : 0)
++  ((unsigned HOST_WIDE_INT) -1)
+diff --git a/libsanitizer/asan/Makefile.am b/libsanitizer/asan/Makefile.am
+index 1a3cb3f5759..13122df0b46 100644
+--- a/libsanitizer/asan/Makefile.am
++++ b/libsanitizer/asan/Makefile.am
+@@ -7,7 +7,8 @@ DEFS = -D_GNU_SOURCE -D_DEBUG -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D
+ if USING_MAC_INTERPOSE
+ DEFS += -DMAC_INTERPOSE_FUNCTIONS -DMISSING_BLOCKS_SUPPORT
+ endif
+-AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti -fomit-frame-pointer -funwind-tables -fvisibility=hidden -Wno-variadic-macros -fno-ipa-icf
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
++AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti $(omit_frame_pointer) -funwind-tables -fvisibility=hidden -Wno-variadic-macros -fno-ipa-icf
+ AM_CXXFLAGS += $(LIBSTDCXX_RAW_CXX_CXXFLAGS)
+ AM_CXXFLAGS += -std=gnu++14
+ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
+diff --git a/libsanitizer/asan/Makefile.in b/libsanitizer/asan/Makefile.in
+index 64cab6ca3eb..3eec3162457 100644
+--- a/libsanitizer/asan/Makefile.in
++++ b/libsanitizer/asan/Makefile.in
+@@ -420,9 +420,10 @@ AM_CPPFLAGS = -I $(top_srcdir)/include -I $(top_srcdir)
+ 
+ # May be used by toolexeclibdir.
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
+ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
+ 	-Wno-long-long -fPIC -fno-builtin -fno-exceptions -fno-rtti \
+-	-fomit-frame-pointer -funwind-tables -fvisibility=hidden \
++	$(omit_frame_pointer) -funwind-tables -fvisibility=hidden \
+ 	-Wno-variadic-macros -fno-ipa-icf \
+ 	$(LIBSTDCXX_RAW_CXX_CXXFLAGS) -std=gnu++14 $(EXTRA_CXXFLAGS)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+diff --git a/libsanitizer/asan/asan_interceptors.h b/libsanitizer/asan/asan_interceptors.h
+index 8e9ed5d1ef4..68b0abe5e8b 100644
+--- a/libsanitizer/asan/asan_interceptors.h
++++ b/libsanitizer/asan/asan_interceptors.h
+@@ -77,7 +77,8 @@ void InitializePlatformInterceptors();
+ #endif
+ 
+ #if ASAN_HAS_EXCEPTIONS && !SANITIZER_SOLARIS && !SANITIZER_NETBSD && \
+-    (!SANITIZER_WINDOWS || (defined(__MINGW32__) && defined(__i386__)))
++    (!SANITIZER_WINDOWS || \
++     (defined(__MINGW32__) && defined(__i386__) && !defined(__GNUC__)))
+ # define ASAN_INTERCEPT___CXA_THROW 1
+ # if ! defined(ASAN_HAS_CXA_RETHROW_PRIMARY_EXCEPTION) \
+      || ASAN_HAS_CXA_RETHROW_PRIMARY_EXCEPTION
+diff --git a/libsanitizer/asan/asan_win.cpp b/libsanitizer/asan/asan_win.cpp
+index c60b7e7f2d7..2b36c8fa605 100644
+--- a/libsanitizer/asan/asan_win.cpp
++++ b/libsanitizer/asan/asan_win.cpp
+@@ -120,6 +120,7 @@ INTERCEPTOR(int, _except_handler3, void *a, void *b, void *c, void *d) {
+   return REAL(_except_handler3)(a, b, c, d);
+ }
+ 
++#ifndef __GNUC__
+ #if ASAN_DYNAMIC
+ // This handler is named differently in -MT and -MD CRTs.
+ #define _except_handler4 _except_handler4_common
+@@ -130,6 +131,7 @@ INTERCEPTOR(int, _except_handler4, void *a, void *b, void *c, void *d) {
+   return REAL(_except_handler4)(a, b, c, d);
+ }
+ #endif
++#endif
+ 
+ struct ThreadStartParams {
+   thread_callback_t start_routine;
+@@ -187,7 +189,9 @@ void InitializePlatformInterceptors() {
+   ASAN_INTERCEPT_FUNC(__C_specific_handler);
+ #else
+   ASAN_INTERCEPT_FUNC(_except_handler3);
++#ifndef __GNUC__
+   ASAN_INTERCEPT_FUNC(_except_handler4);
++#endif
+ #endif
+ 
+   // Try to intercept kernel32!RaiseException, and if that fails, intercept
+diff --git a/libsanitizer/configure.tgt b/libsanitizer/configure.tgt
+index 83c548be2f3..7669e757dd6 100644
+--- a/libsanitizer/configure.tgt
++++ b/libsanitizer/configure.tgt
+@@ -85,7 +85,7 @@ case "${target}" in
+ 		TSAN_TARGET_DEPENDENT_OBJECTS=tsan_rtl_loongarch64.lo
+ 	fi
+ 	;;
+-  x86_64-*-mingw*)
++  x86_64-*-mingw* | i?86-*-mingw*)
+ 	;;
+   *)
+ 	UNSUPPORTED=1
+diff --git a/libsanitizer/interception/Makefile.am b/libsanitizer/interception/Makefile.am
+index f7013b4ea94..3455c985c8f 100644
+--- a/libsanitizer/interception/Makefile.am
++++ b/libsanitizer/interception/Makefile.am
+@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I $(top_srcdir)/include -I $(top_srcdir)
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
+ 
+ DEFS = -D_GNU_SOURCE -D_DEBUG -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
+-AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti -fomit-frame-pointer -funwind-tables -fvisibility=hidden -Wno-variadic-macros
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
++AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti $(omit_frame_pointer) -funwind-tables -fvisibility=hidden -Wno-variadic-macros
+ AM_CXXFLAGS += $(LIBSTDCXX_RAW_CXX_CXXFLAGS)
+ AM_CXXFLAGS += -std=gnu++14
+ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
+diff --git a/libsanitizer/interception/Makefile.in b/libsanitizer/interception/Makefile.in
+index 2d807c98d3b..d1209b14be6 100644
+--- a/libsanitizer/interception/Makefile.in
++++ b/libsanitizer/interception/Makefile.in
+@@ -337,9 +337,10 @@ AM_CPPFLAGS = -I $(top_srcdir)/include -I $(top_srcdir)
+ 
+ # May be used by toolexeclibdir.
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
+ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
+ 	-Wno-long-long -fPIC -fno-builtin -fno-exceptions -fno-rtti \
+-	-fomit-frame-pointer -funwind-tables -fvisibility=hidden \
++	$(omit_frame_pointer) -funwind-tables -fvisibility=hidden \
+ 	-Wno-variadic-macros $(LIBSTDCXX_RAW_CXX_CXXFLAGS) \
+ 	-std=gnu++14 $(EXTRA_CXXFLAGS)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+diff --git a/libsanitizer/interception/interception_win.cpp b/libsanitizer/interception/interception_win.cpp
+index 85925d66607..b2898bb36c1 100644
+--- a/libsanitizer/interception/interception_win.cpp
++++ b/libsanitizer/interception/interception_win.cpp
+@@ -792,8 +792,12 @@ bool OverrideFunctionWithRedirectJump(
+   // relative indirect jump
+   if (old_u8[0] == 0xff && old_u8[1] == 0x25)
+   {
++#if SANITIZER_WINDOWS64
+     sptr relative_offset = *(s32 *)(old_func + 2);
+     uptr *absolute_target_ptr = (uptr *)(old_func + 6 + relative_offset);
++#else
++    uptr *absolute_target_ptr = *(uptr **)(old_func + 2);
++#endif
+     if (orig_old_func)
+       *orig_old_func = *absolute_target_ptr;
+ 
+diff --git a/libsanitizer/sanitizer_common/Makefile.am b/libsanitizer/sanitizer_common/Makefile.am
+index 9ed6ef88775..5780e2b99af 100644
+--- a/libsanitizer/sanitizer_common/Makefile.am
++++ b/libsanitizer/sanitizer_common/Makefile.am
+@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I $(top_srcdir)/include -I $(top_srcdir) -isystem $(top_srcdir)/i
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
+ 
+ DEFS = -D_GNU_SOURCE -D_DEBUG -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS @RPC_DEFS@ @AS_SYM_ASSIGN_DEFS@
+-AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti -fomit-frame-pointer -funwind-tables -fvisibility=hidden -Wno-variadic-macros
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
++AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti $(omit_frame_pointer) -funwind-tables -fvisibility=hidden -Wno-variadic-macros
+ AM_CXXFLAGS += $(LIBSTDCXX_RAW_CXX_CXXFLAGS)
+ AM_CXXFLAGS += -std=gnu++14
+ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
+diff --git a/libsanitizer/sanitizer_common/Makefile.in b/libsanitizer/sanitizer_common/Makefile.in
+index 31fff8236fe..5c0573997e5 100644
+--- a/libsanitizer/sanitizer_common/Makefile.in
++++ b/libsanitizer/sanitizer_common/Makefile.in
+@@ -375,9 +375,10 @@ AM_CPPFLAGS = -I $(top_srcdir)/include -I $(top_srcdir) -isystem $(top_srcdir)/i
+ 
+ # May be used by toolexeclibdir.
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
+ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
+ 	-Wno-long-long -fPIC -fno-builtin -fno-exceptions -fno-rtti \
+-	-fomit-frame-pointer -funwind-tables -fvisibility=hidden \
++	$(omit_frame_pointer) -funwind-tables -fvisibility=hidden \
+ 	-Wno-variadic-macros $(LIBSTDCXX_RAW_CXX_CXXFLAGS) \
+ 	-std=gnu++14 $(EXTRA_CXXFLAGS) $(am__append_1)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+diff --git a/libsanitizer/ubsan/Makefile.am b/libsanitizer/ubsan/Makefile.am
+index 7769b3437e4..86fc18a1e4b 100644
+--- a/libsanitizer/ubsan/Makefile.am
++++ b/libsanitizer/ubsan/Makefile.am
+@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I $(top_srcdir) -I $(top_srcdir)/include
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
+ 
+ DEFS = -D_GNU_SOURCE -D_DEBUG -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DPIC -DCAN_SANITIZE_UB=1 -DUBSAN_CAN_USE_CXXABI=1
+-AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti -fomit-frame-pointer -funwind-tables -fvisibility=hidden -Wno-variadic-macros
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
++AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long  -fPIC -fno-builtin -fno-exceptions -fno-rtti $(omit_frame_pointer) -funwind-tables -fvisibility=hidden -Wno-variadic-macros
+ AM_CXXFLAGS += $(LIBSTDCXX_RAW_CXX_CXXFLAGS)
+ AM_CXXFLAGS += -std=gnu++14
+ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
+diff --git a/libsanitizer/ubsan/Makefile.in b/libsanitizer/ubsan/Makefile.in
+index 717d1571556..cac401a5d10 100644
+--- a/libsanitizer/ubsan/Makefile.in
++++ b/libsanitizer/ubsan/Makefile.in
+@@ -376,9 +376,10 @@ AM_CPPFLAGS = -I $(top_srcdir) -I $(top_srcdir)/include
+ 
+ # May be used by toolexeclibdir.
+ gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
++omit_frame_pointer = $(if $(filter i686-mingw32,$(target_cpu)-$(target_os)),-fno-omit-frame-pointer,-fomit-frame-pointer)
+ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
+ 	-Wno-long-long -fPIC -fno-builtin -fno-exceptions -fno-rtti \
+-	-fomit-frame-pointer -funwind-tables -fvisibility=hidden \
++	$(omit_frame_pointer) -funwind-tables -fvisibility=hidden \
+ 	-Wno-variadic-macros $(LIBSTDCXX_RAW_CXX_CXXFLAGS) \
+ 	-std=gnu++14 $(EXTRA_CXXFLAGS)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+-- 
+2.39.1.windows.1
+

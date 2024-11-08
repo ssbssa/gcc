@@ -1,7 +1,7 @@
-From 380106fa20e6f354cf74d20322de7946aa214ba2 Mon Sep 17 00:00:00 2001
+From 3efda9be881323d573ef3d372f51e2acc5b5af37 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:27:39 +0200
-Subject: [PATCH 05/20] Enable diagnostic colors on cygwin terminal
+Subject: [PATCH 05/36] Enable diagnostic colors on cygwin terminal
 
 ---
  gcc/diagnostic-color.cc | 66 ++++++++++++++++++++++++++++++++++++++++-

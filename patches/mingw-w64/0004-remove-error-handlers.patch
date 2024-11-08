@@ -1,7 +1,7 @@
-From 7c4dbd6190a8f39d2e3144ef84284fe32f6dc5d9 Mon Sep 17 00:00:00 2001
+From 909315ed87c4c622594e8bd4595eb6d7b2446d4e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
-Subject: [PATCH 4/8] remove error handlers
+Subject: [PATCH 4/9] remove error handlers
 
 ---
  mingw-w64-crt/crt/crtexe.c       | 6 ++++++

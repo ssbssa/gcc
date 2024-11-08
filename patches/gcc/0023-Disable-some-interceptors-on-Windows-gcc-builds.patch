@@ -1,0 +1,90 @@
+From dcc7a4d4230df075933865349bbb5d62aec9553c Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 17:44:20 +0200
+Subject: [PATCH 23/36] Disable some interceptors on Windows-gcc builds
+
+---
+ .../sanitizer_common_interceptors.inc                | 12 +++++++++---
+ .../sanitizer_platform_interceptors.h                | 11 +++++++++--
+ 2 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
+index 607ecae6808..975b532d5eb 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
++++ b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
+@@ -7058,7 +7058,13 @@ INTERCEPTOR(SIZE_T, wcslen, const wchar_t *s) {
+   COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * (res + 1));
+   return res;
+ }
++#define INIT_WCSLEN                  \
++  COMMON_INTERCEPT_FUNCTION(wcslen);
++#else
++#define INIT_WCSLEN
++#endif
+ 
++#if SANITIZER_INTERCEPT_WCSNLEN
+ INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
+   void *ctx;
+   COMMON_INTERCEPTOR_ENTER(ctx, wcsnlen, s, n);
+@@ -7066,11 +7072,10 @@ INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
+   COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * Min(res + 1, n));
+   return res;
+ }
+-#define INIT_WCSLEN                  \
+-  COMMON_INTERCEPT_FUNCTION(wcslen); \
++#define INIT_WCSNLEN                  \
+   COMMON_INTERCEPT_FUNCTION(wcsnlen);
+ #else
+-#define INIT_WCSLEN
++#define INIT_WCSNLEN
+ #endif
+ 
+ #if SANITIZER_INTERCEPT_WCSCAT
+@@ -10504,6 +10509,7 @@ static void InitializeCommonInterceptors() {
+   INIT_UTMPX;
+   INIT_GETLOADAVG;
+   INIT_WCSLEN;
++  INIT_WCSNLEN;
+   INIT_WCSCAT;
+   INIT_WCSDUP;
+   INIT_WCSXFRM;
+diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
+index 8c7c00de6d1..9c0eb74a389 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
++++ b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
+@@ -138,8 +138,14 @@
+ #define SI_LINUX_NOT_FREEBSD 0
+ #endif
+ 
++#if SANITIZER_WINDOWS && defined(__GNUC__)
++#define SI_NOT_WINGCC 0
++#else
++#define SI_NOT_WINGCC 1
++#endif
++
+ #define SANITIZER_INTERCEPT_STRLEN SI_NOT_FUCHSIA
+-#define SANITIZER_INTERCEPT_STRNLEN (SI_NOT_MAC && SI_NOT_FUCHSIA)
++#define SANITIZER_INTERCEPT_STRNLEN (SI_NOT_MAC && SI_NOT_FUCHSIA && SI_NOT_WINGCC)
+ #define SANITIZER_INTERCEPT_STRCMP SI_NOT_FUCHSIA
+ #define SANITIZER_INTERCEPT_STRSTR SI_NOT_FUCHSIA
+ #define SANITIZER_INTERCEPT_STRCASESTR SI_POSIX
+@@ -212,7 +218,7 @@
+ #define SANITIZER_INTERCEPT___PRINTF_CHK \
+   (SANITIZER_INTERCEPT_PRINTF && SI_GLIBC)
+ 
+-#define SANITIZER_INTERCEPT_FREXP SI_NOT_FUCHSIA
++#define SANITIZER_INTERCEPT_FREXP (SI_NOT_FUCHSIA && SI_NOT_WINGCC)
+ #define SANITIZER_INTERCEPT_FREXPF_FREXPL SI_POSIX
+ 
+ #define SANITIZER_INTERCEPT_GETPWNAM_AND_FRIENDS SI_POSIX
+@@ -496,6 +502,7 @@
+ #define SANITIZER_INTERCEPT_MALLOC_USABLE_SIZE (!SI_MAC && !SI_NETBSD)
+ #define SANITIZER_INTERCEPT_MCHECK_MPROBE SI_LINUX_NOT_ANDROID
+ #define SANITIZER_INTERCEPT_WCSLEN 1
++#define SANITIZER_INTERCEPT_WCSNLEN SI_NOT_WINGCC
+ #define SANITIZER_INTERCEPT_WCSCAT SI_POSIX
+ #define SANITIZER_INTERCEPT_WCSDUP SI_POSIX
+ #define SANITIZER_INTERCEPT_SIGNAL_AND_SIGACTION (!SI_WINDOWS && SI_NOT_FUCHSIA)
+-- 
+2.39.1.windows.1
+

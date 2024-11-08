@@ -1,0 +1,55 @@
+From ae35285fc0bbafee20191d742ee747e0914ef4cb Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 17:46:01 +0200
+Subject: [PATCH 24/36] Enable colored output on Windows
+
+---
+ .../sanitizer_symbolizer_report.cpp               |  5 -----
+ libsanitizer/sanitizer_common/sanitizer_win.cpp   | 15 ++++++++++++++-
+ 2 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
+index 3e4417ae3f5..5f769198aea 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
+@@ -60,11 +60,6 @@ static inline bool ReportSupportsColors() { return true; }
+ #endif  // !SANITIZER_FUCHSIA
+ 
+ bool ColorizeReports() {
+-  // FIXME: Add proper Windows support to AnsiColorDecorator and re-enable color
+-  // printing on Windows.
+-  if (SANITIZER_WINDOWS)
+-    return false;
+-
+   const char *flag = common_flags()->color;
+   return internal_strcmp(flag, "always") == 0 ||
+          (internal_strcmp(flag, "auto") == 0 && ReportSupportsColors());
+diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+index a628df58752..ff7ac16c998 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+@@ -794,7 +794,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
+ }
+ 
+ bool SupportsColoredOutput(fd_t fd) {
+-  // FIXME: support colored output.
++  // Map the conventional Unix fds 1 and 2 to Windows handles. They might be
++  // closed, in which case this will fail.
++  if (fd == kStdoutFd || fd == kStderrFd) {
++    fd = GetStdHandle(fd == kStdoutFd ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
++    if (fd == 0) {
++      return false;
++    }
++  }
++
++  DWORD flags;
++  if (GetConsoleMode(fd, &flags) &&
++      SetConsoleMode(fd, flags | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
++    return true;
++
+   return false;
+ }
+ 
+-- 
+2.39.1.windows.1
+

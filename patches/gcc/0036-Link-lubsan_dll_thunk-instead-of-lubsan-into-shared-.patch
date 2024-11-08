@@ -1,0 +1,247 @@
+From 7236080df5333dfac72b4dfd259a6c3ad75056c1 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 27 Oct 2024 17:16:24 +0100
+Subject: [PATCH 36/36] Link -lubsan_dll_thunk instead of -lubsan into shared
+ targets
+
+---
+ gcc/gcc.cc                                    |  3 +-
+ libsanitizer/asan/asan_interface.inc          | 25 +++++++++++
+ .../sanitizer_common_interface.inc            | 23 ----------
+ libsanitizer/ubsan/Makefile.am                |  9 +++-
+ libsanitizer/ubsan/Makefile.in                | 43 ++++++++++++++++++-
+ libsanitizer/ubsan/ubsan_init.cpp             |  4 ++
+ 6 files changed, 80 insertions(+), 27 deletions(-)
+
+diff --git a/gcc/gcc.cc b/gcc/gcc.cc
+index 2eb745e70a7..0f269c04050 100644
+--- a/gcc/gcc.cc
++++ b/gcc/gcc.cc
+@@ -839,7 +839,8 @@ proper position among the other output files.  */
+   " %{static-libubsan|static:%:include(libsanitizer.spec)%(link_libubsan)}"
+ #ifdef HAVE_LD_STATIC_DYNAMIC
+ #define LIBUBSAN_SPEC "%{static-libubsan:" LD_STATIC_OPTION \
+-		     "} -lubsan -lstdc++ %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
++		     "} %{shared:-lubsan_dll_thunk;:-lubsan -lstdc++}" \
++		     " %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
+ 		     STATIC_LIBUBSAN_LIBS
+ #else
+ #define LIBUBSAN_SPEC "-lubsan" STATIC_LIBUBSAN_LIBS
+diff --git a/libsanitizer/asan/asan_interface.inc b/libsanitizer/asan/asan_interface.inc
+index bfc44b46196..d71eb768409 100644
+--- a/libsanitizer/asan/asan_interface.inc
++++ b/libsanitizer/asan/asan_interface.inc
+@@ -187,3 +187,28 @@ INTERFACE_FUNCTION(__asan_update_allocation_context)
+ INTERFACE_WEAK_FUNCTION(__asan_default_options)
+ INTERFACE_WEAK_FUNCTION(__asan_default_suppressions)
+ INTERFACE_WEAK_FUNCTION(__asan_on_error)
++// Allocator interface.
++INTERFACE_FUNCTION(__sanitizer_get_allocated_begin)
++INTERFACE_FUNCTION(__sanitizer_get_allocated_size)
++INTERFACE_FUNCTION(__sanitizer_get_allocated_size_fast)
++INTERFACE_FUNCTION(__sanitizer_get_current_allocated_bytes)
++INTERFACE_FUNCTION(__sanitizer_get_estimated_allocated_size)
++INTERFACE_FUNCTION(__sanitizer_get_free_bytes)
++INTERFACE_FUNCTION(__sanitizer_get_heap_size)
++INTERFACE_FUNCTION(__sanitizer_get_ownership)
++INTERFACE_FUNCTION(__sanitizer_get_unmapped_bytes)
++INTERFACE_FUNCTION(__sanitizer_purge_allocator)
++INTERFACE_FUNCTION(__sanitizer_print_memory_profile)
++// Sanitizer weak hooks
++INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_memcmp)
++INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strcmp)
++INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strncmp)
++INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strstr)
++
++INTERFACE_FUNCTION(__sanitizer_annotate_contiguous_container)
++INTERFACE_FUNCTION(__sanitizer_annotate_double_ended_contiguous_container)
++INTERFACE_FUNCTION(__sanitizer_contiguous_container_find_bad_address)
++INTERFACE_FUNCTION(
++    __sanitizer_double_ended_contiguous_container_find_bad_address)
++INTERFACE_FUNCTION(__sanitizer_verify_contiguous_container)
++INTERFACE_FUNCTION(__sanitizer_verify_double_ended_contiguous_container)
+diff --git a/libsanitizer/sanitizer_common/sanitizer_common_interface.inc b/libsanitizer/sanitizer_common/sanitizer_common_interface.inc
+index 557207fe62a..aa4af02ea25 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_common_interface.inc
++++ b/libsanitizer/sanitizer_common/sanitizer_common_interface.inc
+@@ -8,42 +8,19 @@
+ // Sanitizer Common interface list.
+ //===----------------------------------------------------------------------===//
+ INTERFACE_FUNCTION(__sanitizer_acquire_crash_state)
+-INTERFACE_FUNCTION(__sanitizer_annotate_contiguous_container)
+-INTERFACE_FUNCTION(__sanitizer_annotate_double_ended_contiguous_container)
+-INTERFACE_FUNCTION(__sanitizer_contiguous_container_find_bad_address)
+-INTERFACE_FUNCTION(
+-    __sanitizer_double_ended_contiguous_container_find_bad_address)
+ INTERFACE_FUNCTION(__sanitizer_set_death_callback)
+ INTERFACE_FUNCTION(__sanitizer_set_report_path)
+ INTERFACE_FUNCTION(__sanitizer_set_report_fd)
+ INTERFACE_FUNCTION(__sanitizer_get_report_path)
+-INTERFACE_FUNCTION(__sanitizer_verify_contiguous_container)
+-INTERFACE_FUNCTION(__sanitizer_verify_double_ended_contiguous_container)
+ INTERFACE_WEAK_FUNCTION(__sanitizer_on_print)
+ INTERFACE_WEAK_FUNCTION(__sanitizer_report_error_summary)
+ INTERFACE_WEAK_FUNCTION(__sanitizer_sandbox_on_notify)
+-// Sanitizer weak hooks
+-INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_memcmp)
+-INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strcmp)
+-INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strncmp)
+-INTERFACE_WEAK_FUNCTION(__sanitizer_weak_hook_strstr)
+ // Stacktrace interface.
+ INTERFACE_FUNCTION(__sanitizer_get_module_and_offset_for_pc)
+ INTERFACE_FUNCTION(__sanitizer_symbolize_global)
+ INTERFACE_FUNCTION(__sanitizer_symbolize_pc)
+ // Allocator interface.
+-INTERFACE_FUNCTION(__sanitizer_get_allocated_begin)
+-INTERFACE_FUNCTION(__sanitizer_get_allocated_size)
+-INTERFACE_FUNCTION(__sanitizer_get_allocated_size_fast)
+-INTERFACE_FUNCTION(__sanitizer_get_current_allocated_bytes)
+-INTERFACE_FUNCTION(__sanitizer_get_estimated_allocated_size)
+-INTERFACE_FUNCTION(__sanitizer_get_free_bytes)
+-INTERFACE_FUNCTION(__sanitizer_get_heap_size)
+-INTERFACE_FUNCTION(__sanitizer_get_ownership)
+-INTERFACE_FUNCTION(__sanitizer_get_unmapped_bytes)
+ INTERFACE_FUNCTION(__sanitizer_install_malloc_and_free_hooks)
+-INTERFACE_FUNCTION(__sanitizer_purge_allocator)
+-INTERFACE_FUNCTION(__sanitizer_print_memory_profile)
+ INTERFACE_WEAK_FUNCTION(__sanitizer_free_hook)
+ INTERFACE_WEAK_FUNCTION(__sanitizer_malloc_hook)
+ // Memintrinsic functions.
+diff --git a/libsanitizer/ubsan/Makefile.am b/libsanitizer/ubsan/Makefile.am
+index 86fc18a1e4b..b269a380d53 100644
+--- a/libsanitizer/ubsan/Makefile.am
++++ b/libsanitizer/ubsan/Makefile.am
+@@ -12,7 +12,7 @@ AM_CXXFLAGS += $(EXTRA_CXXFLAGS)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+ ACLOCAL_AMFLAGS = -I m4
+ 
+-toolexeclib_LTLIBRARIES = libubsan.la
++toolexeclib_LTLIBRARIES = libubsan.la libubsan_dll_thunk.la
+ 
+ ubsan_plugin_files = \
+ 	ubsan_diag.cpp \
+@@ -44,6 +44,13 @@ endif
+ libubsan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+ 	$(link_libubsan) $(libubsan_darwin_rpath)
+ 
++libubsan_dll_thunk_la_SOURCES = \
++	ubsan_win_dll_thunk.cpp \
++	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
++	../interception/interception_win.cpp
++libubsan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS)
++libubsan_dll_thunk_la_CPPFLAGS += -DSANITIZER_DLL_THUNK
++
+ # Use special rules for files that require RTTI support.
+ ubsan_handlers_cxx.% ubsan_type_hash.% ubsan_type_hash_itanium.% : AM_CXXFLAGS += -frtti
+ 
+diff --git a/libsanitizer/ubsan/Makefile.in b/libsanitizer/ubsan/Makefile.in
+index cac401a5d10..956b19c8ca6 100644
+--- a/libsanitizer/ubsan/Makefile.in
++++ b/libsanitizer/ubsan/Makefile.in
+@@ -161,6 +161,12 @@ am__v_lt_1 =
+ libubsan_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+ 	$(CXXFLAGS) $(libubsan_la_LDFLAGS) $(LDFLAGS) -o $@
++libubsan_dll_thunk_la_LIBADD =
++am_libubsan_dll_thunk_la_OBJECTS =  \
++	libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo \
++	libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo \
++	libubsan_dll_thunk_la-interception_win.lo
++libubsan_dll_thunk_la_OBJECTS = $(am_libubsan_dll_thunk_la_OBJECTS)
+ AM_V_P = $(am__v_P_@AM_V@)
+ am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
+ am__v_P_0 = false
+@@ -195,7 +201,7 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+ am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+ am__v_CXXLD_1 = 
+-SOURCES = $(libubsan_la_SOURCES)
++SOURCES = $(libubsan_la_SOURCES) $(libubsan_dll_thunk_la_SOURCES)
+ am__can_run_installinfo = \
+   case $$AM_UPDATE_INFO_DIR in \
+     n|no|NO) false;; \
+@@ -384,7 +390,7 @@ AM_CXXFLAGS = -Wall -W -Wno-unused-parameter -Wwrite-strings -pedantic \
+ 	-std=gnu++14 $(EXTRA_CXXFLAGS)
+ AM_CCASFLAGS = $(EXTRA_ASFLAGS)
+ ACLOCAL_AMFLAGS = -I m4
+-toolexeclib_LTLIBRARIES = libubsan.la
++toolexeclib_LTLIBRARIES = libubsan.la libubsan_dll_thunk.la
+ ubsan_plugin_files = \
+ 	ubsan_diag.cpp \
+ 	ubsan_flags.cpp \
+@@ -408,6 +414,12 @@ libubsan_la_LIBADD =  \
+ libubsan_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+ 	$(link_libubsan) $(libubsan_darwin_rpath)
+ 
++libubsan_dll_thunk_la_SOURCES = \
++	ubsan_win_dll_thunk.cpp \
++	../sanitizer_common/sanitizer_win_dll_thunk.cpp \
++	../interception/interception_win.cpp
++
++libubsan_dll_thunk_la_CPPFLAGS = $(AM_CPPFLAGS) -DSANITIZER_DLL_THUNK
+ 
+ # Work around what appears to be a GNU make bug handling MAKEFLAGS
+ # values defined in terms of make variables, as is the case for CC and
+@@ -520,12 +532,18 @@ clean-toolexeclibLTLIBRARIES:
+ libubsan.la: $(libubsan_la_OBJECTS) $(libubsan_la_DEPENDENCIES) $(EXTRA_libubsan_la_DEPENDENCIES) 
+ 	$(AM_V_CXXLD)$(libubsan_la_LINK) -rpath $(toolexeclibdir) $(libubsan_la_OBJECTS) $(libubsan_la_LIBADD) $(LIBS)
+ 
++libubsan_dll_thunk.la: $(libubsan_dll_thunk_la_OBJECTS) $(libubsan_dll_thunk_la_DEPENDENCIES) $(EXTRA_libubsan_dll_thunk_la_DEPENDENCIES) 
++	$(AM_V_CXXLD)$(CXXLINK) -rpath $(toolexeclibdir) $(libubsan_dll_thunk_la_OBJECTS) $(libubsan_dll_thunk_la_LIBADD) $(LIBS)
++
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 
+ distclean-compile:
+ 	-rm -f *.tab.c
+ 
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-interception_win.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_diag.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_flags.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubsan_handlers.Plo@am__quote@
+@@ -558,6 +576,27 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+ 
++libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo: ubsan_win_dll_thunk.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Tpo -c -o libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo `test -f 'ubsan_win_dll_thunk.cpp' || echo '$(srcdir)/'`ubsan_win_dll_thunk.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Tpo $(DEPDIR)/libubsan_dll_thunk_la-ubsan_win_dll_thunk.Plo
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='ubsan_win_dll_thunk.cpp' object='libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-ubsan_win_dll_thunk.lo `test -f 'ubsan_win_dll_thunk.cpp' || echo '$(srcdir)/'`ubsan_win_dll_thunk.cpp
++
++libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo: ../sanitizer_common/sanitizer_win_dll_thunk.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo -c -o libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Tpo $(DEPDIR)/libubsan_dll_thunk_la-sanitizer_win_dll_thunk.Plo
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../sanitizer_common/sanitizer_win_dll_thunk.cpp' object='libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-sanitizer_win_dll_thunk.lo `test -f '../sanitizer_common/sanitizer_win_dll_thunk.cpp' || echo '$(srcdir)/'`../sanitizer_common/sanitizer_win_dll_thunk.cpp
++
++libubsan_dll_thunk_la-interception_win.lo: ../interception/interception_win.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libubsan_dll_thunk_la-interception_win.lo -MD -MP -MF $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Tpo -c -o libubsan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Tpo $(DEPDIR)/libubsan_dll_thunk_la-interception_win.Plo
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../interception/interception_win.cpp' object='libubsan_dll_thunk_la-interception_win.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libubsan_dll_thunk_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libubsan_dll_thunk_la-interception_win.lo `test -f '../interception/interception_win.cpp' || echo '$(srcdir)/'`../interception/interception_win.cpp
++
+ mostlyclean-libtool:
+ 	-rm -f *.lo
+ 
+diff --git a/libsanitizer/ubsan/ubsan_init.cpp b/libsanitizer/ubsan/ubsan_init.cpp
+index 5802d58896f..dad638ee383 100644
+--- a/libsanitizer/ubsan/ubsan_init.cpp
++++ b/libsanitizer/ubsan/ubsan_init.cpp
+@@ -73,4 +73,8 @@ void __ubsan::InitAsPlugin() {
+   }
+ }
+ 
++#if SANITIZER_WINDOWS && defined(__GNUC__)
++void *__link___sandbox_on_notify = (void *) &__sanitizer_sandbox_on_notify;
++#endif
++
+ #endif  // CAN_SANITIZE_UB
+-- 
+2.39.1.windows.1
+

@@ -25,7 +25,7 @@ else
 endif
 
 
-BINUTILS_VER=2.41
+BINUTILS_VER=2.43.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -52,7 +52,16 @@ MINGW_W64_CRT_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-crt/configur
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET) \
 		   $(DISABLE_LIB)
 
-GCC_VER=14.1.0
+MCFGTHREAD_VER=releases-v1.6
+MCFGTHREAD_SRC_DIR=mcfgthread-$(MCFGTHREAD_VER)
+MCFGTHREAD_FILE=$(MCFGTHREAD_SRC_DIR).tar.gz
+MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
+		   --build=$(MYBUILD) --host=$(MYTARGET) \
+		   --enable-static --disable-shared \
+		   --with-sysroot=$(GCC_DIR) \
+		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
+
+GCC_VER=14.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -63,6 +72,8 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --disable-bootstrap --enable-lto --enable-fully-dynamic-string \
 	 --with-gnu-ld --disable-symvers --disable-werror --disable-shared \
 	 --disable-version-specific-runtime-libs \
+	 --enable-threads=mcf \
+	 --disable-win32-utf8-manifest \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
@@ -186,7 +197,11 @@ $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-add-strndup-wcsndup.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done
+$(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-crt-Preprocess-all-.def.in-files-with-DDEF_-ARCH.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -202,7 +217,7 @@ $(BUILD_DIR)/mingw-w64-05-headers-make-install.done: | $(BUILD_DIR)/mingw-w64-04
 
 # gcc core
 
-$(SOURCE_DIR)/gcc-01-extract-01-gcc.done: | pkg/$(GCC_FILE) $(SOURCE_DIR)/mingw-w64-01-extract.done
+$(SOURCE_DIR)/gcc-01-extract-01-gcc.done: | pkg/$(GCC_FILE) $(SOURCE_DIR)/mcfgthread-01-extract.done
 	tar -C $(SOURCE_DIR) -xJf pkg/$(GCC_FILE)
 	@touch $@
 
@@ -286,27 +301,91 @@ $(SOURCE_DIR)/gcc-02-patch-15-parameter-pack.done: | $(SOURCE_DIR)/gcc-02-patch-
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Add-name-of-parameter-pack.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-16-comdat.done: | $(SOURCE_DIR)/gcc-02-patch-15-parameter-pack.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-Do-not-use-caller-saved-registers-for-COMDAT-functio.patch
+$(SOURCE_DIR)/gcc-02-patch-16-tzdb-disabled.done: | $(SOURCE_DIR)/gcc-02-patch-15-parameter-pack.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-Set-TZDB_DISABLED-if-_GLIBCXX_HAS_GTHREADS-is-not-av.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done: | $(SOURCE_DIR)/gcc-02-patch-16-comdat.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Set-TZDB_DISABLED-if-_GLIBCXX_HAS_GTHREADS-is-not-av.patch
+$(SOURCE_DIR)/gcc-02-patch-17-getthreadid-alternative.done: | $(SOURCE_DIR)/gcc-02-patch-16-tzdb-disabled.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Add-GetThreadId-alternative-for-WinXP.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-18-dtor-hooks-atexit.done: | $(SOURCE_DIR)/gcc-02-patch-17-tzdb-disabled.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0018-c-mingw-Fix-up-types-of-dtor-hooks-to-__cxa_-thread_.patch
+$(SOURCE_DIR)/gcc-02-patch-18-mcf-sjlj-infinite-recursion.done: | $(SOURCE_DIR)/gcc-02-patch-17-getthreadid-alternative.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0018-mcf-sjlj-avoid-infinite-recursion.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-19-ice-seh_cfa_offset.done: | $(SOURCE_DIR)/gcc-02-patch-18-dtor-hooks-atexit.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0019-Fix-internal-error-in-seh_cfa_offset-with-O2-fno-omi.patch
+$(SOURCE_DIR)/gcc-02-patch-19-freport-bug.done: | $(SOURCE_DIR)/gcc-02-patch-18-mcf-sjlj-infinite-recursion.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0019-Fix-freport-bug-for-Windows.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done: | $(SOURCE_DIR)/gcc-02-patch-19-ice-seh_cfa_offset.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0020-preprocessor-Create-the-parser-before-handling-comma.patch
+$(SOURCE_DIR)/gcc-02-patch-20-sanitizer-win64.done: | $(SOURCE_DIR)/gcc-02-patch-19-freport-bug.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0020-Enable-sanitizer-support-on-Windows-x86_64.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done
+$(SOURCE_DIR)/gcc-02-patch-21-pecoff.done: | $(SOURCE_DIR)/gcc-02-patch-20-sanitizer-win64.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0021-Use-pecoff-format-on-Windows.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-22-mmap-win.done: | $(SOURCE_DIR)/gcc-02-patch-21-pecoff.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0022-Enable-mmap-reader-for-libbacktrace-on-Windows.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-23-disable-interceptors.done: | $(SOURCE_DIR)/gcc-02-patch-22-mmap-win.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0023-Disable-some-interceptors-on-Windows-gcc-builds.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-24-colored-output-win.done: | $(SOURCE_DIR)/gcc-02-patch-23-disable-interceptors.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0024-Enable-colored-output-on-Windows.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-25-dynamic-shadow-offset.done: | $(SOURCE_DIR)/gcc-02-patch-24-colored-output-win.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0025-Implement-dynamic-shadow-offset-for-address-sanitize.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-26-EnumProcessModules-win7.done: | $(SOURCE_DIR)/gcc-02-patch-25-dynamic-shadow-offset.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0026-Fix-EnumProcessModules-for-Win7.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-27-remove-futex-calls.done: | $(SOURCE_DIR)/gcc-02-patch-26-EnumProcessModules-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0027-Remove-futex-calls-not-available-on-Win7.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-28-colored-output-win7.done: | $(SOURCE_DIR)/gcc-02-patch-27-remove-futex-calls.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0028-Enable-colored-output-on-Windows-7.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-29-fix-unsupported-flags.done: | $(SOURCE_DIR)/gcc-02-patch-28-colored-output-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0029-Fix-checks-for-unsupported-flags.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-30-psapi-win7.done: | $(SOURCE_DIR)/gcc-02-patch-29-fix-unsupported-flags.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0030-Use-psapi.dll-on-Win7.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-31-sanitizer-win32.done: | $(SOURCE_DIR)/gcc-02-patch-30-psapi-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0031-Enable-sanitizer-support-on-Windows-x86.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-32-sanitizer-winxp.done: | $(SOURCE_DIR)/gcc-02-patch-31-sanitizer-win32.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0032-Fix-sanitizers-for-WinXP.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-33-intercept-_strdup.done: | $(SOURCE_DIR)/gcc-02-patch-32-sanitizer-winxp.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0033-Intercept-_strdup-on-Windows-gcc-builds.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-34-libubsan-lstdcxx.done: | $(SOURCE_DIR)/gcc-02-patch-33-intercept-_strdup.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0034-Add-lstdc-when-linking-libubsan.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-35-link-lasan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02-patch-34-libubsan-lstdcxx.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0035-Link-lasan_dll_thunk-instead-of-lasan-into-shared-ta.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02-patch-35-link-lasan_dll_thunk.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0036-Link-lubsan_dll_thunk-instead-of-lubsan-into-shared-.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -336,14 +415,62 @@ $(BUILD_DIR)/mingw-w64-08-crt-make-install.done: | $(BUILD_DIR)/mingw-w64-07-crt
 	@touch $@
 
 
+# mcfgthread
+
+$(SOURCE_DIR)/mcfgthread-01-extract.done: | pkg/$(MCFGTHREAD_FILE) $(SOURCE_DIR)/mingw-w64-01-extract.done
+	tar -C $(SOURCE_DIR) -xzf pkg/$(MCFGTHREAD_FILE)
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-01-allow-XP.done: | $(SOURCE_DIR)/mcfgthread-01-extract.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0001-Remove-error-if-compiling-below-Win7.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-02-BaseGetNamedObjectDirectory.done: | $(SOURCE_DIR)/mcfgthread-02-patch-01-allow-XP.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0002-WinXP-alternative-for-BaseGetNamedObjectDirectory.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-03-GetTickCount64.done: | $(SOURCE_DIR)/mcfgthread-02-patch-02-BaseGetNamedObjectDirectory.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0003-WinXP-alternative-for-GetTickCount64.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-04-NtWaitForKeyedEvent.done: | $(SOURCE_DIR)/mcfgthread-02-patch-03-GetTickCount64.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0004-NtWaitForKeyedEvent-on-WinXP-needs-an-explicit-keyed.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-05-configure-no-executable.done: | $(SOURCE_DIR)/mcfgthread-02-patch-04-NtWaitForKeyedEvent.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0005-Disable-test-if-executable-creation-works-in-configu.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done: | $(SOURCE_DIR)/mcfgthread-02-patch-05-configure-no-executable.done
+	patch -d $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR) -p1 <patches/mcfgthread/0006-Save-and-restore-last-error-code-for-TLS-calls.patch
+	@touch $@
+
+$(SOURCE_DIR)/mcfgthread-03-autoreconf.done: | $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done
+	cd $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR); autoreconf -i
+	@touch $@
+
+$(BUILD_DIR)/mcfgthread-04-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(SOURCE_DIR)/mcfgthread-03-autoreconf.done
+	@mkdir -p $(BUILD_DIR)/mcfgthread
+	$(GCC_PATH) cd $(BUILD_DIR)/mcfgthread && $(MCFGTHREAD_CONF)
+	@touch $@
+
+$(BUILD_DIR)/mcfgthread-05-make.done: | $(BUILD_DIR)/mcfgthread-04-configure.done
+	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/mcfgthread
+	@touch $@
+
+$(BUILD_DIR)/mcfgthread-06-make-install.done: | $(BUILD_DIR)/mcfgthread-05-make.done
+	$(GCC_PATH) $(MAKE) -C $(BUILD_DIR)/mcfgthread install
+	@touch $@
+
+
 # gcc
 
-$(BUILD_DIR)/gcc-06-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-05-make-install-gcc.done
+$(BUILD_DIR)/gcc-06-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mcfgthread-06-make-install.done
 	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc
 	@touch $@
 
 $(BUILD_DIR)/gcc-07-make-install.done: | $(BUILD_DIR)/gcc-06-make.done
-	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc install-strip
+	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc installdirs install-strip-host install-target
 	@touch $@
 
 ifeq ($(BUILD_BITS),64)
@@ -368,6 +495,7 @@ $(BUILD_DIR)/gcc-09-lto-plugin.done: | $(BUILD_DIR)/gcc-08-remove-prefix.done
 extract-all: | \
   $(SOURCE_DIR)/binutils-01-extract.done \
   $(SOURCE_DIR)/mingw-w64-01-extract.done \
+  $(SOURCE_DIR)/mcfgthread-01-extract.done \
   $(SOURCE_DIR)/gcc-01-extract-01-gcc.done \
   $(SOURCE_DIR)/gcc-01-extract-02-gmp.done \
   $(SOURCE_DIR)/gcc-01-extract-03-mpfr.done \
@@ -377,13 +505,15 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done \
-  $(SOURCE_DIR)/gcc-02-patch-20-ice-pch.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done \
+  $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done \
+  $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done \
 
 
 build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done
 build-mingw-w64-headers: | $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 build-gcc: | $(BUILD_DIR)/gcc-05-make-install-gcc.done
+build-mcfgthread: | $(BUILD_DIR)/mcfgthread-06-make-install.done
 build-mingw-w64-crt: | $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
 build-gcc-full: | $(BUILD_DIR)/gcc-09-lto-plugin.done
 

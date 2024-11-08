@@ -1,0 +1,76 @@
+From e02b266cd313d05d191d7a0f86c42d7ac00967d3 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 23 Aug 2024 22:41:16 +0200
+Subject: [PATCH 4/6] NtWaitForKeyedEvent on WinXP needs an explicit
+ keyed-event handle
+
+---
+ mcfgthread/xglobals.c | 7 +++++++
+ mcfgthread/xglobals.i | 5 +++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/mcfgthread/xglobals.c b/mcfgthread/xglobals.c
+index 1daee65..10c5354 100644
+--- a/mcfgthread/xglobals.c
++++ b/mcfgthread/xglobals.c
+@@ -162,6 +162,7 @@ do_encode_numeric_field(wchar_t* ptr, size_t width, uint64_t value, const wchar_
+ __MCF_WINAPI(HMODULE, GetModuleHandleA, const char*);
+ __MCF_WINAPI(PVOID, GetProcAddress, HMODULE, const char*);
+ __MCF_WINAPI(NTSTATUS, NtOpenDirectoryObject, PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
++__MCF_WINAPI(NTSTATUS, NtCreateKeyedEvent, PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, ULONG);
+ 
+ static NTSTATUS NTAPI BaseGetNamedObjectDirectory_replace(PHANDLE phDir)
+ {
+@@ -257,6 +258,11 @@ do_on_process_attach(void)
+       GetTickCount64_replace(); // initialize last_tick_count
+     }
+ 
++    pfreq.QuadPart = 0;
++    NTSTATUS wait_ret = NtWaitForKeyedEvent(NULL, NULL, FALSE, &pfreq);
++    if(wait_ret == STATUS_INVALID_HANDLE)
++      NtCreateKeyedEvent(&__MCF_wait_keyed_event, EVENT_ALL_ACCESS, NULL, 0);
++
+     /* Initialize dynamic global shared data.  */
+     static WCHAR gnbuffer[] = L"Local\\__MCF_crt_xglobals_*?pid???_#?cookie????????";
+     static UNICODE_STRING gname = { .Buffer = gnbuffer, .Length = sizeof(gnbuffer) - sizeof(WCHAR), .MaximumLength = sizeof(gnbuffer) };
+@@ -435,6 +441,7 @@ HANDLE __MCF_crt_heap = __MCF_BAD_PTR;
+ double __MCF_crt_pf_recip = 1;
+ SYSTEM_INFO __MCF_crt_sysinfo = { .dwPageSize = 1 };
+ ULONGLONG NTAPI (*__MCF_GetTickCount64)(void) = NULL;
++HANDLE __MCF_wait_keyed_event = NULL;
+ 
+ /* This is a pointer to global data. If this library is linked statically,
+  * all instances of this pointer in the same process should point to the
+diff --git a/mcfgthread/xglobals.i b/mcfgthread/xglobals.i
+index 30b465f..ee75cec 100644
+--- a/mcfgthread/xglobals.i
++++ b/mcfgthread/xglobals.i
+@@ -321,6 +321,7 @@ extern SYSTEM_INFO __MCF_XGLOBALS_READONLY __MCF_crt_sysinfo;
+ extern HANDLE __MCF_XGLOBALS_READONLY __MCF_crt_heap;
+ extern double __MCF_XGLOBALS_READONLY __MCF_crt_pf_recip;
+ extern ULONGLONG NTAPI (*__MCF_XGLOBALS_READONLY __MCF_GetTickCount64)(void);
++extern HANDLE __MCF_XGLOBALS_READONLY __MCF_wait_keyed_event;
+ 
+ /* This is a pointer to the process-specific data.
+  * As mcfgthread may be linked statically by user DLLs, we must ensure that, in
+@@ -347,7 +348,7 @@ __MCF_ALWAYS_INLINE
+ NTSTATUS
+ __MCF_keyed_event_wait(const void* __key, const LARGE_INTEGER* __timeout) __MCF_NOEXCEPT
+   {
+-    NTSTATUS __status = NtWaitForKeyedEvent(NULL, (PVOID) __key, 0, (LARGE_INTEGER*) __timeout);
++    NTSTATUS __status = NtWaitForKeyedEvent(__MCF_wait_keyed_event, (PVOID) __key, 0, (LARGE_INTEGER*) __timeout);
+     __MCF_ASSERT_NT(__status);
+     return __status;
+   }
+@@ -356,7 +357,7 @@ __MCF_ALWAYS_INLINE
+ NTSTATUS
+ __MCF_keyed_event_signal(const void* __key, const LARGE_INTEGER* __timeout) __MCF_NOEXCEPT
+   {
+-    NTSTATUS __status = NtReleaseKeyedEvent(NULL, (PVOID) __key, 0, (LARGE_INTEGER*) __timeout);
++    NTSTATUS __status = NtReleaseKeyedEvent(__MCF_wait_keyed_event, (PVOID) __key, 0, (LARGE_INTEGER*) __timeout);
+     __MCF_ASSERT_NT(__status);
+     return __status;
+   }
+-- 
+2.39.1.windows.1
+

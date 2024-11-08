@@ -1,0 +1,25 @@
+From d3b1bd9c25aa591560921635d61b5839cc393a89 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Tue, 22 Oct 2024 17:09:10 +0200
+Subject: [PATCH 34/36] Add -lstdc++ when linking libubsan
+
+---
+ gcc/gcc.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc/gcc.cc b/gcc/gcc.cc
+index 78505086ee3..d476f9dc99d 100644
+--- a/gcc/gcc.cc
++++ b/gcc/gcc.cc
+@@ -838,7 +838,7 @@ proper position among the other output files.  */
+   " %{static-libubsan|static:%:include(libsanitizer.spec)%(link_libubsan)}"
+ #ifdef HAVE_LD_STATIC_DYNAMIC
+ #define LIBUBSAN_SPEC "%{static-libubsan:" LD_STATIC_OPTION \
+-		     "} -lubsan %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
++		     "} -lubsan -lstdc++ %{static-libubsan:" LD_DYNAMIC_OPTION "}" \
+ 		     STATIC_LIBUBSAN_LIBS
+ #else
+ #define LIBUBSAN_SPEC "-lubsan" STATIC_LIBUBSAN_LIBS
+-- 
+2.39.1.windows.1
+

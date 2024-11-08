@@ -1,0 +1,36 @@
+From dfdc5785f4a8c01888da3f9df984ae53b5a7bd4e Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sat, 24 Aug 2024 16:48:10 +0200
+Subject: [PATCH 18/36] mcf sjlj avoid infinite recursion
+
+---
+ libgcc/unwind-sjlj.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/libgcc/unwind-sjlj.c b/libgcc/unwind-sjlj.c
+index 178f4d0af01..2c44c4c2bcf 100644
+--- a/libgcc/unwind-sjlj.c
++++ b/libgcc/unwind-sjlj.c
+@@ -111,8 +111,19 @@ static void
+ fc_key_init_once (void)
+ {
+   static __gthread_once_t once = __GTHREAD_ONCE_INIT;
++#ifdef __USING_MCFGTHREAD__
++  if (_MCF_once_wait (&once, NULL) == 1)
++    {
++      fc_key_init ();
++      _MCF_once_release (&once);
++    }
++
++  if (use_fc_key < 0)
++    use_fc_key = 0;
++#else
+   if (__gthread_once (&once, fc_key_init) != 0 || use_fc_key < 0)
+     use_fc_key = 0;
++#endif
+ }
+ #endif
+ 
+-- 
+2.39.1.windows.1
+

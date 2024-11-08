@@ -1,7 +1,7 @@
-From cfab824f86b10ec6127a04b58f2711be749c42b1 Mon Sep 17 00:00:00 2001
+From 3a71bab48f168e2d0879171578e4eb1992f2a581 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
-Subject: [PATCH 5/8] free argv[]
+Subject: [PATCH 5/9] free argv[]
 
 ---
  mingw-w64-crt/crt/crtexe.c | 10 ++++++++++

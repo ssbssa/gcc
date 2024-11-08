@@ -1,7 +1,7 @@
-From 9f24507469a87c07aba3d2165eeec0b354df7711 Mon Sep 17 00:00:00 2001
+From 3bcfef7747331a71953919a8cf7448342d089600 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:00:25 +0200
-Subject: [PATCH 01/20] Fix gengtype for windows paths
+Subject: [PATCH 01/36] Fix gengtype for windows paths
 
 ---
  gcc/gengtype.cc | 3 +++

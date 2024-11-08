@@ -1,7 +1,7 @@
-From f770cffd170c789582ffa07040ec6717d7eb07a6 Mon Sep 17 00:00:00 2001
+From bd65d0707da2cb35c37f4d9f821af19a0b6afe6f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
-Subject: [PATCH 10/20] Enable diagnostic URLs on cygwin terminal
+Subject: [PATCH 10/36] Enable diagnostic URLs on cygwin terminal
 
 ---
  gcc/diagnostic-color.cc | 4 ++--

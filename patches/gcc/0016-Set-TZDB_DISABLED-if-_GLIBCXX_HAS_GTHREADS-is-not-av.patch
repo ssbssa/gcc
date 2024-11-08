@@ -1,7 +1,7 @@
-From 601e9c458dfb8aeb3a8501d5f0e211d55b8bdb6f Mon Sep 17 00:00:00 2001
+From fc7c86c8d907979843dad6a7b705e7800c8cef21 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 20 Jul 2024 20:14:09 +0200
-Subject: [PATCH 17/20] Set TZDB_DISABLED if _GLIBCXX_HAS_GTHREADS is not
+Subject: [PATCH 16/36] Set TZDB_DISABLED if _GLIBCXX_HAS_GTHREADS is not
  available
 
 ---

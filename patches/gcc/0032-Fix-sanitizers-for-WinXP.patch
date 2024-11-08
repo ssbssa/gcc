@@ -1,0 +1,73 @@
+From 243f3e5615a6ad81d59737737f3e9c6fae38eb43 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 16 Oct 2024 17:15:17 +0200
+Subject: [PATCH 32/36] Fix sanitizers for WinXP
+
+---
+ .../sanitizer_common/sanitizer_symbolizer_win.cpp  | 14 +++++++++++---
+ libsanitizer/ubsan/ubsan_diag.cpp                  |  2 +-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
+index d42daf791a3..ddc22dfe98f 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
+@@ -72,16 +72,21 @@ void InitializeDbgHelpIfNeeded() {
+         reinterpret_cast<decltype(::name) *>(GetProcAddress(dbghelp, #name)); \
+     CHECK(name != nullptr);                                                   \
+   } while (0)
++#define DBGHELP_IMPORT_NOCHECK(name)                                          \
++  do {                                                                        \
++    name =                                                                    \
++        reinterpret_cast<decltype(::name) *>(GetProcAddress(dbghelp, #name)); \
++  } while (0)
+   DBGHELP_IMPORT(StackWalk64);
+   DBGHELP_IMPORT(SymCleanup);
+   DBGHELP_IMPORT(SymFromAddr);
+   DBGHELP_IMPORT(SymFunctionTableAccess64);
+   DBGHELP_IMPORT(SymGetLineFromAddr64);
+   DBGHELP_IMPORT(SymGetModuleBase64);
+-  DBGHELP_IMPORT(SymGetSearchPathW);
++  DBGHELP_IMPORT_NOCHECK(SymGetSearchPathW);
+   DBGHELP_IMPORT(SymInitialize);
+   DBGHELP_IMPORT(SymSetOptions);
+-  DBGHELP_IMPORT(SymSetSearchPathW);
++  DBGHELP_IMPORT_NOCHECK(SymSetSearchPathW);
+   DBGHELP_IMPORT(UnDecorateSymbolName);
+ #undef DBGHELP_IMPORT
+ 
+@@ -103,6 +108,9 @@ void InitializeDbgHelpIfNeeded() {
+   }
+   is_dbghelp_initialized = true;
+ 
++  if (SymGetSearchPathW == NULL && SymSetSearchPathW == NULL)
++    return;
++
+   // When an executable is run from a location different from the one where it
+   // was originally built, we may not see the nearby PDB files.
+   // To work around this, let's append the directory of the main module
+@@ -115,7 +123,7 @@ void InitializeDbgHelpIfNeeded() {
+   }
+   size_t sz = wcslen(path_buffer);
+   if (sz) {
+-    CHECK_EQ(0, wcscat_s(path_buffer, L";"));
++    wcscat(path_buffer, L";");
+     sz++;
+   }
+   DWORD res = GetModuleFileNameW(NULL, path_buffer + sz, MAX_PATH);
+diff --git a/libsanitizer/ubsan/ubsan_diag.cpp b/libsanitizer/ubsan/ubsan_diag.cpp
+index aac27041531..1e7087309ea 100644
+--- a/libsanitizer/ubsan/ubsan_diag.cpp
++++ b/libsanitizer/ubsan/ubsan_diag.cpp
+@@ -216,7 +216,7 @@ static void RenderText(InternalScopedString *Buffer, const char *Message,
+       // FIXME: Support floating-point formatting in sanitizer_common's
+       //        printf, and stop using snprintf here.
+       char FloatBuffer[32];
+-#if SANITIZER_WINDOWS
++#if SANITIZER_WINDOWS && !defined(__GNUC__)
+       // On MSVC platforms, long doubles are equal to regular doubles.
+       // In MinGW environments on x86, long doubles are 80 bit, but here,
+       // we're calling an MS CRT provided printf function which considers
+-- 
+2.39.1.windows.1
+

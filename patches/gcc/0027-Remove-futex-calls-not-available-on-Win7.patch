@@ -1,0 +1,89 @@
+From 421364907dae6288f067a22e7131589af34c6407 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 18:31:25 +0200
+Subject: [PATCH 27/36] Remove futex calls not available on Win7
+
+---
+ libsanitizer/configure                          |  2 +-
+ libsanitizer/configure.ac                       |  2 +-
+ libsanitizer/libsanitizer.spec.in               | 15 ++++++++++-----
+ libsanitizer/sanitizer_common/sanitizer_win.cpp |  6 +-----
+ 4 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/libsanitizer/configure b/libsanitizer/configure
+index 45f6a7e9291..7e7a2a0672a 100755
+--- a/libsanitizer/configure
++++ b/libsanitizer/configure
+@@ -16047,7 +16047,7 @@ done
+ link_sanitizer_common='-lpthread -lm'
+ 
+ case "$target" in
+-  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
++  *-*-mingw*) link_sanitizer_common='' ;;
+ esac
+ 
+ # At least for glibc, shm_open is in librt.  But don't pull that
+diff --git a/libsanitizer/configure.ac b/libsanitizer/configure.ac
+index 00e3d0a8643..ccddd9e97bf 100644
+--- a/libsanitizer/configure.ac
++++ b/libsanitizer/configure.ac
+@@ -111,7 +111,7 @@ AC_CHECK_FUNCS(clock_getres clock_gettime clock_settime lstat readlink)
+ link_sanitizer_common='-lpthread -lm'
+ 
+ case "$target" in
+-  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
++  *-*-mingw*) link_sanitizer_common='' ;;
+ esac
+ 
+ # At least for glibc, shm_open is in librt.  But don't pull that
+diff --git a/libsanitizer/libsanitizer.spec.in b/libsanitizer/libsanitizer.spec.in
+index 70a33574d7b..0b3eb0a8f2e 100644
+--- a/libsanitizer/libsanitizer.spec.in
++++ b/libsanitizer/libsanitizer.spec.in
+@@ -1,13 +1,18 @@
+ # This spec file is read by gcc when linking.  It is used to specify the
+ # standard libraries we need in order to link with various sanitizer libs.
+ 
+-*link_libasan: @link_libasan@
++*link_libasan:
++@link_libasan@
+ 
+-*link_libhwasan: @link_libhwasan@
++*link_libhwasan:
++@link_libhwasan@
+ 
+-*link_libtsan: @link_libtsan@
++*link_libtsan:
++@link_libtsan@
+ 
+-*link_libubsan: @link_libubsan@
++*link_libubsan:
++@link_libubsan@
+ 
+-*link_liblsan: @link_liblsan@
++*link_liblsan:
++@link_liblsan@
+ 
+diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+index ff7ac16c998..741d661b2ac 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+@@ -876,14 +876,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
+ void internal_join_thread(void *th) { }
+ 
+ void FutexWait(atomic_uint32_t *p, u32 cmp) {
+-  WaitOnAddress(p, &cmp, sizeof(cmp), INFINITE);
++  Sleep(0);
+ }
+ 
+ void FutexWake(atomic_uint32_t *p, u32 count) {
+-  if (count == 1)
+-    WakeByAddressSingle(p);
+-  else
+-    WakeByAddressAll(p);
+ }
+ 
+ uptr GetTlsSize() {
+-- 
+2.39.1.windows.1
+

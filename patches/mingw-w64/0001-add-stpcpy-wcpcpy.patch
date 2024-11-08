@@ -1,7 +1,7 @@
-From c7c8717e0bacc3c59de94a3d7fdffc1abea5e43b Mon Sep 17 00:00:00 2001
+From 7e2c3cbf562802187206ce2e201df93cace4feba Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:27:35 +0200
-Subject: [PATCH 1/8] add stpcpy/wcpcpy
+Subject: [PATCH 1/9] add stpcpy/wcpcpy
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +
@@ -15,7 +15,7 @@ Subject: [PATCH 1/8] add stpcpy/wcpcpy
  create mode 100644 mingw-w64-crt/misc/wcpcpy.c
 
 diff --git a/mingw-w64-crt/Makefile.am b/mingw-w64-crt/Makefile.am
-index 590733a93..e23c81c05 100644
+index 70336b6f9..85822379d 100644
 --- a/mingw-w64-crt/Makefile.am
 +++ b/mingw-w64-crt/Makefile.am
 @@ -738,6 +738,7 @@ src_libmingwex=\
@@ -27,7 +27,7 @@ index 590733a93..e23c81c05 100644
    ssp/chk_fail.c         ssp/gets_chk.c             ssp/memcpy_chk.c        ssp/memmove_chk.c \
    ssp/mempcpy_chk.c \
 diff --git a/mingw-w64-crt/Makefile.in b/mingw-w64-crt/Makefile.in
-index 3d3a8e9d2..be331c8a1 100644
+index 7512bfe42..9c14ae4c3 100644
 --- a/mingw-w64-crt/Makefile.in
 +++ b/mingw-w64-crt/Makefile.in
 @@ -796,6 +796,7 @@ lib32_libmingw32_a_OBJECTS = $(am_lib32_libmingw32_a_OBJECTS)

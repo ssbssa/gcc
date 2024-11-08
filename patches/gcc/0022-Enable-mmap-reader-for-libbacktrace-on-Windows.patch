@@ -1,0 +1,248 @@
+From 6482e5cf890596e12c2c2bab1443e70595d05f81 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 17:37:46 +0200
+Subject: [PATCH 22/36] Enable mmap reader for libbacktrace on Windows
+
+---
+ libbacktrace/mmap.c                           | 18 +++++
+ libbacktrace/mmapio.c                         | 68 +++++++++++++++++++
+ libsanitizer/configure                        |  8 +++
+ libsanitizer/configure.ac                     |  8 +++
+ .../sanitizer_symbolizer_libbacktrace.cpp     |  2 +-
+ .../sanitizer_symbolizer_win.cpp              |  8 +++
+ 6 files changed, 111 insertions(+), 1 deletion(-)
+
+diff --git a/libbacktrace/mmap.c b/libbacktrace/mmap.c
+index 322ed945669..e2c53ae1304 100644
+--- a/libbacktrace/mmap.c
++++ b/libbacktrace/mmap.c
+@@ -37,11 +37,15 @@ POSSIBILITY OF SUCH DAMAGE.  */
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <sys/types.h>
++#ifndef _WIN32
+ #include <sys/mman.h>
++#endif
+ 
+ #include "backtrace.h"
+ #include "internal.h"
+ 
++#ifndef _WIN32
++
+ #ifndef HAVE_DECL_GETPAGESIZE
+ extern int getpagesize (void);
+ #endif
+@@ -58,6 +62,20 @@ extern int getpagesize (void);
+ #define MAP_FAILED ((void *)-1)
+ #endif
+ 
++#else
++
++#define PROT_READ     1
++#define PROT_WRITE    2
++#define MAP_PRIVATE   1
++#define MAP_ANONYMOUS 2
++#define MAP_FAILED    NULL
++
++int getpagesize(void);
++void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
++int munmap(void *addr, size_t length);
++
++#endif
++
+ /* A list of free memory blocks.  */
+ 
+ struct backtrace_freelist_struct
+diff --git a/libbacktrace/mmapio.c b/libbacktrace/mmapio.c
+index b780c3d07df..b912b227b6f 100644
+--- a/libbacktrace/mmapio.c
++++ b/libbacktrace/mmapio.c
+@@ -34,12 +34,19 @@ POSSIBILITY OF SUCH DAMAGE.  */
+ 
+ #include <errno.h>
+ #include <sys/types.h>
++#ifndef _WIN32
+ #include <sys/mman.h>
++#else
++#define WIN32_LEAN_AND_MEAN
++#include <windows.h>
++#endif
+ #include <unistd.h>
+ 
+ #include "backtrace.h"
+ #include "internal.h"
+ 
++#ifndef _WIN32
++
+ #ifndef HAVE_DECL_GETPAGESIZE
+ extern int getpagesize (void);
+ #endif
+@@ -48,6 +55,67 @@ extern int getpagesize (void);
+ #define MAP_FAILED ((void *)-1)
+ #endif
+ 
++#else
++
++#define PROT_READ     1
++#define PROT_WRITE    2
++#define MAP_PRIVATE   1
++#define MAP_ANONYMOUS 2
++#define MAP_FAILED    NULL
++
++int getpagesize(void);
++void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
++int munmap(void *addr, size_t length);
++
++int getpagesize(void)
++{
++  SYSTEM_INFO si;
++  GetSystemInfo(&si);
++  return si.dwAllocationGranularity;
++}
++
++void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
++{
++  HANDLE fh = fd < 0 ? INVALID_HANDLE_VALUE : (HANDLE) _get_osfhandle(fd);
++  size_t mapping_size = fd < 0 ? length : 0;
++  HANDLE mapping = CreateFileMapping(fh, NULL,
++				     (prot & PROT_WRITE) ? PAGE_READWRITE : PAGE_READONLY,
++				     mapping_size >> 32, mapping_size & 0xffffffff, NULL);
++  if (mapping == NULL)
++    {
++      errno = ENOMEM;
++      return MAP_FAILED;
++    }
++
++  if (fh != INVALID_HANDLE_VALUE)
++    {
++      BY_HANDLE_FILE_INFORMATION bhfi;
++      GetFileInformationByHandle(fh, &bhfi);
++      uint64_t file_size = bhfi.nFileSizeLow | ((uint64_t) bhfi.nFileSizeHigh << 32);
++      if (offset + length > file_size)
++	length = file_size - offset;
++    }
++
++  void *view = MapViewOfFile(mapping,
++			     ((prot & PROT_WRITE) ? FILE_MAP_WRITE : 0) | FILE_MAP_READ,
++			     0, offset, length);
++  CloseHandle(mapping);
++  if (view == NULL)
++    {
++      errno = ENOMEM;
++      return MAP_FAILED;
++    }
++
++  return view;
++}
++
++int munmap(void *addr, size_t length)
++{
++  return UnmapViewOfFile(addr) ? 0 : -1;
++}
++
++#endif
++
+ /* This file implements file views and memory allocation when mmap is
+    available.  */
+ 
+diff --git a/libsanitizer/configure b/libsanitizer/configure
+index 8a8c9a460a4..45f6a7e9291 100755
+--- a/libsanitizer/configure
++++ b/libsanitizer/configure
+@@ -16837,6 +16837,12 @@ ac_config_commands="$ac_config_commands gstdint.h"
+ 
+ 
+ 
++case "$target" in
++  *-*-mingw*)
++    VIEW_FILE=mmapio.lo
++    ALLOC_FILE=mmap.lo
++    ;;
++  *)
+ for ac_header in sys/mman.h alloca.h
+ do :
+   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+@@ -16888,6 +16894,8 @@ else
+ fi
+ rm -f conftest.err conftest.i conftest.$ac_ext
+ fi
++;;
++esac
+ 
+ 
+ 
+diff --git a/libsanitizer/configure.ac b/libsanitizer/configure.ac
+index 20d5ea10f3c..00e3d0a8643 100644
+--- a/libsanitizer/configure.ac
++++ b/libsanitizer/configure.ac
+@@ -271,6 +271,12 @@ AC_SUBST(BACKTRACE_SUPPORTED)
+ 
+ GCC_HEADER_STDINT(gstdint.h)
+ 
++case "$target" in
++  *-*-mingw*)
++    VIEW_FILE=mmapio.lo
++    ALLOC_FILE=mmap.lo
++    ;;
++  *)
+ AC_CHECK_HEADERS(sys/mman.h alloca.h)
+ if test "$ac_cv_header_sys_mman_h" = "no"; then
+   have_mmap=no
+@@ -295,6 +301,8 @@ else
+ #endif
+ ])], [ALLOC_FILE=mmap.lo], [ALLOC_FILE=alloc.lo])
+ fi
++;;
++esac
+ AC_SUBST(VIEW_FILE)
+ AC_SUBST(ALLOC_FILE)
+ 
+diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_libbacktrace.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_libbacktrace.cpp
+index d78dab93487..3aeabbc6f3f 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_libbacktrace.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_libbacktrace.cpp
+@@ -19,7 +19,7 @@
+ 
+ #if SANITIZER_LIBBACKTRACE
+ # include "backtrace-supported.h"
+-# if SANITIZER_POSIX && BACKTRACE_SUPPORTED && !BACKTRACE_USES_MALLOC
++# if BACKTRACE_SUPPORTED && !BACKTRACE_USES_MALLOC
+ #  include "backtrace.h"
+ #  if SANITIZER_CP_DEMANGLE
+ #   undef ARRAY_SIZE
+diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
+index aae3e76ea22..d42daf791a3 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
+@@ -16,6 +16,7 @@
+ 
+ #  include "sanitizer_dbghelp.h"
+ #  include "sanitizer_symbolizer_internal.h"
++#  include "sanitizer_symbolizer_libbacktrace.h"
+ 
+ namespace __sanitizer {
+ 
+@@ -278,6 +279,12 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
+     return;
+   }
+ 
++#ifdef __GNUC__
++  if (SymbolizerTool *tool = LibbacktraceSymbolizer::get(allocator)) {
++    VReport(2, "Using libbacktrace symbolizer.\n");
++    list->push_back(tool);
++  }
++#else
+   // Add llvm-symbolizer.
+   const char *user_path = common_flags()->external_symbolizer_path;
+ 
+@@ -300,6 +307,7 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
+   } else {
+     VReport(2, "External symbolizer is not present.\n");
+   }
++#endif
+ 
+   // Add the dbghelp based symbolizer.
+   list->push_back(new(*allocator) WinSymbolizerTool());
+-- 
+2.39.1.windows.1
+

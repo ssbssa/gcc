@@ -1,0 +1,24 @@
+From 02963c9249f865a7145f1e9d6772614ea589cded Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 25 Aug 2024 15:35:56 +0200
+Subject: [PATCH 5/6] Disable test if executable creation works in configure
+
+---
+ configure.ac | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configure.ac b/configure.ac
+index ba341d5..8e8da7c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -19,6 +19,7 @@ AC_CONFIG_SRCDIR([mcfgthread/gthr.c])
+ AC_CONFIG_HEADERS([config.h])
+ AC_CONFIG_AUX_DIR([build-aux])
+ AC_CONFIG_MACRO_DIR([m4])
++AC_NO_EXECUTABLES
+ AC_PROG_CC
+ 
+ LT_INIT([win32-dll])
+-- 
+2.39.1.windows.1
+

@@ -1,7 +1,7 @@
-From ca9904fe6f42e03514dd06c185770375f8f9c949 Mon Sep 17 00:00:00 2001
+From 83020b256e7ba73ea5400f4cb49287a120f2f890 Mon Sep 17 00:00:00 2001
 From: Ed Catmur <ed@catmur.uk>
 Date: Sun, 6 Mar 2022 17:04:24 +0100
-Subject: [PATCH 15/20] Add name of parameter pack
+Subject: [PATCH 15/36] Add name of parameter pack
 
 ---
  gcc/dwarf2out.cc | 2 +-

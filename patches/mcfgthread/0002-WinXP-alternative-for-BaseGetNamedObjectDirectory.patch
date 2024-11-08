@@ -1,0 +1,99 @@
+From a256988cf601643867b1f16ee10194fac1017dfb Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 23 Aug 2024 17:22:01 +0200
+Subject: [PATCH 2/6] WinXP alternative for BaseGetNamedObjectDirectory
+
+---
+ mcfgthread/xglobals.c | 55 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 54 insertions(+), 1 deletion(-)
+
+diff --git a/mcfgthread/xglobals.c b/mcfgthread/xglobals.c
+index cf26994..4d4af1d 100644
+--- a/mcfgthread/xglobals.c
++++ b/mcfgthread/xglobals.c
+@@ -7,6 +7,7 @@
+ #define __MCF_XGLOBALS_INLINE  __MCF_DLLEXPORT
+ #define __MCF_XGLOBALS_READONLY
+ #include "xglobals.i"
++#include <winternl.h>
+ 
+ __MCF_DLLEXPORT
+ EXCEPTION_DISPOSITION
+@@ -158,6 +159,51 @@ do_encode_numeric_field(wchar_t* ptr, size_t width, uint64_t value, const wchar_
+       *--eptr = digits[0];
+   }
+ 
++__MCF_WINAPI(HMODULE, GetModuleHandleA, const char*);
++__MCF_WINAPI(PVOID, GetProcAddress, HMODULE, const char*);
++__MCF_WINAPI(NTSTATUS, NtOpenDirectoryObject, PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
++
++static NTSTATUS NTAPI BaseGetNamedObjectDirectory_replace(PHANDLE phDir)
++{
++  ULONG SessionId = NtCurrentTeb()->ProcessEnvironmentBlock->SessionId;
++
++  WCHAR BnoBuffer[100] = L"\\BaseNamedObjects";
++  if (SessionId != 0)
++  {
++    WCHAR NumBuf[20];
++    WCHAR *be = NumBuf + 20;
++    WCHAR *b = be;
++    if (SessionId == 0)
++      *--b = '0';
++    while (SessionId > 0)
++    {
++      *--b = (WCHAR) ('0' + (SessionId % 10));
++      SessionId /= 10;
++    }
++    WCHAR *concat = BnoBuffer;
++    __builtin_memcpy(concat, L"\\Sessions\\", 10 * 2);
++    concat += 10;
++    __builtin_memcpy(concat, b, (unsigned) (be - b) * 2);
++    concat += be - b;
++    __builtin_memcpy(concat, L"\\BaseNamedObjects", 17 * 2);
++    concat += 17;
++    *concat = 0;
++  }
++
++  UNICODE_STRING BnoString;
++  RtlInitUnicodeString(&BnoString, BnoBuffer);
++
++  OBJECT_ATTRIBUTES ObjectAttributes;
++  InitializeObjectAttributes(&ObjectAttributes,
++      &BnoString,
++      OBJ_CASE_INSENSITIVE,
++      NULL,
++      NULL);
++
++  NTSTATUS Status = NtOpenDirectoryObject(phDir, 0xf, &ObjectAttributes);
++  return Status;
++}
++
+ static
+ void
+ do_on_process_attach(void)
+@@ -172,6 +218,13 @@ do_on_process_attach(void)
+     __MCF_CHECK(QueryPerformanceFrequency(&pfreq));
+     __MCF_crt_pf_recip = 1000 / (double) pfreq.QuadPart;
+ 
++    NTSTATUS NTAPI (*BaseGetNamedObjectDirectory_ptr)(PHANDLE) = NULL;
++    HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
++    if(kernel32)
++      BaseGetNamedObjectDirectory_ptr = GetProcAddress(kernel32, "BaseGetNamedObjectDirectory");
++    if(!BaseGetNamedObjectDirectory_ptr)
++      BaseGetNamedObjectDirectory_ptr = &BaseGetNamedObjectDirectory_replace;
++
+     /* Initialize dynamic global shared data.  */
+     static WCHAR gnbuffer[] = L"Local\\__MCF_crt_xglobals_*?pid???_#?cookie????????";
+     static UNICODE_STRING gname = { .Buffer = gnbuffer, .Length = sizeof(gnbuffer) - sizeof(WCHAR), .MaximumLength = sizeof(gnbuffer) };
+@@ -188,7 +241,7 @@ do_on_process_attach(void)
+     do_encode_numeric_field(gnbuffer + 34, 16, cookie, L"GHJKLMNPQRSTUWXY");
+     __MCF_ASSERT(gnbuffer[50] == 0);
+ 
+-    __MCF_CHECK_NT(BaseGetNamedObjectDirectory(&(gattrs.RootDirectory)));
++    __MCF_CHECK_NT(BaseGetNamedObjectDirectory_ptr(&(gattrs.RootDirectory)));
+     __MCF_ASSERT(gattrs.RootDirectory);
+ 
+     /* Allocate or open storage for global data.
+-- 
+2.39.1.windows.1
+

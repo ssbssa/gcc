@@ -1,0 +1,82 @@
+From dd93fc106825b13dd3f58457db4d7a3f1fa013ae Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 8 Nov 2024 16:30:44 +0100
+Subject: [PATCH 6/6] Save and restore last-error-code for TLS calls
+
+---
+ mcfgthread/thread.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/mcfgthread/thread.c b/mcfgthread/thread.c
+index d6a905c..ede9cd5 100644
+--- a/mcfgthread/thread.c
++++ b/mcfgthread/thread.c
+@@ -8,6 +8,31 @@
+ #include "thread.h"
+ #include "xglobals.i"
+ 
++#if defined(__amd64__)
++
++#  define __MCF_TEB_LOAD_32_IMMEDIATE(out, base)  \
++    __asm__ volatile ("{ mov %%gs:%c1, %k0 | mov %k0, gs:[%1] }" : "=r"(*(out)) : "i"(base))
++
++#  define __MCF_TEB_STORE_32_IMMEDIATE(base, in)  \
++    __asm__ volatile ("{ mov %k1, %%gs:%c0 | mov gs:[%0], %k1 }" : : "i"(base), "r"(in))
++
++#  define __MCF_64_32(x, y)  x
++
++#elif defined(__i386__)
++
++#  define __MCF_TEB_LOAD_32_IMMEDIATE(out, base)  \
++    __asm__ volatile ("{ mov %%fs:%c1, %k0 | mov %k0, fs:[%1] }" : "=r"(*(out)) : "i"(base))
++
++#  define __MCF_TEB_STORE_32_IMMEDIATE(base, in)  \
++    __asm__ volatile ("{ mov %k1, %%fs:%c0 | mov fs:[%0], %k1 }" : : "i"(base), "r"(in))
++
++#  define __MCF_64_32(x, y)  y
++
++#endif
++
++#define GET_LAST_ERROR(e) __MCF_TEB_LOAD_32_IMMEDIATE(&e, __MCF_64_32(104, 52))
++#define SET_LAST_ERROR(e) __MCF_TEB_STORE_32_IMMEDIATE(__MCF_64_32(104, 52), e)
++
+ static __attribute__((__force_align_arg_pointer__))
+ DWORD
+ __stdcall
+@@ -98,6 +123,9 @@ __MCF_DLLEXPORT
+ _MCF_thread*
+ __MCF_thread_attach_foreign(_MCF_thread* thrd)
+   {
++    DWORD last_error;
++    GET_LAST_ERROR(last_error);
++
+     __MCF_ASSERT(thrd->__nref[0] == 0);
+     __MCF_ASSERT(thrd->__tid == 0);
+     __MCF_ASSERT(thrd->__handle == NULL);
+@@ -113,6 +141,9 @@ __MCF_thread_attach_foreign(_MCF_thread* thrd)
+ 
+     /* Attach the thread now.  */
+     __MCF_CHECK(TlsSetValue(__MCF_g->__tls_index, thrd));
++
++    SET_LAST_ERROR(last_error);
++
+     return thrd;
+   }
+ 
+@@ -178,7 +209,13 @@ __MCF_DLLEXPORT
+ _MCF_thread*
+ _MCF_thread_self(void)
+   {
++    DWORD last_error;
++    GET_LAST_ERROR(last_error);
++
+     _MCF_thread* self = TlsGetValue(__MCF_g->__tls_index);
++
++    SET_LAST_ERROR(last_error);
++
+     if(__builtin_expect(self != NULL, 1))
+       return self;
+ 
+-- 
+2.39.1.windows.1
+

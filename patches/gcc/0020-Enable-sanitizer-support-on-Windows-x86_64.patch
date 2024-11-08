@@ -1,0 +1,434 @@
+From bd4742a1053aff38ed2d2c1fa5d4c0a13240ea7d Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 17:03:05 +0200
+Subject: [PATCH 20/36] Enable sanitizer support on Windows x86_64
+
+---
+ gcc/config/i386/cygming.h                     |  4 ++
+ libsanitizer/asan/Makefile.am                 |  1 +
+ libsanitizer/asan/Makefile.in                 | 13 +++---
+ libsanitizer/asan/asan_globals_win.cpp        | 10 +++--
+ libsanitizer/asan/asan_malloc_win.cpp         |  8 ++++
+ libsanitizer/asan/asan_mapping.h              |  6 ++-
+ libsanitizer/asan/asan_win.cpp                | 42 ++++++++++++++++---
+ libsanitizer/configure                        |  4 ++
+ libsanitizer/configure.ac                     |  4 ++
+ libsanitizer/configure.tgt                    |  2 +
+ .../interception/interception_win.cpp         | 26 ++++++++++++
+ .../sanitizer_internal_defs.h                 | 12 +++---
+ .../sanitizer_common/sanitizer_win.cpp        |  2 +-
+ .../sanitizer_common/sanitizer_win_defs.h     | 18 +++++++-
+ libsanitizer/ubsan/ubsan_handlers.cpp         |  2 +-
+ 15 files changed, 129 insertions(+), 25 deletions(-)
+
+diff --git a/gcc/config/i386/cygming.h b/gcc/config/i386/cygming.h
+index 1af5bc380a5..e261e4df290 100644
+--- a/gcc/config/i386/cygming.h
++++ b/gcc/config/i386/cygming.h
+@@ -467,3 +467,7 @@ do {						\
+ #ifndef HAVE_GAS_ALIGNED_COMM
+ # define HAVE_GAS_ALIGNED_COMM 0
+ #endif
++
++#undef SUBTARGET_SHADOW_OFFSET
++#define SUBTARGET_SHADOW_OFFSET	    \
++  (TARGET_64BIT ? HOST_WIDE_INT_1 << 45 : 0)
+diff --git a/libsanitizer/asan/Makefile.am b/libsanitizer/asan/Makefile.am
+index 6af250e99d9..1a3cb3f5759 100644
+--- a/libsanitizer/asan/Makefile.am
++++ b/libsanitizer/asan/Makefile.am
+@@ -26,6 +26,7 @@ asan_files = \
+ 	asan_fake_stack.cpp \
+ 	asan_flags.cpp \
+ 	asan_globals.cpp \
++	asan_globals_win.cpp \
+ 	asan_interceptors.cpp \
+ 	asan_interceptors_memintrinsics.cpp \
+ 	asan_linux.cpp \
+diff --git a/libsanitizer/asan/Makefile.in b/libsanitizer/asan/Makefile.in
+index ac72e13830f..64cab6ca3eb 100644
+--- a/libsanitizer/asan/Makefile.in
++++ b/libsanitizer/asan/Makefile.in
+@@ -153,11 +153,12 @@ libasan_la_DEPENDENCIES =  \
+ 	$(am__append_3) $(am__DEPENDENCIES_1)
+ am__objects_1 = asan_activation.lo asan_allocator.lo asan_debugging.lo \
+ 	asan_descriptions.lo asan_errors.lo asan_fake_stack.lo \
+-	asan_flags.lo asan_globals.lo asan_interceptors.lo \
+-	asan_interceptors_memintrinsics.lo asan_linux.lo asan_mac.lo \
+-	asan_malloc_linux.lo asan_malloc_mac.lo asan_malloc_win.lo \
+-	asan_memory_profile.lo asan_new_delete.lo asan_poisoning.lo \
+-	asan_posix.lo asan_premap_shadow.lo asan_report.lo asan_rtl.lo \
++	asan_flags.lo asan_globals.lo asan_globals_win.lo \
++	asan_interceptors.lo asan_interceptors_memintrinsics.lo \
++	asan_linux.lo asan_mac.lo asan_malloc_linux.lo \
++	asan_malloc_mac.lo asan_malloc_win.lo asan_memory_profile.lo \
++	asan_new_delete.lo asan_poisoning.lo asan_posix.lo \
++	asan_premap_shadow.lo asan_report.lo asan_rtl.lo \
+ 	asan_shadow_setup.lo asan_stack.lo asan_stats.lo \
+ 	asan_suppressions.lo asan_thread.lo asan_win.lo \
+ 	asan_win_dll_thunk.lo asan_win_dynamic_runtime_thunk.lo \
+@@ -437,6 +438,7 @@ asan_files = \
+ 	asan_fake_stack.cpp \
+ 	asan_flags.cpp \
+ 	asan_globals.cpp \
++	asan_globals_win.cpp \
+ 	asan_interceptors.cpp \
+ 	asan_interceptors_memintrinsics.cpp \
+ 	asan_linux.cpp \
+@@ -598,6 +600,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_fake_stack.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_flags.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_globals.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_globals_win.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors_memintrinsics.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_interceptors_vfork.Plo@am__quote@
+diff --git a/libsanitizer/asan/asan_globals_win.cpp b/libsanitizer/asan/asan_globals_win.cpp
+index 19af88ab12b..bca2d69f6f0 100644
+--- a/libsanitizer/asan/asan_globals_win.cpp
++++ b/libsanitizer/asan/asan_globals_win.cpp
+@@ -12,14 +12,16 @@
+ 
+ #include "asan_interface_internal.h"
+ #if SANITIZER_WINDOWS
++#include <_mingw.h>
++#include "sanitizer_common/sanitizer_win_defs.h"
+ 
+ namespace __asan {
+ 
+ #pragma section(".ASAN$GA", read, write)
+ #pragma section(".ASAN$GZ", read, write)
+-extern "C" __declspec(allocate(".ASAN$GA"))
++extern "C" IN_SECTION(".ASAN$GA")
+     ALIGNED(sizeof(__asan_global)) __asan_global __asan_globals_start = {};
+-extern "C" __declspec(allocate(".ASAN$GZ"))
++extern "C" IN_SECTION(".ASAN$GZ")
+     ALIGNED(sizeof(__asan_global)) __asan_global __asan_globals_end = {};
+ #pragma comment(linker, "/merge:.ASAN=.data")
+ 
+@@ -51,9 +53,9 @@ static void unregister_dso_globals() {
+ // Register globals
+ #pragma section(".CRT$XCU", long, read)
+ #pragma section(".CRT$XTX", long, read)
+-extern "C" __declspec(allocate(".CRT$XCU"))
++extern "C" IN_SECTION(".CRT$XCU")
+ void (*const __asan_dso_reg_hook)() = &register_dso_globals;
+-extern "C" __declspec(allocate(".CRT$XTX"))
++extern "C" IN_SECTION(".CRT$XTX")
+ void (*const __asan_dso_unreg_hook)() = &unregister_dso_globals;
+ 
+ } // namespace __asan
+diff --git a/libsanitizer/asan/asan_malloc_win.cpp b/libsanitizer/asan/asan_malloc_win.cpp
+index 7e1d04c36dd..fc797e44480 100644
+--- a/libsanitizer/asan/asan_malloc_win.cpp
++++ b/libsanitizer/asan/asan_malloc_win.cpp
+@@ -40,6 +40,14 @@ constexpr unsigned long HEAP_FREE_UNSUPPORTED_FLAGS =
+ constexpr unsigned long HEAP_REALLOC_UNSUPPORTED_FLAGS =
+     (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
+ 
++#ifndef WINAPI
++#if defined(_M_IX86) || defined(__i386__)
++#define WINAPI __stdcall
++#else
++#define WINAPI
++#endif
++#endif
++
+ 
+ extern "C" {
+ LPVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, size_t dwBytes);
+diff --git a/libsanitizer/asan/asan_mapping.h b/libsanitizer/asan/asan_mapping.h
+index 47ccf8444d3..8b384b08b64 100644
+--- a/libsanitizer/asan/asan_mapping.h
++++ b/libsanitizer/asan/asan_mapping.h
+@@ -206,7 +206,11 @@
+ #  elif SANITIZER_LOONGARCH64
+ #    define ASAN_SHADOW_OFFSET_CONST 0x0000400000000000
+ #  elif SANITIZER_WINDOWS64
+-#    define ASAN_SHADOW_OFFSET_DYNAMIC
++#    ifdef __GNUC__
++#      define ASAN_SHADOW_OFFSET_CONST 0x0000200000000000
++#    else
++#      define ASAN_SHADOW_OFFSET_DYNAMIC
++#    endif
+ #  else
+ #    if ASAN_SHADOW_SCALE != 3
+ #      error "Value below is based on shadow scale = 3."
+diff --git a/libsanitizer/asan/asan_win.cpp b/libsanitizer/asan/asan_win.cpp
+index d5a30f471e2..c60b7e7f2d7 100644
+--- a/libsanitizer/asan/asan_win.cpp
++++ b/libsanitizer/asan/asan_win.cpp
+@@ -219,7 +219,24 @@ void FlushUnneededASanShadowMemory(uptr p, uptr size) {
+ // ---------------------- TSD ---------------- {{{
+ static bool tsd_key_inited = false;
+ 
++#ifndef __GNUC__
+ static __declspec(thread) void *fake_tsd = 0;
++#else
++struct TlsVoidPtr
++{
++  operator void *()
++  {
++    return TlsGetValue(tls_index);
++  }
++  void operator=(void *v)
++  {
++    TlsSetValue(tls_index, v);
++  }
++
++  DWORD tls_index;
++};
++static TlsVoidPtr fake_tsd;
++#endif
+ 
+ // https://docs.microsoft.com/en-us/windows/desktop/api/winternl/ns-winternl-_teb
+ // "[This structure may be altered in future versions of Windows. Applications
+@@ -252,7 +269,7 @@ void AsanTSDInit(void (*destructor)(void *tsd)) {
+ 
+ void *AsanTSDGet() {
+   CHECK(tsd_key_inited);
+-  return IsTlsInitialized() ? fake_tsd : nullptr;
++  return IsTlsInitialized() ? (void *) fake_tsd : nullptr;
+ }
+ 
+ void AsanTSDSet(void *tsd) {
+@@ -265,7 +282,7 @@ void PlatformTSDDtor(void *tsd) { AsanThread::TSDDtor(tsd); }
+ 
+ // ---------------------- Various stuff ---------------- {{{
+ void *AsanDoesNotSupportStaticLinkage() {
+-#if defined(_DEBUG)
++#if defined(_DEBUG) && !defined(__GNUC__)
+ #error Please build the runtime with a non-debug CRT: /MD or /MT
+ #endif
+   return 0;
+@@ -326,6 +343,11 @@ ShadowExceptionHandler(PEXCEPTION_POINTERS exception_pointers) {
+ #endif
+ 
+ void InitializePlatformExceptionHandlers() {
++#ifdef __GNUC__
++  fake_tsd.tls_index = TlsAlloc();
++  CHECK(fake_tsd.tls_index != TLS_OUT_OF_INDEXES);
++#endif
++
+ #if SANITIZER_WINDOWS64
+   // On Win64, we map memory on demand with access violation handler.
+   // Install our exception handler.
+@@ -334,7 +356,15 @@ void InitializePlatformExceptionHandlers() {
+ }
+ 
+ bool IsSystemHeapAddress(uptr addr) {
+-  return ::HeapValidate(GetProcessHeap(), 0, (void *)addr) != FALSE;
++  HANDLE process_heap = GetProcessHeap();
++  if (::HeapValidate(process_heap, 0, (void *)addr))
++    return true;
++
++  HANDLE crt_heap = (HANDLE) _get_heap_handle();
++  if (crt_heap == process_heap)
++    return false;
++
++  return ::HeapValidate(crt_heap, 0, (void *)addr) != FALSE;
+ }
+ 
+ // We want to install our own exception handler (EH) to print helpful reports
+@@ -379,7 +409,7 @@ bool HandleDlopenInit() {
+ // immediately after the CRT runs. This way, our exception filter is called
+ // first and we can delegate to their filter if appropriate.
+ #pragma section(".CRT$XCAB", long, read)
+-__declspec(allocate(".CRT$XCAB")) int (*__intercept_seh)() =
++IN_SECTION(".CRT$XCAB") int (*__intercept_seh)() =
+     __asan_set_seh_filter;
+ 
+ // Piggyback on the TLS initialization callback directory to initialize asan as
+@@ -392,7 +422,7 @@ static void NTAPI asan_thread_init(void *module, DWORD reason, void *reserved) {
+ }
+ 
+ #pragma section(".CRT$XLAB", long, read)
+-__declspec(allocate(".CRT$XLAB")) void(NTAPI *__asan_tls_init)(
++IN_SECTION(".CRT$XLAB") void(NTAPI *__asan_tls_init)(
+     void *, unsigned long, void *) = asan_thread_init;
+ #endif
+ 
+@@ -406,7 +436,7 @@ static void NTAPI asan_thread_exit(void *module, DWORD reason, void *reserved) {
+ }
+ 
+ #pragma section(".CRT$XLY", long, read)
+-__declspec(allocate(".CRT$XLY")) void(NTAPI *__asan_tls_exit)(
++IN_SECTION(".CRT$XLY") void(NTAPI *__asan_tls_exit)(
+     void *, unsigned long, void *) = asan_thread_exit;
+ 
+ WIN_FORCE_LINK(__asan_dso_reg_hook)
+diff --git a/libsanitizer/configure b/libsanitizer/configure
+index 6bfd28916d2..a2103e5a16e 100755
+--- a/libsanitizer/configure
++++ b/libsanitizer/configure
+@@ -16046,6 +16046,10 @@ done
+ # Common libraries that we need to link against for all sanitizer libs.
+ link_sanitizer_common='-lpthread -lm'
+ 
++case "$target" in
++  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
++esac
++
+ # At least for glibc, shm_open is in librt.  But don't pull that
+ # in if it still doesn't give us the function we want.  This
+ # test is copied from libgomp.
+diff --git a/libsanitizer/configure.ac b/libsanitizer/configure.ac
+index 8037c941774..8161a892137 100644
+--- a/libsanitizer/configure.ac
++++ b/libsanitizer/configure.ac
+@@ -110,6 +110,10 @@ AC_CHECK_FUNCS(clock_getres clock_gettime clock_settime lstat readlink)
+ # Common libraries that we need to link against for all sanitizer libs.
+ link_sanitizer_common='-lpthread -lm'
+ 
++case "$target" in
++  *-*-mingw*) link_sanitizer_common='-lsynchronization' ;;
++esac
++
+ # At least for glibc, shm_open is in librt.  But don't pull that
+ # in if it still doesn't give us the function we want.  This
+ # test is copied from libgomp.
+diff --git a/libsanitizer/configure.tgt b/libsanitizer/configure.tgt
+index 77a0e68222b..83c548be2f3 100644
+--- a/libsanitizer/configure.tgt
++++ b/libsanitizer/configure.tgt
+@@ -85,6 +85,8 @@ case "${target}" in
+ 		TSAN_TARGET_DEPENDENT_OBJECTS=tsan_rtl_loongarch64.lo
+ 	fi
+ 	;;
++  x86_64-*-mingw*)
++	;;
+   *)
+ 	UNSUPPORTED=1
+ 	;;
+diff --git a/libsanitizer/interception/interception_win.cpp b/libsanitizer/interception/interception_win.cpp
+index 1b681ada37b..85925d66607 100644
+--- a/libsanitizer/interception/interception_win.cpp
++++ b/libsanitizer/interception/interception_win.cpp
+@@ -787,6 +787,32 @@ bool OverrideFunctionWithDetour(
+ 
+ bool OverrideFunctionWithRedirectJump(
+     uptr old_func, uptr new_func, uptr *orig_old_func) {
++  u8 *old_u8 = (u8 *)old_func;
++
++  // relative indirect jump
++  if (old_u8[0] == 0xff && old_u8[1] == 0x25)
++  {
++    sptr relative_offset = *(s32 *)(old_func + 2);
++    uptr *absolute_target_ptr = (uptr *)(old_func + 6 + relative_offset);
++    if (orig_old_func)
++      *orig_old_func = *absolute_target_ptr;
++
++    // Change memory protection to writable.
++    DWORD protection = 0;
++    if (!ChangeMemoryProtection((uptr)absolute_target_ptr,
++				sizeof(uptr), &protection))
++      return false;
++
++    *absolute_target_ptr = new_func;
++
++    // Restore previous memory protection.
++    if (!RestoreMemoryProtection((uptr)absolute_target_ptr,
++				 sizeof(uptr), protection))
++      return false;
++
++    return true;
++  }
++
+   // Check whether the first instruction is a relative jump.
+   if (*(u8*)old_func != 0xE9)
+     return false;
+diff --git a/libsanitizer/sanitizer_common/sanitizer_internal_defs.h b/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
+index 3809669dd48..ba1f2680b94 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
++++ b/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
+@@ -29,11 +29,11 @@
+ 
+ // Only use SANITIZER_*ATTRIBUTE* before the function return type!
+ #if SANITIZER_WINDOWS
+-#if SANITIZER_IMPORT_INTERFACE
+-# define SANITIZER_INTERFACE_ATTRIBUTE __declspec(dllimport)
+-#else
+-# define SANITIZER_INTERFACE_ATTRIBUTE __declspec(dllexport)
+-#endif
++# if SANITIZER_IMPORT_INTERFACE
++#  define SANITIZER_INTERFACE_ATTRIBUTE __declspec(dllimport)
++# else
++#  define SANITIZER_INTERFACE_ATTRIBUTE __declspec(dllexport)
++# endif
+ # define SANITIZER_WEAK_ATTRIBUTE
+ #elif SANITIZER_GO
+ # define SANITIZER_INTERFACE_ATTRIBUTE
+@@ -52,7 +52,7 @@
+ // For example:
+ //   SANITIZER_INTERFACE_WEAK_DEF(bool, compare, int a, int b) { return a > b; }
+ //
+-#if SANITIZER_WINDOWS
++#if SANITIZER_WINDOWS && !defined(__GNUC__)
+ #include "sanitizer_win_defs.h"
+ # define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)                   \
+   WIN_WEAK_EXPORT_DEF(ReturnType, Name, __VA_ARGS__)
+diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+index 06e496523ee..a628df58752 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
+@@ -749,7 +749,7 @@ static int RunAtexit() {
+ }
+ 
+ #pragma section(".CRT$XID", long, read)
+-__declspec(allocate(".CRT$XID")) int (*__run_atexit)() = RunAtexit;
++IN_SECTION(".CRT$XID") int (*__run_atexit)() = RunAtexit;
+ #endif
+ 
+ // ------------------ sanitizer_libc.h
+diff --git a/libsanitizer/sanitizer_common/sanitizer_win_defs.h b/libsanitizer/sanitizer_common/sanitizer_win_defs.h
+index bfe38a33236..6d08c83735f 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_win_defs.h
++++ b/libsanitizer/sanitizer_common/sanitizer_win_defs.h
+@@ -43,7 +43,13 @@
+ #define STRINGIFY_(A) #A
+ #define STRINGIFY(A) STRINGIFY_(A)
+ 
+-#if !SANITIZER_GO
++#ifndef __GNUC__
++#define IN_SECTION(n) __declspec(allocate(n))
++#else
++#define IN_SECTION(n) __attribute__((section(n)))
++#endif
++
++#if !SANITIZER_GO && !defined(__GNUC__)
+ 
+ // ----------------- A workaround for the absence of weak symbols --------------
+ // We don't have a direct equivalent of weak symbols when using MSVC, but we can
+@@ -161,6 +167,16 @@
+ //   }
+ //
+ 
++#elif !SANITIZER_GO
++
++#define WIN_FORCE_LINK(Name)						\
++  extern "C" void Name(void);						\
++  void (*__force_link_##Name)(void) = &Name;
++
++# define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...)			\
++  extern "C" __attribute__((dllexport))					\
++  ReturnType Name(__VA_ARGS__)
++
+ #else // SANITIZER_GO
+ 
+ // Go neither needs nor wants weak references.
+diff --git a/libsanitizer/ubsan/ubsan_handlers.cpp b/libsanitizer/ubsan/ubsan_handlers.cpp
+index 85ec961841f..97a66642dbf 100644
+--- a/libsanitizer/ubsan/ubsan_handlers.cpp
++++ b/libsanitizer/ubsan/ubsan_handlers.cpp
+@@ -869,7 +869,7 @@ namespace __ubsan {
+ 
+ #ifdef UBSAN_CAN_USE_CXXABI
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(__GNUC__)
+ 
+ extern "C" void __ubsan_handle_cfi_bad_type_default(CFICheckFailData *Data,
+                                                     ValueHandle Vtable,
+-- 
+2.39.1.windows.1
+

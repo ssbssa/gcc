@@ -1,0 +1,39 @@
+From bff290b3b3693357901c2bfb4af423b0df6fba5f Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 23 Aug 2024 13:40:10 +0200
+Subject: [PATCH 1/6] Remove error if compiling below Win7
+
+---
+ Makefile.am           | 2 +-
+ mcfgthread/xglobals.i | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index d0253c6..7d50ae4 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -17,7 +17,7 @@ END =
+ 
+ ## Compiler options
+ AM_CPPFLAGS = -pipe -Wall -Wextra @host_asm_opt@ -Imcfgthread  \
+-  -U_FORTIFY_SOURCE -D_WIN32_WINNT=0x0601 -D_POSIX_C_SOURCE=200809  \
++  -U_FORTIFY_SOURCE -D_POSIX_C_SOURCE=200809  \
+   -f{strict-{aliasing,overflow},merge-all-constants,fast-math}  \
+   -fno-{stack-protector,align-{functions,jumps,loops},ident}  \
+   -Werror={conversion,sign-{compare,conversion},write-strings}  \
+diff --git a/mcfgthread/xglobals.i b/mcfgthread/xglobals.i
+index 59a2f04..02e1fad 100644
+--- a/mcfgthread/xglobals.i
++++ b/mcfgthread/xglobals.i
+@@ -27,7 +27,7 @@ __MCF_C_DECLARATIONS_BEGIN
+ #  error Only Windows platforms are supported.
+ #endif
+ 
+-#if _WIN32_WINNT < 0x0601
++#if 0 // _WIN32_WINNT < 0x0601
+ #  error Please define `_WIN32_WINNT` to at least Windows 7.
+ #endif
+ 
+-- 
+2.39.1.windows.1
+

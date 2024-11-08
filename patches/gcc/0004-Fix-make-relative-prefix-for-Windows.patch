@@ -1,7 +1,7 @@
-From a67c28c9b17a38c56516e06ec6c1e31ef5a90d82 Mon Sep 17 00:00:00 2001
+From f05b3abb9bee669d0ab257da89d8d5f2ae5f0d57 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:22:37 +0200
-Subject: [PATCH 04/20] Fix make-relative-prefix for Windows
+Subject: [PATCH 04/36] Fix make-relative-prefix for Windows
 
 ---
  libiberty/make-relative-prefix.c | 31 +++++++++++++++++++++++++++++++

@@ -1,0 +1,243 @@
+From 161ea1fa56521f55a88590f5b229ed354dcc292d Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Sun, 13 Oct 2024 17:31:12 +0200
+Subject: [PATCH 21/36] Use pecoff format on Windows
+
+---
+ libbacktrace/pecoff.c                 | 67 +++++++++++++++++++++++----
+ libsanitizer/config.h.in              |  3 ++
+ libsanitizer/configure                | 14 ++++++
+ libsanitizer/configure.ac             |  3 ++
+ libsanitizer/libbacktrace/Makefile.am |  1 +
+ libsanitizer/libbacktrace/Makefile.in |  9 ++++
+ 6 files changed, 87 insertions(+), 10 deletions(-)
+
+diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
+index 9e437d810c7..0ef81e39db3 100644
+--- a/libbacktrace/pecoff.c
++++ b/libbacktrace/pecoff.c
+@@ -48,7 +48,9 @@ POSSIBILITY OF SUCH DAMAGE.  */
+ #define NOMINMAX
+ #endif
+ 
++#define PSAPI_VERSION 2
+ #include <windows.h>
++#include <psapi.h>
+ #endif
+ 
+ /* Coff file header.  */
+@@ -461,7 +463,9 @@ coff_initialize_syminfo (struct backtrace_state *state,
+ 
+   /* End of symbols marker.  */
+   coff_sym->name = NULL;
+-  coff_sym->address = -1;
++  coff_sym->address = sects_num > 0
++    ? base_address + sects[sects_num - 1].virtual_address + sects[sects_num - 1].size_of_raw_data
++    : (uintptr_t) -1;
+ 
+   backtrace_qsort (coff_symbols, coff_symbol_count,
+ 		   sizeof (struct coff_symbol), coff_symbol_compare);
+@@ -592,7 +596,8 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
+ static int
+ coff_add (struct backtrace_state *state, int descriptor,
+ 	  backtrace_error_callback error_callback, void *data,
+-	  fileline *fileline_fn, int *found_sym, int *found_dwarf)
++	  fileline *fileline_fn, int *found_sym, int *found_dwarf,
++	  uintptr_t module_handle)
+ {
+   struct backtrace_view fhdr_view;
+   off_t fhdr_off;
+@@ -869,14 +874,8 @@ coff_add (struct backtrace_state *state, int descriptor,
+ 				  + (sections[i].offset - min_offset));
+     }
+ 
+-#ifdef HAVE_WINDOWS_H
+-  {
+-    uintptr_t module_handle;
+-
+-    module_handle = (uintptr_t) GetModuleHandle (NULL);
++  if (module_handle)
+     base_address = module_handle - image_base;
+-  }
+-#endif
+ 
+   if (!backtrace_dwarf_add (state, base_address, &dwarf_sections,
+ 			    0, /* FIXME: is_bigendian */
+@@ -917,12 +916,60 @@ backtrace_initialize (struct backtrace_state *state,
+   int found_sym;
+   int found_dwarf;
+   fileline coff_fileline_fn;
++  uintptr_t module_handle = 0;
++
++#ifdef HAVE_WINDOWS_H
++  module_handle = (uintptr_t) GetModuleHandle (NULL);
++#endif
+ 
+   ret = coff_add (state, descriptor, error_callback, data,
+-		  &coff_fileline_fn, &found_sym, &found_dwarf);
++		  &coff_fileline_fn, &found_sym, &found_dwarf,
++		  module_handle);
+   if (!ret)
+     return 0;
+ 
++#ifdef HAVE_WINDOWS_H
++  HMODULE modarr[1000];
++  DWORD modcnt = 0;
++  if (EnumProcessModules (GetCurrentProcess (),
++			  modarr, sizeof (modarr), &modcnt))
++    {
++      DWORD i;
++      char modname[MAX_PATH];
++
++      modcnt /= sizeof (HMODULE);
++      if (modcnt > 1000)
++	modcnt = 1000;
++
++      for (i = 1; i < modcnt; i++)
++	{
++	  if (GetModuleFileName (modarr[i], modname, MAX_PATH))
++	    {
++	      int descriptor;
++	      int does_not_exist;
++	      fileline mod_fileline_fn;
++	      int mod_found_dwarf;
++
++	      descriptor = backtrace_open (modname, error_callback,
++					   data, &does_not_exist);
++	      if (descriptor < 0)
++		continue;
++
++	      if (coff_add (state, descriptor, error_callback, data,
++			    &mod_fileline_fn, &found_sym, &mod_found_dwarf,
++			    (uintptr_t) modarr[i]))
++		{
++		  if (mod_found_dwarf)
++		    {
++		      found_dwarf = 1;
++		      coff_fileline_fn = mod_fileline_fn;
++		    }
++		}
++	    }
++	}
++    }
++#endif
++
+   if (!state->threaded)
+     {
+       if (found_sym)
+diff --git a/libsanitizer/config.h.in b/libsanitizer/config.h.in
+index a64b6a16a17..96dd8f990cf 100644
+--- a/libsanitizer/config.h.in
++++ b/libsanitizer/config.h.in
+@@ -82,6 +82,9 @@
+ /* Define to 1 if you have the <unistd.h> header file. */
+ #undef HAVE_UNISTD_H
+ 
++/* Define to 1 if you have the <windows.h> header file. */
++#undef HAVE_WINDOWS_H
++
+ /* Define to the sub-directory in which libtool stores uninstalled libraries.
+    */
+ #undef LT_OBJDIR
+diff --git a/libsanitizer/configure b/libsanitizer/configure
+index a2103e5a16e..8a8c9a460a4 100755
+--- a/libsanitizer/configure
++++ b/libsanitizer/configure
+@@ -16408,6 +16408,7 @@ $as_echo "$libsanitizer_cv_sys_filetype" >&6; }
+ FORMAT_FILE=
+ case "$libsanitizer_cv_sys_filetype" in
+ elf*) FORMAT_FILE="elf.lo" ;;
++pecoff) FORMAT_FILE="pecoff.lo" ;;
+ *) { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: could not determine output file type" >&5
+ $as_echo "$as_me: WARNING: could not determine output file type" >&2;}
+    FORMAT_FILE="unknown.lo"
+@@ -16937,6 +16938,19 @@ $as_echo "#define HAVE_DL_ITERATE_PHDR 1" >>confdefs.h
+ 
+ fi
+ 
++for ac_header in windows.h
++do :
++  ac_fn_c_check_header_mongrel "$LINENO" "windows.h" "ac_cv_header_windows_h" "$ac_includes_default"
++if test "x$ac_cv_header_windows_h" = xyes; then :
++  cat >>confdefs.h <<_ACEOF
++#define HAVE_WINDOWS_H 1
++_ACEOF
++
++fi
++
++done
++
++
+ # Check for the fcntl function.
+ if test -n "${with_target_subdir}"; then
+    case "${host}" in
+diff --git a/libsanitizer/configure.ac b/libsanitizer/configure.ac
+index 8161a892137..20d5ea10f3c 100644
+--- a/libsanitizer/configure.ac
++++ b/libsanitizer/configure.ac
+@@ -247,6 +247,7 @@ libsanitizer_cv_sys_filetype=$filetype])
+ FORMAT_FILE=
+ case "$libsanitizer_cv_sys_filetype" in
+ elf*) FORMAT_FILE="elf.lo" ;;
++pecoff) FORMAT_FILE="pecoff.lo" ;;
+ *) AC_MSG_WARN([could not determine output file type])
+    FORMAT_FILE="unknown.lo"
+    backtrace_supported=no
+@@ -320,6 +321,8 @@ if test "$have_dl_iterate_phdr" = "yes"; then
+   AC_DEFINE(HAVE_DL_ITERATE_PHDR, 1, [Define if dl_iterate_phdr is available.])
+ fi
+ 
++AC_CHECK_HEADERS(windows.h)
++
+ # Check for the fcntl function.
+ if test -n "${with_target_subdir}"; then
+    case "${host}" in
+diff --git a/libsanitizer/libbacktrace/Makefile.am b/libsanitizer/libbacktrace/Makefile.am
+index 0cf8d2104c0..cff3243388c 100644
+--- a/libsanitizer/libbacktrace/Makefile.am
++++ b/libsanitizer/libbacktrace/Makefile.am
+@@ -58,6 +58,7 @@ libsanitizer_libbacktrace_la_SOURCES = \
+ 
+ FORMAT_FILES = \
+ 	../../libbacktrace/elf.c \
++	../../libbacktrace/pecoff.c \
+ 	../../libbacktrace/unknown.c
+ 
+ VIEW_FILES = \
+diff --git a/libsanitizer/libbacktrace/Makefile.in b/libsanitizer/libbacktrace/Makefile.in
+index 33faa78bb43..d6a5813631a 100644
+--- a/libsanitizer/libbacktrace/Makefile.in
++++ b/libsanitizer/libbacktrace/Makefile.in
+@@ -407,6 +407,7 @@ libsanitizer_libbacktrace_la_SOURCES = \
+ 
+ FORMAT_FILES = \
+ 	../../libbacktrace/elf.c \
++	../../libbacktrace/pecoff.c \
+ 	../../libbacktrace/unknown.c
+ 
+ VIEW_FILES = \
+@@ -493,6 +494,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fileline.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmap.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmapio.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pecoff.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/posix.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/read.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sort.Plo@am__quote@
+@@ -576,6 +578,13 @@ elf.lo: ../../libbacktrace/elf.c
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o elf.lo `test -f '../../libbacktrace/elf.c' || echo '$(srcdir)/'`../../libbacktrace/elf.c
+ 
++pecoff.lo: ../../libbacktrace/pecoff.c
++@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pecoff.lo -MD -MP -MF $(DEPDIR)/pecoff.Tpo -c -o pecoff.lo `test -f '../../libbacktrace/pecoff.c' || echo '$(srcdir)/'`../../libbacktrace/pecoff.c
++@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pecoff.Tpo $(DEPDIR)/pecoff.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='../../libbacktrace/pecoff.c' object='pecoff.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pecoff.lo `test -f '../../libbacktrace/pecoff.c' || echo '$(srcdir)/'`../../libbacktrace/pecoff.c
++
+ unknown.lo: ../../libbacktrace/unknown.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT unknown.lo -MD -MP -MF $(DEPDIR)/unknown.Tpo -c -o unknown.lo `test -f '../../libbacktrace/unknown.c' || echo '$(srcdir)/'`../../libbacktrace/unknown.c
+ @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/unknown.Tpo $(DEPDIR)/unknown.Plo
+-- 
+2.39.1.windows.1
+

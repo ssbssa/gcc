@@ -1,0 +1,45 @@
+From cde6138cab1abf8d4b659c8f9af3e82dcb376585 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 6 Sep 2024 17:38:44 +0200
+Subject: [PATCH 19/36] Fix -freport-bug for Windows
+
+---
+ gcc/gcc.cc            | 4 ++--
+ libiberty/pex-win32.c | 5 ++---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/gcc/gcc.cc b/gcc/gcc.cc
+index 728332b8153..78505086ee3 100644
+--- a/gcc/gcc.cc
++++ b/gcc/gcc.cc
+@@ -7720,8 +7720,8 @@ files_equal_p (char *file1, char *file2)
+   const int bufsize = 8192;
+   char *buf = XNEWVEC (char, bufsize);
+ 
+-  fd1 = open (file1, O_RDONLY);
+-  fd2 = open (file2, O_RDONLY);
++  fd1 = open (file1, O_RDONLY | O_BINARY);
++  fd2 = open (file2, O_RDONLY | O_BINARY);
+ 
+   if (fd1 < 0 || fd2 < 0)
+     goto error;
+diff --git a/libiberty/pex-win32.c b/libiberty/pex-win32.c
+index 3780f1de02d..56478df47e3 100644
+--- a/libiberty/pex-win32.c
++++ b/libiberty/pex-win32.c
+@@ -130,10 +130,9 @@ pex_win32_open_write (struct pex_obj *obj ATTRIBUTE_UNUSED, const char *name,
+ {
+   /* Note that we can't use O_EXCL here because gcc may have already
+      created the temporary file via make_temp_file.  */
+-  if (append)
+-    return -1;
+   return _open (name,
+-		(_O_WRONLY | _O_CREAT | _O_TRUNC
++		(_O_WRONLY | _O_CREAT
++		 | (append ? _O_APPEND : _O_TRUNC)
+ 		 | (binary ? _O_BINARY : _O_TEXT)),
+ 		_S_IREAD | _S_IWRITE);
+ }
+-- 
+2.39.1.windows.1
+

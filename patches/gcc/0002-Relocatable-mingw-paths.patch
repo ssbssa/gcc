@@ -1,7 +1,7 @@
-From 357b3d1a9999dd0fbf466abe16cff0f8ff46509e Mon Sep 17 00:00:00 2001
+From a77325201199bb0f1b8805fb19f93f9a5e61a87f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/20] Relocatable mingw paths
+Subject: [PATCH 02/36] Relocatable mingw paths
 
 ---
  gcc/config/i386/mingw32.h | 9 ++-------
@@ -9,7 +9,7 @@ Subject: [PATCH 02/20] Relocatable mingw paths
  2 files changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/gcc/config/i386/mingw32.h b/gcc/config/i386/mingw32.h
-index 58304fc55f6..35b53e84b70 100644
+index 7753affd36d..7f4706a1c86 100644
 --- a/gcc/config/i386/mingw32.h
 +++ b/gcc/config/i386/mingw32.h
 @@ -84,7 +84,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -21,7 +21,7 @@ index 58304fc55f6..35b53e84b70 100644
  
  #undef CPP_SPEC
  #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
-@@ -225,17 +225,12 @@ along with GCC; see the file COPYING3.  If not see
+@@ -227,17 +227,12 @@ along with GCC; see the file COPYING3.  If not see
  
  /* Override startfile prefix defaults.  */
  #ifndef STANDARD_STARTFILE_PREFIX_1

@@ -1,0 +1,126 @@
+From 0dd77b084ca9b6d55ffdcf44ef2331c57a0af29f Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 23 Aug 2024 17:40:49 +0200
+Subject: [PATCH 3/6] WinXP alternative for GetTickCount64
+
+---
+ mcfgthread/clock.c    |  2 +-
+ mcfgthread/xglobals.c | 37 +++++++++++++++++++++++++++++++++++--
+ mcfgthread/xglobals.i |  2 +-
+ 3 files changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/mcfgthread/clock.c b/mcfgthread/clock.c
+index dc9abf0..78b36af 100644
+--- a/mcfgthread/clock.c
++++ b/mcfgthread/clock.c
+@@ -56,7 +56,7 @@ __MCF_DLLEXPORT
+ int64_t
+ _MCF_tick_count(void)
+   {
+-    return (int64_t) GetTickCount64();
++    return (int64_t) __MCF_GetTickCount64();
+   }
+ 
+ __MCF_DLLEXPORT
+diff --git a/mcfgthread/xglobals.c b/mcfgthread/xglobals.c
+index 4d4af1d..1daee65 100644
+--- a/mcfgthread/xglobals.c
++++ b/mcfgthread/xglobals.c
+@@ -51,7 +51,7 @@ __MCF_initialize_winnt_timeout_v2(__MCF_winnt_timeout* to, const int64_t* ms_opt
+       if(*ms_opt < -922337203685477)
+         return;
+ 
+-      to->__since = GetTickCount64();
++      to->__since = __MCF_GetTickCount64();
+       to->__li->QuadPart = *ms_opt * 10000;
+     }
+     else
+@@ -69,7 +69,7 @@ __MCF_adjust_winnt_timeout_v2(__MCF_winnt_timeout* to)
+     /* Add the number of 100 nanoseconds that have elapsed so far, to the
+      * timeout which is negative, using saturation arithmetic.  */
+     uint64_t last_since = to->__since;
+-    to->__since = GetTickCount64();
++    to->__since = __MCF_GetTickCount64();
+     to->__li->QuadPart += (int64_t) (to->__since - last_since) * 10000;
+     to->__li->QuadPart &= to->__li->QuadPart >> 63;
+   }
+@@ -204,6 +204,30 @@ static NTSTATUS NTAPI BaseGetNamedObjectDirectory_replace(PHANDLE phDir)
+   return Status;
+ }
+ 
++static ULONGLONG NTAPI GetTickCount64_replace(void)
++{
++  static ULONGLONG last_tick_count = 0;
++  ULARGE_INTEGER old_ticks;
++  old_ticks.QuadPart = __atomic_load_n(&last_tick_count, __ATOMIC_SEQ_CST);
++  while (1)
++  {
++    DWORD new_ticks = GetTickCount();
++    if (new_ticks == old_ticks.LowPart)
++      return old_ticks.QuadPart;
++
++    ULARGE_INTEGER combined = {{new_ticks, old_ticks.HighPart}};
++    if (new_ticks < old_ticks.LowPart)
++      combined.HighPart++;
++
++    if (__atomic_compare_exchange_n(&last_tick_count, &old_ticks.QuadPart,
++          combined.QuadPart, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))
++      return combined.QuadPart;
++
++    if (old_ticks.QuadPart >= combined.QuadPart)
++      return old_ticks.QuadPart;
++  }
++}
++
+ static
+ void
+ do_on_process_attach(void)
+@@ -221,9 +245,17 @@ do_on_process_attach(void)
+     NTSTATUS NTAPI (*BaseGetNamedObjectDirectory_ptr)(PHANDLE) = NULL;
+     HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
+     if(kernel32)
++    {
+       BaseGetNamedObjectDirectory_ptr = GetProcAddress(kernel32, "BaseGetNamedObjectDirectory");
++      __MCF_GetTickCount64 = GetProcAddress(kernel32, "GetTickCount64");
++    }
+     if(!BaseGetNamedObjectDirectory_ptr)
+       BaseGetNamedObjectDirectory_ptr = &BaseGetNamedObjectDirectory_replace;
++    if(!__MCF_GetTickCount64)
++    {
++      __MCF_GetTickCount64 = &GetTickCount64_replace;
++      GetTickCount64_replace(); // initialize last_tick_count
++    }
+ 
+     /* Initialize dynamic global shared data.  */
+     static WCHAR gnbuffer[] = L"Local\\__MCF_crt_xglobals_*?pid???_#?cookie????????";
+@@ -402,6 +434,7 @@ const PIMAGE_TLS_CALLBACK __MCF_xl_b __attribute__((__section__(".CRT$XLB"), __u
+ HANDLE __MCF_crt_heap = __MCF_BAD_PTR;
+ double __MCF_crt_pf_recip = 1;
+ SYSTEM_INFO __MCF_crt_sysinfo = { .dwPageSize = 1 };
++ULONGLONG NTAPI (*__MCF_GetTickCount64)(void) = NULL;
+ 
+ /* This is a pointer to global data. If this library is linked statically,
+  * all instances of this pointer in the same process should point to the
+diff --git a/mcfgthread/xglobals.i b/mcfgthread/xglobals.i
+index 02e1fad..30b465f 100644
+--- a/mcfgthread/xglobals.i
++++ b/mcfgthread/xglobals.i
+@@ -87,7 +87,6 @@ __MCF_WINAPI(void, GetSystemTimeAsFileTime, FILETIME*);
+ #if _WIN32_WINNT >= 0x0602
+ __MCF_WINAPI(void, GetSystemTimePreciseAsFileTime, FILETIME*);
+ #endif
+-__MCF_WINAPI(ULONGLONG, GetTickCount64, void);
+ __MCF_WINAPI(BOOL, QueryPerformanceFrequency, LARGE_INTEGER*);
+ __MCF_WINAPI(BOOL, QueryPerformanceCounter, LARGE_INTEGER*);
+ 
+@@ -321,6 +320,7 @@ struct __MCF_crt_xglobals
+ extern SYSTEM_INFO __MCF_XGLOBALS_READONLY __MCF_crt_sysinfo;
+ extern HANDLE __MCF_XGLOBALS_READONLY __MCF_crt_heap;
+ extern double __MCF_XGLOBALS_READONLY __MCF_crt_pf_recip;
++extern ULONGLONG NTAPI (*__MCF_XGLOBALS_READONLY __MCF_GetTickCount64)(void);
+ 
+ /* This is a pointer to the process-specific data.
+  * As mcfgthread may be linked statically by user DLLs, we must ensure that, in
+-- 
+2.39.1.windows.1
+

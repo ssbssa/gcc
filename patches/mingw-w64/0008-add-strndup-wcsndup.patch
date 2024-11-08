@@ -1,7 +1,7 @@
-From 97b0a52cfb2ccd5631a6d11560acd64b48137461 Mon Sep 17 00:00:00 2001
+From a7a69b4745cca0ee29c92c6aebd2ec038b031153 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 7 May 2017 15:09:46 +0200
-Subject: [PATCH 8/8] add strndup/wcsndup
+Subject: [PATCH 8/9] add strndup/wcsndup
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +
@@ -15,7 +15,7 @@ Subject: [PATCH 8/8] add strndup/wcsndup
  create mode 100644 mingw-w64-crt/misc/wcsndup.c
 
 diff --git a/mingw-w64-crt/Makefile.am b/mingw-w64-crt/Makefile.am
-index e23c81c05..ce2e1bf1b 100644
+index 85822379d..708bdeb47 100644
 --- a/mingw-w64-crt/Makefile.am
 +++ b/mingw-w64-crt/Makefile.am
 @@ -739,6 +739,7 @@ src_libmingwex=\
@@ -27,7 +27,7 @@ index e23c81c05..ce2e1bf1b 100644
    ssp/chk_fail.c         ssp/gets_chk.c             ssp/memcpy_chk.c        ssp/memmove_chk.c \
    ssp/mempcpy_chk.c \
 diff --git a/mingw-w64-crt/Makefile.in b/mingw-w64-crt/Makefile.in
-index be331c8a1..f976e0afe 100644
+index 9c14ae4c3..2d411917c 100644
 --- a/mingw-w64-crt/Makefile.in
 +++ b/mingw-w64-crt/Makefile.in
 @@ -797,6 +797,7 @@ lib32_libmingwex_a_AR = $(AR) $(ARFLAGS)

@@ -1,7 +1,7 @@
-From 46200164910858c1e93a3b80de488aaa0031e02e Mon Sep 17 00:00:00 2001
+From 562ccd758e2d9e508ecf23ef6dce60c69eab06a7 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 3/8] fix binmode
+Subject: [PATCH 3/9] fix binmode
 
 ---
  mingw-w64-crt/crt/binmode.c |  7 ++++---
