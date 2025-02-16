@@ -95,11 +95,11 @@ ISL_FILE=$(ISL_SRC_DIR).tar.xz
 
 
 all:
-all: $(BUILD_DIR)/binutils-06-prefix.done
+all: $(BUILD_DIR)/binutils-07-licenses.done
 all: $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 all: $(BUILD_DIR)/gcc-05-make-install-gcc.done
 all: $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
-all: $(BUILD_DIR)/gcc-09-lto-plugin.done
+all: $(BUILD_DIR)/gcc-10-licenses.done
 
 
 $(SOURCE_DIR):
@@ -158,6 +158,11 @@ $(BUILD_DIR)/binutils-06-prefix.done: | $(BUILD_DIR)/binutils-05-make-install.do
 
 endif
 
+$(BUILD_DIR)/binutils-07-licenses.done: | $(BUILD_DIR)/binutils-06-prefix.done
+	@mkdir -p $(BINUTILS_DIR)/share/licenses/binutils
+	cp -p $(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/COPYING3 $(BINUTILS_DIR)/share/licenses/binutils/
+	@touch $@
+
 
 # mingw-w64 headers
 
@@ -201,7 +206,7 @@ $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done: | $(SOURCE_DIR)/mingw-w
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-crt-Preprocess-all-.def.in-files-with-DDEF_-ARCH.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -385,7 +390,7 @@ $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0036-Link-lubsan_dll_thunk-instead-of-lubsan-into-shared-.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -401,7 +406,7 @@ $(BUILD_DIR)/gcc-05-make-install-gcc.done: | $(BUILD_DIR)/gcc-04-make-gcc.done
 
 # mingw-w64 crt
 
-$(BUILD_DIR)/mingw-w64-06-crt-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
+$(BUILD_DIR)/mingw-w64-06-crt-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-crt
 	$(GCC_PATH) cd $(BUILD_DIR)/mingw-w64-crt && $(MINGW_W64_CRT_CONF)
 	@touch $@
@@ -449,7 +454,7 @@ $(SOURCE_DIR)/mcfgthread-03-autoreconf.done: | $(SOURCE_DIR)/mcfgthread-02-patch
 	cd $(SOURCE_DIR)/$(MCFGTHREAD_SRC_DIR); autoreconf -i
 	@touch $@
 
-$(BUILD_DIR)/mcfgthread-04-configure.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(SOURCE_DIR)/mcfgthread-03-autoreconf.done
+$(BUILD_DIR)/mcfgthread-04-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(SOURCE_DIR)/mcfgthread-03-autoreconf.done
 	@mkdir -p $(BUILD_DIR)/mcfgthread
 	$(GCC_PATH) cd $(BUILD_DIR)/mcfgthread && $(MCFGTHREAD_CONF)
 	@touch $@
@@ -465,7 +470,7 @@ $(BUILD_DIR)/mcfgthread-06-make-install.done: | $(BUILD_DIR)/mcfgthread-05-make.
 
 # gcc
 
-$(BUILD_DIR)/gcc-06-make.done: | $(BUILD_DIR)/binutils-06-prefix.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mcfgthread-06-make-install.done
+$(BUILD_DIR)/gcc-06-make.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(BUILD_DIR)/mingw-w64-08-crt-make-install.done $(BUILD_DIR)/gcc-05-make-install-gcc.done $(BUILD_DIR)/mcfgthread-06-make-install.done
 	$(BINUTILS_PATH) $(MAKE) -C $(BUILD_DIR)/gcc
 	@touch $@
 
@@ -491,6 +496,25 @@ $(BUILD_DIR)/gcc-09-lto-plugin.done: | $(BUILD_DIR)/gcc-08-remove-prefix.done
 	cp -f $(GCC_DIR)/mingw/libexec/gcc/$(MYTARGET)/$(GCC_VER)/liblto_plugin.dll $(GCC_DIR)/mingw/lib/bfd-plugins/
 	@touch $@
 
+$(BUILD_DIR)/gcc-10-licenses.done: | $(BUILD_DIR)/gcc-09-lto-plugin.done
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/mingw-w64
+	cp -p $(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/COPYING.MinGW-w64/COPYING.MinGW-w64.txt $(GCC_DIR)/mingw/share/licenses/mingw-w64/
+	cp -p $(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt $(GCC_DIR)/mingw/share/licenses/mingw-w64/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/mcfgthread
+	cp -p $(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/LICENSE.TXT $(GCC_DIR)/mingw/share/licenses/mcfgthread/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/gcc
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/COPYING3 $(GCC_DIR)/mingw/share/licenses/gcc/
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/COPYING.RUNTIME $(GCC_DIR)/mingw/share/licenses/gcc/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/gmp
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/gmp/COPYINGv3 $(GCC_DIR)/mingw/share/licenses/gmp/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/mpfr
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/mpfr/COPYING.LESSER $(GCC_DIR)/mingw/share/licenses/mpfr/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/mpc
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/mpc/COPYING.LESSER $(GCC_DIR)/mingw/share/licenses/mpc/
+	@mkdir -p $(GCC_DIR)/mingw/share/licenses/isl
+	cp -p $(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/isl/LICENSE $(GCC_DIR)/mingw/share/licenses/isl/
+	@touch $@
+
 
 extract-all: | \
   $(SOURCE_DIR)/binutils-01-extract.done \
@@ -510,12 +534,12 @@ patch-all: | \
   $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done \
 
 
-build-binutils: | $(BUILD_DIR)/binutils-06-prefix.done
+build-binutils: | $(BUILD_DIR)/binutils-07-licenses.done
 build-mingw-w64-headers: | $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 build-gcc: | $(BUILD_DIR)/gcc-05-make-install-gcc.done
 build-mcfgthread: | $(BUILD_DIR)/mcfgthread-06-make-install.done
 build-mingw-w64-crt: | $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
-build-gcc-full: | $(BUILD_DIR)/gcc-09-lto-plugin.done
+build-gcc-full: | $(BUILD_DIR)/gcc-10-licenses.done
 
 
 binutils$(BUILD_BITS).7z: | build-binutils
