@@ -11,11 +11,13 @@ BINUTILS_DIR=$(abspath binutils$(BUILD_BITS))
 GCC_DIR=$(abspath gcc$(BUILD_BITS))
 
 ifeq ($(BUILD_BITS),32)
+  BUILD_ARCH=i686
   MYBUILD=i686-w64-mingw32
   MYTARGET=i686-w64-mingw32
   DISABLE_LIB=--disable-lib64
   WINDRES_OVERRIDE=
 else ifeq ($(BUILD_BITS),64)
+  BUILD_ARCH=x86_64
   MYBUILD=i686-w64-mingw32
   MYTARGET=x86_64-w64-mingw32
   DISABLE_LIB=--disable-lib32
@@ -550,12 +552,19 @@ gcc$(BUILD_BITS).7z: | build-gcc-full
 	@rm -f $@
 	cd $(GCC_DIR)/mingw && 7z a -mx=9 ../../$@ *
 
+gcc-$(GCC_VER)-$(MYPKG)-$(BUILD_ARCH).7z: | build-gcc-full
+	@rm -f $@
+	cd $(BINUTILS_DIR) && 7z a -mx=9 ../$@ *
+	cd $(GCC_DIR)/mingw && 7z a -mx=9 ../../$@ *
+
 
 package-binutils: binutils$(BUILD_BITS).7z
 package-gcc: gcc$(BUILD_BITS).7z
+package-all: gcc-$(GCC_VER)-$(MYPKG)-$(BUILD_ARCH).7z
 
 packages: package-binutils
 packages: package-gcc
+packages: package-all
 
 
 info:
