@@ -63,7 +63,7 @@ MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 
-GCC_VER=14.2.0
+GCC_VER=14.3.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -553,7 +553,7 @@ gcc$(BUILD_BITS).7z: | build-gcc-full
 	cd $(GCC_DIR)/mingw && 7z a -mx=9 ../../$@ *
 
 gcc-$(GCC_VER)-$(MYPKG)-$(BUILD_ARCH).7z: | build-gcc-full
-	@rm -f $@
+	@rm -rf $@
 	cd $(BINUTILS_DIR) && 7z a -mx=9 ../$@ *
 	cd $(GCC_DIR)/mingw && 7z a -mx=9 ../../$@ *
 
