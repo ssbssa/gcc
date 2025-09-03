@@ -149,6 +149,13 @@ class AsanThread {
     GetStartData(&data, sizeof(data));
   }
 
+  void SetChainedStackAddr(uptr addr) {
+    chained_stack_addr_ = addr;
+  }
+  uptr GetChainedStackAddr() const {
+    return chained_stack_addr_;
+  }
+
  private:
   // NOTE: There is no AsanThread constructor. It is allocated
   // via mmap() and *must* be valid in zero-initialized state.
@@ -178,6 +185,8 @@ class AsanThread {
   uptr next_stack_bottom_;
   // true if switching is in progress
   atomic_uint8_t stack_switching_;
+
+  uptr chained_stack_addr_;
 
   uptr tls_begin_;
   uptr tls_end_;

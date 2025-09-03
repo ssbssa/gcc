@@ -333,6 +333,11 @@ void SANITIZER_CDECL __asan_handle_no_return(void);
 /// trace. Returns 1 if successful, 0 if not.
 int SANITIZER_CDECL __asan_update_allocation_context(void *addr);
 
+/// Set the allocation address whose allocation stack trace will be chained
+/// to all allocations on the current thread from this point on.
+/// Returns the previous address.
+void *SANITIZER_CDECL __asan_set_stack_chain(void *addr);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
