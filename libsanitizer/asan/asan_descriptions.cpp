@@ -166,9 +166,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
   CHECK_NE(chunk.AllocTid(), kInvalidTid);
   descr->alloc_tid = chunk.AllocTid();
   descr->alloc_stack_id = chunk.GetAllocStackId();
+  descr->alloc_chained_stack_addr = chunk.GetAllocChainedStackAddr();
   descr->free_tid = chunk.FreeTid();
-  if (descr->free_tid != kInvalidTid)
+  if (descr->free_tid != kInvalidTid) {
     descr->free_stack_id = chunk.GetFreeStackId();
+    descr->free_chained_stack_addr = chunk.GetFreeChainedStackAddr();
+  }
   return true;
 }
 
@@ -177,6 +180,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
   StackTrace res = StackDepotGet(id);
   CHECK(res.trace);
   return res;
+}
+
+void DescribeChain(uptr addr) {
+  if (!addr)
+    return;
+  AsanChunkView chunk = FindHeapChunkByAddress(addr);
+  if (!chunk.IsValid())
+    return;
+
+  AsanThreadContext *chain_thread = GetThreadContextByTidLocked(chunk.AllocTid());
+
+  Decorator d;
+  Printf("%schained by thread %s here:%s\n", d.Chain(),
+         AsanThreadIdAndName(chain_thread).c_str(), d.Default());
+  StackTrace alloc_stack = GetStackTraceFromId(chunk.GetAllocStackId());
+  alloc_stack.Print();
+
+  uptr chained_stack_ptr = chunk.GetAllocChainedStackAddr();
+  if (chained_stack_ptr)
+    DescribeChain(chained_stack_ptr);
 }
 
 bool DescribeAddressIfHeap(uptr addr, uptr access_size) {
@@ -426,6 +449,7 @@ void HeapAddressDescription::Print() const {
            AsanThreadIdAndName(free_thread).c_str(), d.Default());
     StackTrace free_stack = GetStackTraceFromId(free_stack_id);
     free_stack.Print();
+    DescribeChain(free_chained_stack_addr);
     Printf("%spreviously allocated by thread %s here:%s\n", d.Allocation(),
            AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
   } else {
@@ -433,6 +457,7 @@ void HeapAddressDescription::Print() const {
            AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
   }
   alloc_stack.Print();
+  DescribeChain(alloc_chained_stack_addr);
   DescribeThread(GetCurrentThread());
   if (free_thread) DescribeThread(free_thread);
   DescribeThread(alloc_thread);
