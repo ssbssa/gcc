@@ -616,6 +616,8 @@ void ErrorGeneric::Print() {
   GET_STACK_TRACE_FATAL(pc, bp);
   stack.Print();
 
+  DescribeChain(GetCurrentThread());
+
   // Pass bug_descr because we have a special case for
   // initialization-order-fiasco
   addr_description.Print(bug_descr);
