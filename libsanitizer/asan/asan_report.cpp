@@ -172,6 +172,8 @@ class ScopedInErrorReport {
     if (current_error_.IsValid()) current_error_.Print();
 
     // Make sure the current thread is announced.
+    if (current_error_.kind != kErrorKindGeneric)
+      DescribeChain(GetCurrentThread());
     DescribeThread(GetCurrentThread());
     // We may want to grab this lock again when printing stats.
     asanThreadRegistry().Unlock();

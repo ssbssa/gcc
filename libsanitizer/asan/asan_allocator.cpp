@@ -102,6 +102,7 @@ class ChunkHeader {
   u16 user_requested_size_hi;
   u32 user_requested_size_lo;
   atomic_uint64_t alloc_context_id;
+  uptr alloc_chained_stack_addr;
 
  public:
   uptr UsedSize() const {
@@ -126,10 +127,18 @@ class ChunkHeader {
   void GetAllocContext(u32 &tid, u32 &stack) const {
     AtomicContextLoad(&alloc_context_id, tid, stack);
   }
+
+  void SetAllocChainedStackAddr(uptr addr) {
+    alloc_chained_stack_addr = addr;
+  }
+  uptr GetAllocChainedStackAddr() const {
+    return alloc_chained_stack_addr;
+  }
 };
 
 class ChunkBase : public ChunkHeader {
   atomic_uint64_t free_context_id;
+  uptr free_chained_stack_addr;
 
  public:
   void SetFreeContext(u32 tid, u32 stack) {
@@ -139,11 +148,18 @@ class ChunkBase : public ChunkHeader {
   void GetFreeContext(u32 &tid, u32 &stack) const {
     AtomicContextLoad(&free_context_id, tid, stack);
   }
+
+  void SetFreeChainedStackAddr(uptr addr) {
+    free_chained_stack_addr = addr;
+  }
+  uptr GetFreeChainedStackAddr() const {
+    return free_chained_stack_addr;
+  }
 };
 
 static const uptr kChunkHeaderSize = sizeof(ChunkHeader);
 static const uptr kChunkHeader2Size = sizeof(ChunkBase) - kChunkHeaderSize;
-COMPILER_CHECK(kChunkHeaderSize == 16);
+COMPILER_CHECK(kChunkHeaderSize == 24);
 COMPILER_CHECK(kChunkHeader2Size <= 16);
 
 enum {
@@ -468,7 +484,7 @@ struct Allocator {
                  : user_requested_size <= (1 << 15) - 512  ? 5
                  : user_requested_size <= (1 << 16) - 1024 ? 6
                                                            : 7;
-    u32 hdr_log = RZSize2Log(RoundUpToPowerOfTwo(sizeof(ChunkHeader)));
+    u32 hdr_log = RZSize2Log(RoundUpToPowerOfTwo(sizeof(ChunkHeader) + sizeof(LargeChunkHeader)));
     u32 min_log = RZSize2Log(atomic_load(&min_redzone, memory_order_acquire));
     u32 max_log = RZSize2Log(atomic_load(&max_redzone, memory_order_acquire));
     return Min(Max(rz_log, Max(min_log, hdr_log)), Max(max_log, hdr_log));
@@ -615,6 +631,7 @@ struct Allocator {
     m->user_requested_alignment_log = user_requested_alignment_log;
 
     m->SetAllocContext(t ? t->tid() : kMainTid, StackDepotPut(*stack));
+    m->SetAllocChainedStackAddr(t ? t->GetChainedStackAddr() : 0);
 
     if (!from_primary || *(u8 *)MEM_TO_SHADOW((uptr)allocated) == 0) {
       // The allocator provides an unpoisoned chunk. This is possible for the
@@ -697,6 +714,7 @@ struct Allocator {
              CHUNK_QUARANTINE);
     AsanThread *t = GetCurrentThread();
     m->SetFreeContext(t ? t->tid() : 0, StackDepotPut(*stack));
+    m->SetFreeChainedStackAddr(t ? t->GetChainedStackAddr() : 0);
 
     // Push into quarantine.
     if (t) {
@@ -978,6 +996,16 @@ u32 AsanChunkView::GetFreeStackId() const {
   u32 stack = 0;
   chunk_->GetFreeContext(tid, stack);
   return stack;
+}
+
+uptr AsanChunkView::GetAllocChainedStackAddr() const {
+  return chunk_->GetAllocChainedStackAddr();
+}
+
+uptr AsanChunkView::GetFreeChainedStackAddr() const {
+  if (!IsQuarantined())
+    return 0;
+  return chunk_->GetFreeChainedStackAddr();
 }
 
 void InitializeAllocator(const AllocatorOptions &options) {
@@ -1377,4 +1405,14 @@ void __sanitizer_purge_allocator() {
 int __asan_update_allocation_context(void* addr) {
   GET_STACK_TRACE_MALLOC;
   return instance.UpdateAllocationStack((uptr)addr, &stack);
+}
+
+void *__asan_set_stack_chain(void *addr) {
+  AsanThread *t = GetCurrentThread();
+  if (!t)
+    return nullptr;
+
+  void *prev_addr = (void *)t->GetChainedStackAddr();
+  t->SetChainedStackAddr((uptr)addr);
+  return prev_addr;
 }
