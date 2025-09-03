@@ -25,6 +25,10 @@ void DescribeThread(AsanThreadContext *context);
 static inline void DescribeThread(AsanThread *t) {
   if (t) DescribeThread(t->context());
 }
+void DescribeChain(uptr addr);
+static inline void DescribeChain(AsanThread *t) {
+  if (t) DescribeChain(t->GetChainedStackAddr());
+}
 
 class AsanThreadIdAndName {
  public:
@@ -44,6 +48,7 @@ class Decorator : public __sanitizer::SanitizerCommonDecorator {
   const char *Access() { return Blue(); }
   const char *Location() { return Green(); }
   const char *Allocation() { return Magenta(); }
+  const char *Chain() { return Yellow(); }
 
   const char *ShadowByte(u8 byte) {
     switch (byte) {
@@ -121,6 +126,8 @@ struct HeapAddressDescription {
   uptr free_tid;
   u32 alloc_stack_id;
   u32 free_stack_id;
+  uptr alloc_chained_stack_addr;
+  uptr free_chained_stack_addr;
   ChunkAccess chunk_access;
 
   void Print() const;
