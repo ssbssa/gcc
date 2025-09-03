@@ -592,14 +592,44 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
     callback (data, addr, sym->name, sym->address, 0);
 }
 
+static int
+pe_try_debugfile (struct backtrace_state *state, const char *prefix,
+		  size_t prefix_len, const char *prefix2, size_t prefix2_len,
+		  const char *debuglink_name,
+		  backtrace_error_callback error_callback, void *data)
+{
+  size_t debuglink_len;
+  size_t try_len;
+  char *try;
+  int does_not_exist;
+  int ret;
+
+  debuglink_len = strlen (debuglink_name);
+  try_len = prefix_len + prefix2_len + debuglink_len + 1;
+  try = backtrace_alloc (state, try_len, error_callback, data);
+  if (try == NULL)
+    return -1;
+
+  memcpy (try, prefix, prefix_len);
+  memcpy (try + prefix_len, prefix2, prefix2_len);
+  memcpy (try + prefix_len + prefix2_len, debuglink_name, debuglink_len);
+  try[prefix_len + prefix2_len + debuglink_len] = '\0';
+
+  ret = backtrace_open (try, error_callback, data, &does_not_exist);
+
+  backtrace_free (state, try, try_len, error_callback, data);
+
+  return ret;
+}
+
 /* Add the backtrace data for one PE/COFF file.  Returns 1 on success,
    0 on failure (in both cases descriptor is closed).  */
 
 static int
-coff_add (struct backtrace_state *state, int descriptor,
+coff_add (struct backtrace_state *state, const char *filename, int descriptor,
 	  backtrace_error_callback error_callback, void *data,
 	  fileline *fileline_fn, int *found_sym, int *found_dwarf,
-	  uintptr_t module_handle)
+	  uintptr_t module_handle, int debuginfo)
 {
   struct backtrace_view fhdr_view;
   off_t fhdr_off;
@@ -631,6 +661,9 @@ coff_add (struct backtrace_state *state, int descriptor,
   uintptr_t image_base;
   uintptr_t base_address = 0;
   struct dwarf_sections dwarf_sections;
+  struct backtrace_view debuglink_view;
+  int debuglink_view_valid;
+  const char *debuglink_name;
 
   *found_sym = 0;
   *found_dwarf = 0;
@@ -639,6 +672,8 @@ coff_add (struct backtrace_state *state, int descriptor,
   syms_view_valid = 0;
   str_view_valid = 0;
   debug_view_valid = 0;
+  debuglink_view_valid = 0;
+  debuglink_name = NULL;
 
   /* Map the MS-DOS stub (if any) and extract file header offset.  */
   if (!backtrace_get_view (state, descriptor, 0, 0x40, error_callback,
@@ -795,6 +830,21 @@ coff_add (struct backtrace_state *state, int descriptor,
 	      break;
 	    }
 	}
+
+      if (!debuginfo && str_off != 0
+	  && coff_long_name_eq (".gnu_debuglink", str_off, &str_view))
+	{
+	  size_t debuglink_size = s->virtual_size <= s->size_of_raw_data
+	    ? s->virtual_size : s->size_of_raw_data;
+
+	  if (!backtrace_get_view (state, descriptor,
+				   s->pointer_to_raw_data, debuglink_size,
+				   error_callback, data, &debuglink_view))
+	    goto fail;
+
+	  debuglink_view_valid = 1;
+	  debuglink_name = (const char *) debuglink_view.data;
+	}
     }
 
   if (syms_num != 0)
@@ -827,6 +877,59 @@ coff_add (struct backtrace_state *state, int descriptor,
     {
       backtrace_release_view (state, &syms_view, error_callback, data);
       syms_view_valid = 0;
+    }
+
+  if (debuglink_name != NULL)
+    {
+      int d;
+      const char *slash, *backslash;
+      const char *prefix;
+      size_t prefix_len;
+
+      slash = strrchr (filename, '/');
+      backslash = strrchr (filename, '\\');
+      if (backslash > slash)
+	slash = backslash;
+      if (slash == NULL)
+	{
+	  prefix = "";
+	  prefix_len = 0;
+	}
+      else
+	{
+	  slash++;
+	  prefix = filename;
+	  prefix_len = slash - filename;
+	}
+
+      d = pe_try_debugfile (state, prefix, prefix_len, "", 0,
+			    debuglink_name, error_callback, data);
+      if (d < 0)
+	{
+	  d = pe_try_debugfile (state, prefix, prefix_len,
+				".debug/", strlen (".debug/"),
+				debuglink_name, error_callback, data);
+	}
+
+      if (d >= 0)
+	{
+	  int ret;
+
+	  backtrace_release_view (state, &debuglink_view, error_callback, data);
+	  ret = coff_add (state, "", d, error_callback, data, fileline_fn,
+			  found_sym, found_dwarf, module_handle, 1);
+	  if (ret < 0)
+	    backtrace_close (d, error_callback, data);
+	  else if (descriptor >= 0)
+	    backtrace_close (descriptor, error_callback, data);
+	  return ret;
+	}
+    }
+
+  if (debuglink_view_valid)
+    {
+      backtrace_release_view (state, &debuglink_view, error_callback, data);
+      debuglink_view_valid = 0;
     }
 
   /* Read all the debug sections in a single view, since they are
@@ -901,6 +1004,8 @@ coff_add (struct backtrace_state *state, int descriptor,
     backtrace_release_view (state, &debug_view, error_callback, data);
   if (descriptor != -1)
     backtrace_close (descriptor, error_callback, data);
+  if (debuglink_view_valid)
+    backtrace_release_view (state, &debuglink_view, error_callback, data);
   return 0;
 }
 
@@ -910,7 +1015,7 @@ coff_add (struct backtrace_state *state, int descriptor,
 
 int
 backtrace_initialize (struct backtrace_state *state,
-		      const char *filename ATTRIBUTE_UNUSED, int descriptor,
+		      const char *filename, int descriptor,
 		      backtrace_error_callback error_callback,
 		      void *data, fileline *fileline_fn)
 {
@@ -924,9 +1029,9 @@ backtrace_initialize (struct backtrace_state *state,
   module_handle = (uintptr_t) GetModuleHandle (NULL);
 #endif
 
-  ret = coff_add (state, descriptor, error_callback, data,
+  ret = coff_add (state, filename, descriptor, error_callback, data,
 		  &coff_fileline_fn, &found_sym, &found_dwarf,
-		  module_handle);
+		  module_handle, 0);
   if (!ret)
     return 0;
 
@@ -974,9 +1079,9 @@ backtrace_initialize (struct backtrace_state *state,
 	      if (descriptor < 0)
 		continue;
 
-	      if (coff_add (state, descriptor, error_callback, data,
+	      if (coff_add (state, modname, descriptor, error_callback, data,
 			    &mod_fileline_fn, &found_sym, &mod_found_dwarf,
-			    (uintptr_t) modarr[i]))
+			    (uintptr_t) modarr[i], 0))
 		{
 		  if (mod_found_dwarf)
 		    {
