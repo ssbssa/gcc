@@ -726,6 +726,7 @@ void ListOfModules::init() {
     uptr base_address = (uptr)mi.lpBaseOfDll;
     uptr end_address = (uptr)mi.lpBaseOfDll + mi.SizeOfImage;
 
+#ifndef __GNUC__
     // Adjust the base address of the module so that we get a VA instead of an
     // RVA when computing the module offset. This helps llvm-symbolizer find the
     // right DWARF CU. In the common case that the image is loaded at it's
@@ -733,6 +734,9 @@ void ListOfModules::init() {
     uptr preferred_base =
         GetPreferredBase(&module_name[0], &buf[0], buf.size());
     uptr adjusted_base = base_address - preferred_base;
+#else
+    uptr adjusted_base = base_address;
+#endif
 
     modules_.push_back(LoadedModule());
     LoadedModule &cur_module = modules_.back();
