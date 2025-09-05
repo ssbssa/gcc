@@ -682,6 +682,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0x24748B:  // 8B 74 24 XX : mov esi, dword ptr [esp + XX]
     case 0x247C8B:  // 8B 7C 24 XX : mov edi, dword ptr [esp + XX]
       return 4;
+
+    case 0x05b60f:  // 0F B6 05 XX YY ZZ WW : movzx eax, byte ptr ds:WWZZYYXX
+      return 7;
   }
 
   switch (*(u32*)address) {
