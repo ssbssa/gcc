@@ -1,7 +1,7 @@
-From 64d76da545d9a8558cf6b1528fccff3bd65a6fae Mon Sep 17 00:00:00 2001
+From de6fc9450ac447d4ffa0e9561d968d5c260ba240 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 22 Oct 2024 16:54:46 +0200
-Subject: [PATCH 33/36] Intercept _strdup on Windows-gcc builds
+Subject: [PATCH 33/41] Intercept _strdup on Windows-gcc builds
 
 ---
  libsanitizer/asan/asan_interceptors.cpp | 23 +++++++++++++++++++++++
@@ -67,5 +67,5 @@ index 68b0abe5e8b..bc3356166de 100644
  # define ASAN_INTERCEPT___STRDUP 1
  #else
 -- 
-2.39.1.windows.1
+2.50.1
 

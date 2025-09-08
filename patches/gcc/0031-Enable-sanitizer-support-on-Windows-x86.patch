@@ -1,7 +1,7 @@
-From 0b4610430c547d24ebd681f0f3a65736900cbd45 Mon Sep 17 00:00:00 2001
+From d5437dcb4fbc675372606af74910afb37e1630a0 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 16 Oct 2024 17:06:57 +0200
-Subject: [PATCH 31/36] Enable sanitizer support on Windows x86
+Subject: [PATCH 31/41] Enable sanitizer support on Windows x86
 
 ---
  gcc/config/i386/cygming.h                      | 2 +-
@@ -224,5 +224,5 @@ index 717d1571556..cac401a5d10 100644
  	-std=gnu++14 $(EXTRA_CXXFLAGS)
  AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 -- 
-2.39.1.windows.1
+2.50.1
 

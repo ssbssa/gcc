@@ -1,0 +1,26 @@
+From 379a0d91d43407393e0f5ab0d128730b78399157 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 5 Sep 2025 19:17:56 +0200
+Subject: [PATCH 39/41] Recognize movxz eax, byte ptr ds:X
+
+---
+ libsanitizer/interception/interception_win.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libsanitizer/interception/interception_win.cpp b/libsanitizer/interception/interception_win.cpp
+index b2898bb36c1..6da2e3396dc 100644
+--- a/libsanitizer/interception/interception_win.cpp
++++ b/libsanitizer/interception/interception_win.cpp
+@@ -682,6 +682,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
+     case 0x24748B:  // 8B 74 24 XX : mov esi, dword ptr [esp + XX]
+     case 0x247C8B:  // 8B 7C 24 XX : mov edi, dword ptr [esp + XX]
+       return 4;
++
++    case 0x05b60f:  // 0F B6 05 XX YY ZZ WW : movzx eax, byte ptr ds:WWZZYYXX
++      return 7;
+   }
+ 
+   switch (*(u32*)address) {
+-- 
+2.50.1
+

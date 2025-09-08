@@ -1,7 +1,7 @@
 From 909315ed87c4c622594e8bd4595eb6d7b2446d4e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:33:16 +0200
-Subject: [PATCH 4/9] remove error handlers
+Subject: [PATCH 04/11] remove error handlers
 
 ---
  mingw-w64-crt/crt/crtexe.c       | 6 ++++++
@@ -74,5 +74,5 @@ index d6eb089d4..b6d79a702 100644
  /* For mingw-w64 we have additional helpers to get image information
     on runtime.  This allows us to cache for pseudo-relocation pass
 -- 
-2.39.1.windows.1
+2.50.1
 

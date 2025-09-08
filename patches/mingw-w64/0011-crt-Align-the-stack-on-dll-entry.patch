@@ -1,0 +1,29 @@
+From 2a4ecfde056acc0d03f3dbf772a171470be10189 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 5 Sep 2025 17:52:27 +0200
+Subject: [PATCH 11/11] crt: Align the stack on dll entry
+
+---
+ mingw-w64-crt/crt/crtdll.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/mingw-w64-crt/crt/crtdll.c b/mingw-w64-crt/crt/crtdll.c
+index 88450ce9f..ae6c20b46 100644
+--- a/mingw-w64-crt/crt/crtdll.c
++++ b/mingw-w64-crt/crt/crtdll.c
+@@ -156,6 +156,12 @@ DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
+   return __DllMainCRTStartup (hDllHandle, dwReason, lpreserved);
+ }
+ 
++#if defined(__i386__) || defined(_X86_)
++/* We need to make sure that we align the stack to 16 bytes for the sake of SSE
++   opts in main or in functions called main.
++   DLL entry points can be called before main, so align them as well.  */
++__attribute__((force_align_arg_pointer))
++#endif
+ __declspec(noinline) WINBOOL
+ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
+ {
+-- 
+2.50.1
+

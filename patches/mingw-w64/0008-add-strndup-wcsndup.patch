@@ -1,7 +1,7 @@
 From a7a69b4745cca0ee29c92c6aebd2ec038b031153 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 7 May 2017 15:09:46 +0200
-Subject: [PATCH 8/9] add strndup/wcsndup
+Subject: [PATCH 08/11] add strndup/wcsndup
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +
@@ -613,5 +613,5 @@ index aa73aadc7..f313f30d1 100644
    _CONST_RETURN wchar_t *__cdecl wcschr(const wchar_t *_Str,wchar_t _Ch);
    int __cdecl wcscmp(const wchar_t *_Str1,const wchar_t *_Str2);
 -- 
-2.39.1.windows.1
+2.50.1
 

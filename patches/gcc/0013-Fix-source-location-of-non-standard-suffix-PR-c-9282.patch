@@ -1,7 +1,7 @@
-From f11ab4d2d23ca6ffbf4abf7145b4f0087ff7c204 Mon Sep 17 00:00:00 2001
+From 3de3620cc97284ecce3aba22ced9e9ea38ed7364 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:18:05 +0200
-Subject: [PATCH 13/36] Fix source location of non-standard suffix (PR c/92826)
+Subject: [PATCH 13/41] Fix source location of non-standard suffix (PR c/92826)
 
 Before:
   $ gcc -c pr92826.c -Wpedantic
@@ -92,5 +92,5 @@ index ff5ce2bf729..8666b61a322 100644
  		   "available with %<-std=c++2b%> or %<-std=gnu++2b%>");
        }
 -- 
-2.39.1.windows.1
+2.50.1
 

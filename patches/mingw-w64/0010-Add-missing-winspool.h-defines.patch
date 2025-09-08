@@ -1,0 +1,63 @@
+From 7d4f515ff621399870492dbfd3940291f8871747 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 3 Sep 2025 21:21:34 +0200
+Subject: [PATCH 10/11] Add missing winspool.h defines
+
+---
+ mingw-w64-headers/include/winspool.h | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/mingw-w64-headers/include/winspool.h b/mingw-w64-headers/include/winspool.h
+index 0116d18f9..bed1ae6ea 100644
+--- a/mingw-w64-headers/include/winspool.h
++++ b/mingw-w64-headers/include/winspool.h
+@@ -204,6 +204,8 @@ extern "C" {
+ #define PRINTER_STATUS_DOOR_OPEN 0x00400000
+ #define PRINTER_STATUS_SERVER_UNKNOWN 0x00800000
+ #define PRINTER_STATUS_POWER_SAVE 0x01000000
++#define PRINTER_STATUS_SERVER_OFFLINE 0x02000000
++#define PRINTER_STATUS_DRIVER_UPDATE_NEEDED 0x04000000
+ 
+ #define PRINTER_ATTRIBUTE_QUEUED 0x00000001
+ #define PRINTER_ATTRIBUTE_DIRECT 0x00000002
+@@ -224,6 +226,23 @@ extern "C" {
+ #define PRINTER_ATTRIBUTE_FAX 0x00004000
+ #define PRINTER_ATTRIBUTE_TS 0x00008000
+ 
++#if (NTDDI_VERSION >= NTDDI_VISTA)
++
++#define PRINTER_ATTRIBUTE_PUSHED_USER       0x00020000
++#define PRINTER_ATTRIBUTE_PUSHED_MACHINE    0x00040000
++#define PRINTER_ATTRIBUTE_MACHINE           0x00080000
++#define PRINTER_ATTRIBUTE_FRIENDLY_NAME     0x00100000
++#define PRINTER_ATTRIBUTE_TS_GENERIC_DRIVER 0x00200000
++
++#endif
++
++#if (NTDDI_VERSION >= NTDDI_WINBLUE)
++
++#define PRINTER_ATTRIBUTE_PER_USER          0x00400000
++#define PRINTER_ATTRIBUTE_ENTERPRISE_CLOUD  0x00800000
++
++#endif
++
+ #define NO_PRIORITY 0
+ #define MAX_PRIORITY 99
+ #define MIN_PRIORITY 1
+@@ -349,6 +368,13 @@ extern "C" {
+ #define JOB_STATUS_RESTART 0x00000800
+ #define JOB_STATUS_COMPLETE 0x00001000
+ 
++#if (NTDDI_VERSION >= NTDDI_VISTA)
++
++#define JOB_STATUS_RETAINED             0x00002000
++#define JOB_STATUS_RENDERING_LOCALLY    0x00004000
++
++#endif
++
+ #define JOB_POSITION_UNSPECIFIED 0
+ 
+   typedef struct _ADDJOB_INFO_1A {
+-- 
+2.50.1
+

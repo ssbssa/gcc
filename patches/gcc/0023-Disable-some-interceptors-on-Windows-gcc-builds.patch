@@ -1,7 +1,7 @@
-From dcc7a4d4230df075933865349bbb5d62aec9553c Mon Sep 17 00:00:00 2001
+From 78d63c14d1aa7bcd82f8fd523388ebc1c520b90e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:44:20 +0200
-Subject: [PATCH 23/36] Disable some interceptors on Windows-gcc builds
+Subject: [PATCH 23/41] Disable some interceptors on Windows-gcc builds
 
 ---
  .../sanitizer_common_interceptors.inc                | 12 +++++++++---
@@ -86,5 +86,5 @@ index 8c7c00de6d1..9c0eb74a389 100644
  #define SANITIZER_INTERCEPT_WCSDUP SI_POSIX
  #define SANITIZER_INTERCEPT_SIGNAL_AND_SIGACTION (!SI_WINDOWS && SI_NOT_FUCHSIA)
 -- 
-2.39.1.windows.1
+2.50.1
 

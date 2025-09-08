@@ -1,7 +1,7 @@
 From 7e2c3cbf562802187206ce2e201df93cace4feba Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:27:35 +0200
-Subject: [PATCH 1/9] add stpcpy/wcpcpy
+Subject: [PATCH 01/11] add stpcpy/wcpcpy
 
 ---
  mingw-w64-crt/Makefile.am      |   1 +
@@ -611,5 +611,5 @@ index c3bbbcc23..aa73aadc7 100644
    size_t __cdecl wcslen(const wchar_t *_Str);
    size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
 -- 
-2.39.1.windows.1
+2.50.1
 

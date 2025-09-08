@@ -1,7 +1,7 @@
-From 421364907dae6288f067a22e7131589af34c6407 Mon Sep 17 00:00:00 2001
+From df312b67440b2b3c01795eafff7bd0ab5ef9260e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:31:25 +0200
-Subject: [PATCH 27/36] Remove futex calls not available on Win7
+Subject: [PATCH 27/41] Remove futex calls not available on Win7
 
 ---
  libsanitizer/configure                          |  2 +-
@@ -85,5 +85,5 @@ index ff7ac16c998..741d661b2ac 100644
  
  uptr GetTlsSize() {
 -- 
-2.39.1.windows.1
+2.50.1
 

@@ -1,7 +1,7 @@
 From c28718f77cb5d286c02ddfc477214e76db637ac2 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:30:00 +0200
-Subject: [PATCH 2/9] fix _fpreset()
+Subject: [PATCH 02/11] fix _fpreset()
 
 ---
  mingw-w64-crt/crt/CRT_fp10.c | 7 +++++++
@@ -33,5 +33,5 @@ index f39b5175f..94155b35d 100644
  }
  
 -- 
-2.39.1.windows.1
+2.50.1
 

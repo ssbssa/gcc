@@ -1,7 +1,7 @@
-From 0a2828b6be93a3011f001fcf7ad13cd879d64749 Mon Sep 17 00:00:00 2001
+From 8c95797c15994e405d811573c2e1260ac8008cba Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:27:04 +0200
-Subject: [PATCH 26/36] Fix EnumProcessModules for Win7
+Subject: [PATCH 26/41] Fix EnumProcessModules for Win7
 
 ---
  libbacktrace/pecoff.c | 25 ++++++++++++++++++++++---
@@ -55,5 +55,5 @@ index 0ef81e39db3..3cce2a0cab6 100644
        DWORD i;
        char modname[MAX_PATH];
 -- 
-2.39.1.windows.1
+2.50.1
 

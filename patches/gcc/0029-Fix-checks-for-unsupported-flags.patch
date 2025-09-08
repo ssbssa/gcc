@@ -1,7 +1,7 @@
-From 2a527f6aeee90e65ad12b2927c27e93b580a0d2b Mon Sep 17 00:00:00 2001
+From 5faf0b2821e6e36e869498ed8d58acfd2ae69e86 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 19:07:55 +0200
-Subject: [PATCH 29/36] Fix checks for unsupported flags
+Subject: [PATCH 29/41] Fix checks for unsupported flags
 
 ---
  libsanitizer/asan/asan_malloc_win.cpp | 6 +++---
@@ -39,5 +39,5 @@ index fc797e44480..94bf9e31e36 100644
    }
    // asan_realloc will never reallocate in place, so for now this flag is
 -- 
-2.39.1.windows.1
+2.50.1
 

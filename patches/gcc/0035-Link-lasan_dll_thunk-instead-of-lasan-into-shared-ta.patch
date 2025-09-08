@@ -1,7 +1,7 @@
-From 762dafffe5fba8b8947238d50c02436f2687a4eb Mon Sep 17 00:00:00 2001
+From 2ce451562f7e838979d7787d5fe5b18d2f5b5e16 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 27 Oct 2024 17:15:12 +0100
-Subject: [PATCH 35/36] Link -lasan_dll_thunk instead of -lasan into shared
+Subject: [PATCH 35/41] Link -lasan_dll_thunk instead of -lasan into shared
  targets
 
 ---
@@ -15,10 +15,10 @@ Subject: [PATCH 35/36] Link -lasan_dll_thunk instead of -lasan into shared
  7 files changed, 92 insertions(+), 20 deletions(-)
 
 diff --git a/gcc/gcc.cc b/gcc/gcc.cc
-index d476f9dc99d..2eb745e70a7 100644
+index 289a0e9013d..8d2b3c81b3b 100644
 --- a/gcc/gcc.cc
 +++ b/gcc/gcc.cc
-@@ -768,7 +768,8 @@ proper position among the other output files.  */
+@@ -772,7 +772,8 @@ proper position among the other output files.  */
  #define LIBASAN_SPEC STATIC_LIBASAN_LIBS
  #elif defined(HAVE_LD_STATIC_DYNAMIC)
  #define LIBASAN_SPEC "%{static-libasan:" LD_STATIC_OPTION \
@@ -362,5 +362,5 @@ index 639d91a2eda..90072d5ff7b 100644
  
  // -------------------- Function interception macros ------------------------ //
 -- 
-2.39.1.windows.1
+2.50.1
 

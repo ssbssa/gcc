@@ -1,7 +1,7 @@
-From 18996fdb85826ae668407a364449bbc66c5808ca Mon Sep 17 00:00:00 2001
+From c9dc599b1c7abf2031b3270cea10bd79c44ddaba Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 20 Aug 2024 21:14:54 +0200
-Subject: [PATCH 17/36] Add GetThreadId alternative for WinXP
+Subject: [PATCH 17/41] Add GetThreadId alternative for WinXP
 
 ---
  libgcc/config/i386/gthr-win32-thread.c | 75 +++++++++++++++++++++++++-
@@ -123,5 +123,5 @@ index 29deff900c7..9fd2130b853 100644
  
  __GTHREAD_WIN32_INLINE int
 -- 
-2.39.1.windows.1
+2.50.1
 

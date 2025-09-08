@@ -1,0 +1,329 @@
+From 99e792ebb318a3f6ff529b6f5f5a56bc1a4484b9 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Wed, 3 Sep 2025 21:14:45 +0200
+Subject: [PATCH 38/41] Implement __asan_set_stack_chain for chained allocation
+ stack traces
+
+---
+ libsanitizer/asan/asan_allocator.cpp          | 42 ++++++++++++++++++-
+ libsanitizer/asan/asan_allocator.h            |  2 +
+ libsanitizer/asan/asan_descriptions.cpp       | 27 +++++++++++-
+ libsanitizer/asan/asan_descriptions.h         |  7 ++++
+ libsanitizer/asan/asan_errors.cpp             |  2 +
+ libsanitizer/asan/asan_interface.inc          |  1 +
+ libsanitizer/asan/asan_interface_internal.h   |  2 +
+ libsanitizer/asan/asan_report.cpp             |  2 +
+ libsanitizer/asan/asan_thread.h               |  9 ++++
+ .../include/sanitizer/asan_interface.h        |  5 +++
+ 10 files changed, 96 insertions(+), 3 deletions(-)
+
+diff --git a/libsanitizer/asan/asan_allocator.cpp b/libsanitizer/asan/asan_allocator.cpp
+index 22dcf613270..7a906377a21 100644
+--- a/libsanitizer/asan/asan_allocator.cpp
++++ b/libsanitizer/asan/asan_allocator.cpp
+@@ -101,6 +101,7 @@ class ChunkHeader {
+   u16 user_requested_size_hi;
+   u32 user_requested_size_lo;
+   atomic_uint64_t alloc_context_id;
++  uptr alloc_chained_stack_addr;
+ 
+  public:
+   uptr UsedSize() const {
+@@ -125,10 +126,18 @@ class ChunkHeader {
+   void GetAllocContext(u32 &tid, u32 &stack) const {
+     AtomicContextLoad(&alloc_context_id, tid, stack);
+   }
++
++  void SetAllocChainedStackAddr(uptr addr) {
++    alloc_chained_stack_addr = addr;
++  }
++  uptr GetAllocChainedStackAddr() const {
++    return alloc_chained_stack_addr;
++  }
+ };
+ 
+ class ChunkBase : public ChunkHeader {
+   atomic_uint64_t free_context_id;
++  uptr free_chained_stack_addr;
+ 
+  public:
+   void SetFreeContext(u32 tid, u32 stack) {
+@@ -138,11 +147,18 @@ class ChunkBase : public ChunkHeader {
+   void GetFreeContext(u32 &tid, u32 &stack) const {
+     AtomicContextLoad(&free_context_id, tid, stack);
+   }
++
++  void SetFreeChainedStackAddr(uptr addr) {
++    free_chained_stack_addr = addr;
++  }
++  uptr GetFreeChainedStackAddr() const {
++    return free_chained_stack_addr;
++  }
+ };
+ 
+ static const uptr kChunkHeaderSize = sizeof(ChunkHeader);
+ static const uptr kChunkHeader2Size = sizeof(ChunkBase) - kChunkHeaderSize;
+-COMPILER_CHECK(kChunkHeaderSize == 16);
++COMPILER_CHECK(kChunkHeaderSize == 24);
+ COMPILER_CHECK(kChunkHeader2Size <= 16);
+ 
+ enum {
+@@ -462,7 +478,7 @@ struct Allocator {
+                  : user_requested_size <= (1 << 15) - 512  ? 5
+                  : user_requested_size <= (1 << 16) - 1024 ? 6
+                                                            : 7;
+-    u32 hdr_log = RZSize2Log(RoundUpToPowerOfTwo(sizeof(ChunkHeader)));
++    u32 hdr_log = RZSize2Log(RoundUpToPowerOfTwo(sizeof(ChunkHeader) + sizeof(LargeChunkHeader)));
+     u32 min_log = RZSize2Log(atomic_load(&min_redzone, memory_order_acquire));
+     u32 max_log = RZSize2Log(atomic_load(&max_redzone, memory_order_acquire));
+     return Min(Max(rz_log, Max(min_log, hdr_log)), Max(max_log, hdr_log));
+@@ -607,6 +623,7 @@ struct Allocator {
+     m->user_requested_alignment_log = user_requested_alignment_log;
+ 
+     m->SetAllocContext(t ? t->tid() : kMainTid, StackDepotPut(*stack));
++    m->SetAllocChainedStackAddr(t ? t->GetChainedStackAddr() : 0);
+ 
+     if (!from_primary || *(u8 *)MEM_TO_SHADOW((uptr)allocated) == 0) {
+       // The allocator provides an unpoisoned chunk. This is possible for the
+@@ -685,6 +702,7 @@ struct Allocator {
+              CHUNK_QUARANTINE);
+     AsanThread *t = GetCurrentThread();
+     m->SetFreeContext(t ? t->tid() : 0, StackDepotPut(*stack));
++    m->SetFreeChainedStackAddr(t ? t->GetChainedStackAddr() : 0);
+ 
+     // Push into quarantine.
+     if (t) {
+@@ -959,6 +977,16 @@ u32 AsanChunkView::GetFreeStackId() const {
+   return stack;
+ }
+ 
++uptr AsanChunkView::GetAllocChainedStackAddr() const {
++  return chunk_->GetAllocChainedStackAddr();
++}
++
++uptr AsanChunkView::GetFreeChainedStackAddr() const {
++  if (!IsQuarantined())
++    return 0;
++  return chunk_->GetFreeChainedStackAddr();
++}
++
+ void InitializeAllocator(const AllocatorOptions &options) {
+   instance.InitLinkerInitialized(options);
+ }
+@@ -1265,3 +1293,13 @@ int __asan_update_allocation_context(void* addr) {
+   GET_STACK_TRACE_MALLOC;
+   return instance.UpdateAllocationStack((uptr)addr, &stack);
+ }
++
++void *__asan_set_stack_chain(void *addr) {
++  AsanThread *t = GetCurrentThread();
++  if (!t)
++    return nullptr;
++
++  void *prev_addr = (void *)t->GetChainedStackAddr();
++  t->SetChainedStackAddr((uptr)addr);
++  return prev_addr;
++}
+diff --git a/libsanitizer/asan/asan_allocator.h b/libsanitizer/asan/asan_allocator.h
+index c3c4fae85b1..28a65608d51 100644
+--- a/libsanitizer/asan/asan_allocator.h
++++ b/libsanitizer/asan/asan_allocator.h
+@@ -64,6 +64,8 @@ class AsanChunkView {
+   bool Eq(const AsanChunkView &c) const { return chunk_ == c.chunk_; }
+   u32 GetAllocStackId() const;
+   u32 GetFreeStackId() const;
++  uptr GetAllocChainedStackAddr() const;
++  uptr GetFreeChainedStackAddr() const;
+   AllocType GetAllocType() const;
+   bool AddrIsInside(uptr addr, uptr access_size, sptr *offset) const {
+     if (addr >= Beg() && (addr + access_size) <= End()) {
+diff --git a/libsanitizer/asan/asan_descriptions.cpp b/libsanitizer/asan/asan_descriptions.cpp
+index ef6f3e0a096..c17a228b3b7 100644
+--- a/libsanitizer/asan/asan_descriptions.cpp
++++ b/libsanitizer/asan/asan_descriptions.cpp
+@@ -164,9 +164,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
+   CHECK_NE(chunk.AllocTid(), kInvalidTid);
+   descr->alloc_tid = chunk.AllocTid();
+   descr->alloc_stack_id = chunk.GetAllocStackId();
++  descr->alloc_chained_stack_addr = chunk.GetAllocChainedStackAddr();
+   descr->free_tid = chunk.FreeTid();
+-  if (descr->free_tid != kInvalidTid)
++  if (descr->free_tid != kInvalidTid) {
+     descr->free_stack_id = chunk.GetFreeStackId();
++    descr->free_chained_stack_addr = chunk.GetFreeChainedStackAddr();
++  }
+   return true;
+ }
+ 
+@@ -177,6 +180,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
+   return res;
+ }
+ 
++void DescribeChain(uptr addr) {
++  if (!addr)
++    return;
++  AsanChunkView chunk = FindHeapChunkByAddress(addr);
++  if (!chunk.IsValid())
++    return;
++
++  AsanThreadContext *chain_thread = GetThreadContextByTidLocked(chunk.AllocTid());
++
++  Decorator d;
++  Printf("%schained by thread %s here:%s\n", d.Chain(),
++         AsanThreadIdAndName(chain_thread).c_str(), d.Default());
++  StackTrace alloc_stack = GetStackTraceFromId(chunk.GetAllocStackId());
++  alloc_stack.Print();
++
++  uptr chained_stack_ptr = chunk.GetAllocChainedStackAddr();
++  if (chained_stack_ptr)
++    DescribeChain(chained_stack_ptr);
++}
++
+ bool DescribeAddressIfHeap(uptr addr, uptr access_size) {
+   HeapAddressDescription descr;
+   if (!GetHeapAddressInformation(addr, access_size, &descr)) {
+@@ -424,6 +447,7 @@ void HeapAddressDescription::Print() const {
+            AsanThreadIdAndName(free_thread).c_str(), d.Default());
+     StackTrace free_stack = GetStackTraceFromId(free_stack_id);
+     free_stack.Print();
++    DescribeChain(free_chained_stack_addr);
+     Printf("%spreviously allocated by thread %s here:%s\n", d.Allocation(),
+            AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
+   } else {
+@@ -431,6 +455,7 @@ void HeapAddressDescription::Print() const {
+            AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
+   }
+   alloc_stack.Print();
++  DescribeChain(alloc_chained_stack_addr);
+   DescribeThread(GetCurrentThread());
+   if (free_thread) DescribeThread(free_thread);
+   DescribeThread(alloc_thread);
+diff --git a/libsanitizer/asan/asan_descriptions.h b/libsanitizer/asan/asan_descriptions.h
+index 650e2eb9173..e3971b35dff 100644
+--- a/libsanitizer/asan/asan_descriptions.h
++++ b/libsanitizer/asan/asan_descriptions.h
+@@ -25,6 +25,10 @@ void DescribeThread(AsanThreadContext *context);
+ static inline void DescribeThread(AsanThread *t) {
+   if (t) DescribeThread(t->context());
+ }
++void DescribeChain(uptr addr);
++static inline void DescribeChain(AsanThread *t) {
++  if (t) DescribeChain(t->GetChainedStackAddr());
++}
+ 
+ class AsanThreadIdAndName {
+  public:
+@@ -46,6 +50,7 @@ class Decorator : public __sanitizer::SanitizerCommonDecorator {
+   const char *Access() { return Blue(); }
+   const char *Location() { return Green(); }
+   const char *Allocation() { return Magenta(); }
++  const char *Chain() { return Yellow(); }
+ 
+   const char *ShadowByte(u8 byte) {
+     switch (byte) {
+@@ -123,6 +128,8 @@ struct HeapAddressDescription {
+   uptr free_tid;
+   u32 alloc_stack_id;
+   u32 free_stack_id;
++  uptr alloc_chained_stack_addr;
++  uptr free_chained_stack_addr;
+   ChunkAccess chunk_access;
+ 
+   void Print() const;
+diff --git a/libsanitizer/asan/asan_errors.cpp b/libsanitizer/asan/asan_errors.cpp
+index 3f2d13e3146..085f6f0f688 100644
+--- a/libsanitizer/asan/asan_errors.cpp
++++ b/libsanitizer/asan/asan_errors.cpp
+@@ -608,6 +608,8 @@ void ErrorGeneric::Print() {
+   GET_STACK_TRACE_FATAL(pc, bp);
+   stack.Print();
+ 
++  DescribeChain(GetCurrentThread());
++
+   // Pass bug_descr because we have a special case for
+   // initialization-order-fiasco
+   addr_description.Print(bug_descr);
+diff --git a/libsanitizer/asan/asan_interface.inc b/libsanitizer/asan/asan_interface.inc
+index d71eb768409..22f85c02539 100644
+--- a/libsanitizer/asan/asan_interface.inc
++++ b/libsanitizer/asan/asan_interface.inc
+@@ -184,6 +184,7 @@ INTERFACE_FUNCTION(__sanitizer_unaligned_store16)
+ INTERFACE_FUNCTION(__sanitizer_unaligned_store32)
+ INTERFACE_FUNCTION(__sanitizer_unaligned_store64)
+ INTERFACE_FUNCTION(__asan_update_allocation_context)
++INTERFACE_FUNCTION(__asan_set_stack_chain)
+ INTERFACE_WEAK_FUNCTION(__asan_default_options)
+ INTERFACE_WEAK_FUNCTION(__asan_default_suppressions)
+ INTERFACE_WEAK_FUNCTION(__asan_on_error)
+diff --git a/libsanitizer/asan/asan_interface_internal.h b/libsanitizer/asan/asan_interface_internal.h
+index a9982637802..7f82f4de0ab 100644
+--- a/libsanitizer/asan/asan_interface_internal.h
++++ b/libsanitizer/asan/asan_interface_internal.h
+@@ -270,6 +270,8 @@ extern "C" {
+ 
+   SANITIZER_INTERFACE_ATTRIBUTE int __asan_update_allocation_context(
+       void *addr);
++
++  SANITIZER_INTERFACE_ATTRIBUTE void *__asan_set_stack_chain(void *addr);
+ }  // extern "C"
+ 
+ #endif  // ASAN_INTERFACE_INTERNAL_H
+diff --git a/libsanitizer/asan/asan_report.cpp b/libsanitizer/asan/asan_report.cpp
+index 7603e813115..72af20d1941 100644
+--- a/libsanitizer/asan/asan_report.cpp
++++ b/libsanitizer/asan/asan_report.cpp
+@@ -143,6 +143,8 @@ class ScopedInErrorReport {
+     if (current_error_.IsValid()) current_error_.Print();
+ 
+     // Make sure the current thread is announced.
++    if (current_error_.kind != kErrorKindGeneric)
++      DescribeChain(GetCurrentThread());
+     DescribeThread(GetCurrentThread());
+     // We may want to grab this lock again when printing stats.
+     asanThreadRegistry().Unlock();
+diff --git a/libsanitizer/asan/asan_thread.h b/libsanitizer/asan/asan_thread.h
+index 62f1b5337fe..c31edefa5d5 100644
+--- a/libsanitizer/asan/asan_thread.h
++++ b/libsanitizer/asan/asan_thread.h
+@@ -149,6 +149,13 @@ class AsanThread {
+     GetStartData(&data, sizeof(data));
+   }
+ 
++  void SetChainedStackAddr(uptr addr) {
++    chained_stack_addr_ = addr;
++  }
++  uptr GetChainedStackAddr() const {
++    return chained_stack_addr_;
++  }
++
+  private:
+   // NOTE: There is no AsanThread constructor. It is allocated
+   // via mmap() and *must* be valid in zero-initialized state.
+@@ -179,6 +186,8 @@ class AsanThread {
+   // true if switching is in progress
+   atomic_uint8_t stack_switching_;
+ 
++  uptr chained_stack_addr_;
++
+   uptr tls_begin_;
+   uptr tls_end_;
+   DTLS *dtls_;
+diff --git a/libsanitizer/include/sanitizer/asan_interface.h b/libsanitizer/include/sanitizer/asan_interface.h
+index 37b6d08f4db..0f35acd76f8 100644
+--- a/libsanitizer/include/sanitizer/asan_interface.h
++++ b/libsanitizer/include/sanitizer/asan_interface.h
+@@ -333,6 +333,11 @@ void SANITIZER_CDECL __asan_handle_no_return(void);
+ /// trace. Returns 1 if successful, 0 if not.
+ int SANITIZER_CDECL __asan_update_allocation_context(void *addr);
+ 
++/// Set the allocation address whose allocation stack trace will be chained
++/// to all allocations on the current thread from this point on.
++/// Returns the previous address.
++void *SANITIZER_CDECL __asan_set_stack_chain(void *addr);
++
+ #ifdef __cplusplus
+ } // extern "C"
+ #endif
+-- 
+2.50.1
+

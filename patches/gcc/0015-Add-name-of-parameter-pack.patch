@@ -1,14 +1,14 @@
-From 83020b256e7ba73ea5400f4cb49287a120f2f890 Mon Sep 17 00:00:00 2001
+From b875c3bf23a3efcceaab14e6e4bb1a8ba18ee865 Mon Sep 17 00:00:00 2001
 From: Ed Catmur <ed@catmur.uk>
 Date: Sun, 6 Mar 2022 17:04:24 +0100
-Subject: [PATCH 15/36] Add name of parameter pack
+Subject: [PATCH 15/41] Add name of parameter pack
 
 ---
  gcc/dwarf2out.cc | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/dwarf2out.cc b/gcc/dwarf2out.cc
-index 1b0e8b5a5b2..ad9f80dfc97 100644
+index c91eb74683b..678c547507c 100644
 --- a/gcc/dwarf2out.cc
 +++ b/gcc/dwarf2out.cc
 @@ -23140,7 +23140,7 @@ gen_formal_parameter_pack_die  (tree parm_pack,
@@ -21,5 +21,5 @@ index 1b0e8b5a5b2..ad9f80dfc97 100644
    for (arg = pack_arg; arg; arg = DECL_CHAIN (arg))
      {
 -- 
-2.39.1.windows.1
+2.50.1
 

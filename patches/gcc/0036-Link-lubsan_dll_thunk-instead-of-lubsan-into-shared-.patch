@@ -1,7 +1,7 @@
-From 7236080df5333dfac72b4dfd259a6c3ad75056c1 Mon Sep 17 00:00:00 2001
+From 7b7a191ba5d66bbbbab89fd0720172e7e8fd8024 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 27 Oct 2024 17:16:24 +0100
-Subject: [PATCH 36/36] Link -lubsan_dll_thunk instead of -lubsan into shared
+Subject: [PATCH 36/41] Link -lubsan_dll_thunk instead of -lubsan into shared
  targets
 
 ---
@@ -14,10 +14,10 @@ Subject: [PATCH 36/36] Link -lubsan_dll_thunk instead of -lubsan into shared
  6 files changed, 80 insertions(+), 27 deletions(-)
 
 diff --git a/gcc/gcc.cc b/gcc/gcc.cc
-index 2eb745e70a7..0f269c04050 100644
+index 8d2b3c81b3b..e42f72f1fd3 100644
 --- a/gcc/gcc.cc
 +++ b/gcc/gcc.cc
-@@ -839,7 +839,8 @@ proper position among the other output files.  */
+@@ -843,7 +843,8 @@ proper position among the other output files.  */
    " %{static-libubsan|static:%:include(libsanitizer.spec)%(link_libubsan)}"
  #ifdef HAVE_LD_STATIC_DYNAMIC
  #define LIBUBSAN_SPEC "%{static-libubsan:" LD_STATIC_OPTION \
@@ -243,5 +243,5 @@ index 5802d58896f..dad638ee383 100644
 +
  #endif  // CAN_SANITIZE_UB
 -- 
-2.39.1.windows.1
+2.50.1
 

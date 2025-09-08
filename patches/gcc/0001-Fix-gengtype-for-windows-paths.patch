@@ -1,7 +1,7 @@
-From 3bcfef7747331a71953919a8cf7448342d089600 Mon Sep 17 00:00:00 2001
+From dc0c09cdce3286bfdc838ca82558c789ae7e0074 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:00:25 +0200
-Subject: [PATCH 01/36] Fix gengtype for windows paths
+Subject: [PATCH 01/41] Fix gengtype for windows paths
 
 ---
  gcc/gengtype.cc | 3 +++
@@ -23,5 +23,5 @@ index c0ecbe8558b..137c4f90bd6 100644
  	    fatal ("missing source directory");
  	  srcdir_len = strlen (srcdir);
 -- 
-2.39.1.windows.1
+2.50.1
 

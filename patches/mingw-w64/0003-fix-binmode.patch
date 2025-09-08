@@ -1,7 +1,7 @@
 From 562ccd758e2d9e508ecf23ef6dce60c69eab06a7 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 3/9] fix binmode
+Subject: [PATCH 03/11] fix binmode
 
 ---
  mingw-w64-crt/crt/binmode.c |  7 ++++---
@@ -55,5 +55,5 @@ index 9d5126878..08e30de55 100644
    * __p__commode() = _commode;
  
 -- 
-2.39.1.windows.1
+2.50.1
 

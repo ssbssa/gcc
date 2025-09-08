@@ -1,7 +1,7 @@
-From 2b7a69f9fc4b754241451eddc70b3c09cdb58bec Mon Sep 17 00:00:00 2001
+From 9807086a07c009be3aa175a31f69cd110ad1bd65 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:15:34 +0200
-Subject: [PATCH 25/36] Implement dynamic shadow offset for address sanitizer
+Subject: [PATCH 25/41] Implement dynamic shadow offset for address sanitizer
 
 ---
  gcc/asan.cc                      | 50 ++++++++++++++++++++++++++++----
@@ -10,7 +10,7 @@ Subject: [PATCH 25/36] Implement dynamic shadow offset for address sanitizer
  3 files changed, 47 insertions(+), 11 deletions(-)
 
 diff --git a/gcc/asan.cc b/gcc/asan.cc
-index 9e0f51b1477..23837d160d1 100644
+index 268bb9fe070..789b0c1e6ca 100644
 --- a/gcc/asan.cc
 +++ b/gcc/asan.cc
 @@ -457,6 +457,33 @@ asan_shadow_offset ()
@@ -72,7 +72,7 @@ index 9e0f51b1477..23837d160d1 100644
    gcc_assert (asan_shadow_set != -1
  	      && (ASAN_RED_ZONE_SIZE >> ASAN_SHADOW_SHIFT) == 4);
    shadow_mem = gen_rtx_MEM (SImode, shadow_base);
-@@ -2558,7 +2595,10 @@ build_shadow_mem_access (gimple_stmt_iterator *gsi, location_t location,
+@@ -2557,7 +2594,10 @@ build_shadow_mem_access (gimple_stmt_iterator *gsi, location_t location,
    gimple_set_location (g, location);
    gsi_insert_after (gsi, g, GSI_NEW_STMT);
  
@@ -112,5 +112,5 @@ index 8b384b08b64..47ccf8444d3 100644
  #    if ASAN_SHADOW_SCALE != 3
  #      error "Value below is based on shadow scale = 3."
 -- 
-2.39.1.windows.1
+2.50.1
 

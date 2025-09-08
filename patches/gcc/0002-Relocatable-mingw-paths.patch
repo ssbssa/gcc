@@ -1,7 +1,7 @@
-From a77325201199bb0f1b8805fb19f93f9a5e61a87f Mon Sep 17 00:00:00 2001
+From d4ba5c09ad92dcc97d46a03f0eb15af9a3419218 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/36] Relocatable mingw paths
+Subject: [PATCH 02/41] Relocatable mingw paths
 
 ---
  gcc/config/i386/mingw32.h | 9 ++-------
@@ -55,5 +55,5 @@ index 64cdd2f4a1b..5cd099b9949 100644
   	      static const char *relocated_prefix;
  	      char *ostr;
 -- 
-2.39.1.windows.1
+2.50.1
 

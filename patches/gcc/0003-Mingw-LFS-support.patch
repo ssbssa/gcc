@@ -1,7 +1,7 @@
-From 3d21fea855d5204ca451e9a35a950b6640dd9e1b Mon Sep 17 00:00:00 2001
+From 0ea87514103791d7fb1a4c556f7182f1b12d92e8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
-Subject: [PATCH 03/36] Mingw LFS support
+Subject: [PATCH 03/41] Mingw LFS support
 
 ---
  libstdc++-v3/config/io/basic_file_stdio.cc    | 22 +++++++++++++++++++
@@ -64,7 +64,7 @@ index 9b529490f08..46859c726c4 100644
      return 0;
    }
 diff --git a/libstdc++-v3/include/ext/stdio_sync_filebuf.h b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
-index f8993ad521a..b999a5ff44d 100644
+index 263b040b317..310d516a37d 100644
 --- a/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 +++ b/libstdc++-v3/include/ext/stdio_sync_filebuf.h
 @@ -203,7 +203,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
@@ -77,5 +77,5 @@ index f8993ad521a..b999a5ff44d 100644
  	  __ret = std::streampos(ftello64(_M_file));
  #else
 -- 
-2.39.1.windows.1
+2.50.1
 

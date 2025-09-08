@@ -1,11 +1,11 @@
-From cde6138cab1abf8d4b659c8f9af3e82dcb376585 Mon Sep 17 00:00:00 2001
+From fa121ac97c52e757bf9a837b453c24108f825a6d Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 6 Sep 2024 17:38:44 +0200
-Subject: [PATCH 19/36] Fix -freport-bug for Windows
+Subject: [PATCH 19/41] Fix -freport-bug for Windows
 
 ---
  libiberty/pex-win32.c | 5 ++---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/libiberty/pex-win32.c b/libiberty/pex-win32.c
 index 3780f1de02d..56478df47e3 100644
@@ -25,5 +25,5 @@ index 3780f1de02d..56478df47e3 100644
  		_S_IREAD | _S_IWRITE);
  }
 -- 
-2.39.1.windows.1
+2.50.1
 

@@ -1,5 +1,5 @@
 
-MYPKG=ssbssa-1
+MYPKG=ssbssa-2
 BUILD_BITS=32
 
 SOURCE_DIR=src
@@ -36,7 +36,8 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --prefix=$(BINUTILS_DIR) --enable-targets=$(MYTARGET) \
 	      --disable-werror --disable-nls \
 	      --disable-install-libbfd --disable-install-libiberty \
-	      --enable-lto --enable-plugins
+	      --enable-lto --enable-plugins \
+	      --with-pkgversion=$(MYPKG)
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
 MINGW_W64_VER=12.0.0
@@ -208,7 +209,15 @@ $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done: | $(SOURCE_DIR)/mingw-w
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-crt-Preprocess-all-.def.in-files-with-DDEF_-ARCH.patch
 	@touch $@
 
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
+$(SOURCE_DIR)/mingw-w64-02-patch-10-missing-winspool-defines.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-Add-missing-winspool.h-defines.patch
+	@touch $@
+
+$(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-missing-winspool-defines.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-crt-Align-the-stack-on-dll-entry.patch
+	@touch $@
+
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -392,7 +401,27 @@ $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0036-Link-lubsan_dll_thunk-instead-of-lubsan-into-shared-.patch
 	@touch $@
 
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
+$(SOURCE_DIR)/gcc-02-patch-37-gnu_debuglink.done: | $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0037-Use-.gnu_debuglink-for-separate-debug-info-file.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-38-__asan_set_stack_chain.done: | $(SOURCE_DIR)/gcc-02-patch-37-gnu_debuglink.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0038-Implement-__asan_set_stack_chain-for-chained-allocat.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-39-movxz-eax-byte-ptr-ds.done: | $(SOURCE_DIR)/gcc-02-patch-38-__asan_set_stack_chain.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0039-Recognize-movxz-eax-byte-ptr-ds-X.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-40-rva-as-module-offset.done: | $(SOURCE_DIR)/gcc-02-patch-39-movxz-eax-byte-ptr-ds.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0040-Use-RVA-as-module-offset.patch
+	@touch $@
+
+$(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done: | $(SOURCE_DIR)/gcc-02-patch-40-rva-as-module-offset.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0041-Align-the-stack-on-new-threads.patch
+	@touch $@
+
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -531,8 +560,8 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done \
-  $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done \
+  $(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done \
   $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done \
 
 

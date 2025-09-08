@@ -1,7 +1,7 @@
 From 3a71bab48f168e2d0879171578e4eb1992f2a581 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
-Subject: [PATCH 5/9] free argv[]
+Subject: [PATCH 05/11] free argv[]
 
 ---
  mingw-w64-crt/crt/crtexe.c | 10 ++++++++++
@@ -43,5 +43,5 @@ index 9aca06e66..0a5248d3a 100644
        exit (mainret);
  
 -- 
-2.39.1.windows.1
+2.50.1
 

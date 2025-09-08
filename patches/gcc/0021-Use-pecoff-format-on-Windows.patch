@@ -1,7 +1,7 @@
-From 161ea1fa56521f55a88590f5b229ed354dcc292d Mon Sep 17 00:00:00 2001
+From 1aa318ca26cd2df5d0850144ba8cf06651afaed8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:31:12 +0200
-Subject: [PATCH 21/36] Use pecoff format on Windows
+Subject: [PATCH 21/41] Use pecoff format on Windows
 
 ---
  libbacktrace/pecoff.c                 | 67 +++++++++++++++++++++++----
@@ -239,5 +239,5 @@ index 33faa78bb43..d6a5813631a 100644
  @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT unknown.lo -MD -MP -MF $(DEPDIR)/unknown.Tpo -c -o unknown.lo `test -f '../../libbacktrace/unknown.c' || echo '$(srcdir)/'`../../libbacktrace/unknown.c
  @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/unknown.Tpo $(DEPDIR)/unknown.Plo
 -- 
-2.39.1.windows.1
+2.50.1
 

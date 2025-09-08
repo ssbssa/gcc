@@ -1,7 +1,7 @@
-From ae35285fc0bbafee20191d742ee747e0914ef4cb Mon Sep 17 00:00:00 2001
+From f6a4c93e24a984b4accd3ae6120736d2fac091ac Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:46:01 +0200
-Subject: [PATCH 24/36] Enable colored output on Windows
+Subject: [PATCH 24/41] Enable colored output on Windows
 
 ---
  .../sanitizer_symbolizer_report.cpp               |  5 -----
@@ -51,5 +51,5 @@ index a628df58752..ff7ac16c998 100644
  }
  
 -- 
-2.39.1.windows.1
+2.50.1
 

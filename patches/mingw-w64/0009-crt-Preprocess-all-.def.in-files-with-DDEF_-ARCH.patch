@@ -1,7 +1,7 @@
 From b6380e22a56d7ef530afc20c29665ffb97c2ee95 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
 Date: Mon, 3 Jun 2024 23:39:47 +0200
-Subject: [PATCH 9/9] crt: Preprocess all .def.in files with -DDEF_<ARCH>
+Subject: [PATCH 09/11] crt: Preprocess all .def.in files with -DDEF_<ARCH>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -69,5 +69,5 @@ index 2d411917c..f976e0afe 100644
  lib32/%.def: lib-common/%.def.in
  	$(MKDIR_P) $(@D) && $(CPP) -x c $< -Wp,-w -undef -P -I$(top_srcdir)/def-include -DDEF_I386 > $@
 -- 
-2.39.1.windows.1
+2.50.1
 

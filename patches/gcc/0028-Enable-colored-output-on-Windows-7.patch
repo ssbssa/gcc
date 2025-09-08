@@ -1,7 +1,7 @@
-From 5747c03f6ee0b56255409d91cbfd60aa5a7dd507 Mon Sep 17 00:00:00 2001
+From 12ad269f05a5f4edf73e8d3ca52faebdf2e7872f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:36:51 +0200
-Subject: [PATCH 28/36] Enable colored output on Windows 7
+Subject: [PATCH 28/41] Enable colored output on Windows 7
 
 ---
  .../sanitizer_common/sanitizer_win.cpp        | 95 ++++++++++++++++++-
@@ -130,5 +130,5 @@ index 741d661b2ac..c2ea6df43ac 100644
  
    DWORD bytes_written_32;
 -- 
-2.39.1.windows.1
+2.50.1
 

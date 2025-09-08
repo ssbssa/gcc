@@ -1,7 +1,7 @@
-From 24161e0e413a4e784b67586a3f9d9fc342c089bd Mon Sep 17 00:00:00 2001
+From 244516db81c7b1db180020f49bf8962f6be85b23 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 14 Oct 2024 15:48:34 +0200
-Subject: [PATCH 30/36] Use psapi.dll on Win7
+Subject: [PATCH 30/41] Use psapi.dll on Win7
 
 ---
  .../sanitizer_common/sanitizer_win.cpp        | 52 +++++++++++++++++--
@@ -104,5 +104,5 @@ index c2ea6df43ac..88c8b3310ba 100644
  
  void CheckASLR() {
 -- 
-2.39.1.windows.1
+2.50.1
 

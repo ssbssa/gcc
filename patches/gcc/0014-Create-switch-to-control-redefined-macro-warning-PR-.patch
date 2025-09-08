@@ -1,7 +1,7 @@
-From 5acb75d1a0bdf376464338ba7f7eaf418cd6562a Mon Sep 17 00:00:00 2001
+From 0ffe8c013b29e077176c0486826b88762dcbb4f6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 10 Aug 2021 17:35:52 +0200
-Subject: [PATCH 14/36] Create switch to control redefined macro warning (PR
+Subject: [PATCH 14/41] Create switch to control redefined macro warning (PR
  preprocessor/83773)
 
 ---
@@ -84,5 +84,5 @@ index 352eb2e4fd9..7c50045f709 100644
  	  bool warned = 
  	    cpp_pedwarning_with_line (pfile, reason,
 -- 
-2.39.1.windows.1
+2.50.1
 

@@ -1,7 +1,7 @@
-From 01e5f8e800bf6ce622854732b7db58ce1e0ff37f Mon Sep 17 00:00:00 2001
+From 2f3a3915a35c5a467e3448e17478c15cbc2a59ca Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:37:19 +0200
-Subject: [PATCH 09/36] Fix duplicate Wformat warnings (PR c/92292)
+Subject: [PATCH 09/41] Fix duplicate Wformat warnings (PR c/92292)
 
 ---
  gcc/c-family/c-format.cc | 2 ++
@@ -21,5 +21,5 @@ index 9c4deabc109..0c80d852b60 100644
      }
  }
 -- 
-2.39.1.windows.1
+2.50.1
 

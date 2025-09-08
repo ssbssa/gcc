@@ -1,7 +1,7 @@
-From 243f3e5615a6ad81d59737737f3e9c6fae38eb43 Mon Sep 17 00:00:00 2001
+From d5b5f730b46d52fbfe7008b5087be2dcd461dd67 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 16 Oct 2024 17:15:17 +0200
-Subject: [PATCH 32/36] Fix sanitizers for WinXP
+Subject: [PATCH 32/41] Fix sanitizers for WinXP
 
 ---
  .../sanitizer_common/sanitizer_symbolizer_win.cpp  | 14 +++++++++++---
@@ -9,7 +9,7 @@ Subject: [PATCH 32/36] Fix sanitizers for WinXP
  2 files changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
-index d42daf791a3..ddc22dfe98f 100644
+index d42daf791a3..d2987a580f2 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
 @@ -72,16 +72,21 @@ void InitializeDbgHelpIfNeeded() {
@@ -40,7 +40,7 @@ index d42daf791a3..ddc22dfe98f 100644
    }
    is_dbghelp_initialized = true;
  
-+  if (SymGetSearchPathW == NULL && SymSetSearchPathW == NULL)
++  if (SymGetSearchPathW == NULL || SymSetSearchPathW == NULL)
 +    return;
 +
    // When an executable is run from a location different from the one where it
@@ -69,5 +69,5 @@ index aac27041531..1e7087309ea 100644
        // In MinGW environments on x86, long doubles are 80 bit, but here,
        // we're calling an MS CRT provided printf function which considers
 -- 
-2.39.1.windows.1
+2.50.1
 

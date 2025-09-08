@@ -1,0 +1,26 @@
+From 37eb7e18fd470def890102549e653eb91560d82c Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Mon, 8 Sep 2025 15:55:08 +0200
+Subject: [PATCH 41/41] Align the stack on new threads
+
+---
+ libsanitizer/asan/asan_win.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libsanitizer/asan/asan_win.cpp b/libsanitizer/asan/asan_win.cpp
+index 0e0bafcfc61..d21d37915ee 100644
+--- a/libsanitizer/asan/asan_win.cpp
++++ b/libsanitizer/asan/asan_win.cpp
+@@ -138,6 +138,9 @@ struct ThreadStartParams {
+   void *arg;
+ };
+ 
++#ifndef _WIN64
++__attribute__((force_align_arg_pointer))
++#endif
+ static thread_return_t THREAD_CALLING_CONV asan_thread_start(void *arg) {
+   AsanThread *t = (AsanThread *)arg;
+   SetCurrentThread(t);
+-- 
+2.50.1
+
