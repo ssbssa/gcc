@@ -138,6 +138,9 @@ struct ThreadStartParams {
   void *arg;
 };
 
+#ifndef _WIN64
+__attribute__((force_align_arg_pointer))
+#endif
 static thread_return_t THREAD_CALLING_CONV asan_thread_start(void *arg) {
   AsanThread *t = (AsanThread *)arg;
   SetCurrentThread(t);
