@@ -1,17 +1,26 @@
-From dab2255f249ba2765b995201d346d669de126827 Mon Sep 17 00:00:00 2001
+From 1c1c9318df4fb48eaec50f575c749199d5f4d610 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
-Subject: [PATCH 10/41] Enable diagnostic URLs on cygwin terminal
+Subject: [PATCH 10/40] Enable diagnostic URLs on cygwin terminal
 
 ---
- gcc/diagnostic-color.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ gcc/diagnostic-color.cc | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
-index 91ed3057be0..2908b971265 100644
+index aaf685fab7b..7b15ac85adb 100644
 --- a/gcc/diagnostic-color.cc
 +++ b/gcc/diagnostic-color.cc
-@@ -266,7 +266,7 @@ w_isatty (int num)
+@@ -323,6 +323,8 @@ w_isatty (int num)
+ 	  GetConsoleScreenBufferInfo (fh, &csbi);
+ 	  console_color = csbi.wAttributes & 0xff;
+ 	}
++      else
++	return 2;
+       return 1;
+     }
+ 
+@@ -355,7 +357,7 @@ w_isatty (int num)
  	  !memcmp (oni->Name.Buffer, namedPipe, l1 * 2) &&
  	  (!memcmp (oni->Name.Buffer + (nl - l2), toMaster, l2 * 2) ||
  	   !memcmp (oni->Name.Buffer + (nl - l3), toMasterNat, l3 * 2)))
@@ -20,15 +29,24 @@ index 91ed3057be0..2908b971265 100644
      }
  
    free (oni);
-@@ -360,7 +360,7 @@ static bool
+@@ -465,6 +467,9 @@ parse_env_vars_for_urls ()
+ static bool
  auto_enable_urls ()
  {
- #ifdef __MINGW32__
--  return false;
++#ifdef __MINGW32__
 +  return w_isatty (STDERR_FILENO) == 2;
- #else
++#else
    const char *term, *colorterm;
  
+   /* First check the terminal is capable of printing color escapes,
+@@ -525,6 +530,7 @@ auto_enable_urls ()
+     return false;
+ 
+   return true;
++#endif
+ }
+ 
+ /* Determine if URLs should be enabled, based on RULE,
 -- 
-2.50.1
+2.46.2.windows.1
 

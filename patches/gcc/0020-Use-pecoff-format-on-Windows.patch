@@ -1,86 +1,67 @@
-From 1aa318ca26cd2df5d0850144ba8cf06651afaed8 Mon Sep 17 00:00:00 2001
+From 418ebd2517c9b24e94e508520a53f82f879df390 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:31:12 +0200
-Subject: [PATCH 21/41] Use pecoff format on Windows
+Subject: [PATCH 20/40] Use pecoff format on Windows
 
 ---
- libbacktrace/pecoff.c                 | 67 +++++++++++++++++++++++----
+ libbacktrace/pecoff.c                 | 52 ++++++++++++++++++++++++---
  libsanitizer/config.h.in              |  3 ++
- libsanitizer/configure                | 14 ++++++
+ libsanitizer/configure                | 14 ++++++++
  libsanitizer/configure.ac             |  3 ++
  libsanitizer/libbacktrace/Makefile.am |  1 +
- libsanitizer/libbacktrace/Makefile.in |  9 ++++
- 6 files changed, 87 insertions(+), 10 deletions(-)
+ libsanitizer/libbacktrace/Makefile.in |  9 +++++
+ 6 files changed, 78 insertions(+), 4 deletions(-)
 
 diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
-index 9e437d810c7..0ef81e39db3 100644
+index ee48677ddbe..99c2c6dea77 100644
 --- a/libbacktrace/pecoff.c
 +++ b/libbacktrace/pecoff.c
-@@ -48,7 +48,9 @@ POSSIBILITY OF SUCH DAMAGE.  */
+@@ -48,9 +48,11 @@ POSSIBILITY OF SUCH DAMAGE.  */
  #define NOMINMAX
  #endif
  
 +#define PSAPI_VERSION 2
  #include <windows.h>
 +#include <psapi.h>
- #endif
  
- /* Coff file header.  */
-@@ -461,7 +463,9 @@ coff_initialize_syminfo (struct backtrace_state *state,
+-#ifdef HAVE_TLHELP32_H
++#if 0 // ifdef HAVE_TLHELP32_H
+ #include <tlhelp32.h>
+ 
+ #ifdef UNICODE
+@@ -503,7 +505,9 @@ coff_initialize_syminfo (struct backtrace_state *state,
  
    /* End of symbols marker.  */
    coff_sym->name = NULL;
 -  coff_sym->address = -1;
 +  coff_sym->address = sects_num > 0
-+    ? base_address + sects[sects_num - 1].virtual_address + sects[sects_num - 1].size_of_raw_data
++    ? base_address.m + sects[sects_num - 1].virtual_address + sects[sects_num - 1].size_of_raw_data
 +    : (uintptr_t) -1;
  
    backtrace_qsort (coff_symbols, coff_symbol_count,
  		   sizeof (struct coff_symbol), coff_symbol_compare);
-@@ -592,7 +596,8 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
- static int
- coff_add (struct backtrace_state *state, int descriptor,
- 	  backtrace_error_callback error_callback, void *data,
--	  fileline *fileline_fn, int *found_sym, int *found_dwarf)
-+	  fileline *fileline_fn, int *found_sym, int *found_dwarf,
-+	  uintptr_t module_handle)
- {
-   struct backtrace_view fhdr_view;
-   off_t fhdr_off;
-@@ -869,14 +874,8 @@ coff_add (struct backtrace_state *state, int descriptor,
- 				  + (sections[i].offset - min_offset));
-     }
- 
--#ifdef HAVE_WINDOWS_H
--  {
--    uintptr_t module_handle;
--
--    module_handle = (uintptr_t) GetModuleHandle (NULL);
-+  if (module_handle)
-     base_address = module_handle - image_base;
--  }
--#endif
- 
-   if (!backtrace_dwarf_add (state, base_address, &dwarf_sections,
- 			    0, /* FIXME: is_bigendian */
-@@ -917,12 +916,60 @@ backtrace_initialize (struct backtrace_state *state,
-   int found_sym;
+@@ -1004,7 +1008,7 @@ backtrace_initialize (struct backtrace_state *state,
    int found_dwarf;
    fileline coff_fileline_fn;
-+  uintptr_t module_handle = 0;
-+
-+#ifdef HAVE_WINDOWS_H
-+  module_handle = (uintptr_t) GetModuleHandle (NULL);
-+#endif
- 
-   ret = coff_add (state, descriptor, error_callback, data,
--		  &coff_fileline_fn, &found_sym, &found_dwarf);
-+		  &coff_fileline_fn, &found_sym, &found_dwarf,
-+		  module_handle);
+   uintptr_t module_handle = 0;
+-#ifdef HAVE_TLHELP32_H
++#if 0 // ifdef HAVE_TLHELP32_H
+   fileline module_fileline_fn;
+   int module_found_sym;
+   HANDLE snapshot;
+@@ -1021,7 +1025,7 @@ backtrace_initialize (struct backtrace_state *state,
    if (!ret)
      return 0;
  
-+#ifdef HAVE_WINDOWS_H
+-#ifdef HAVE_TLHELP32_H
++#if 0 // ifdef HAVE_TLHELP32_H
+   do
+     {
+       snapshot = CreateToolhelp32Snapshot (TH32CS_SNAPMODULE, 0);
+@@ -1061,6 +1065,46 @@ backtrace_initialize (struct backtrace_state *state,
+ #endif
+ 
+ #ifdef HAVE_WINDOWS_H
 +  HMODULE modarr[1000];
 +  DWORD modcnt = 0;
 +  if (EnumProcessModules (GetCurrentProcess (),
@@ -120,11 +101,10 @@ index 9e437d810c7..0ef81e39db3 100644
 +	    }
 +	}
 +    }
-+#endif
 +
-   if (!state->threaded)
+   nt_dll_handle = GetModuleHandleW (L"ntdll.dll");
+   if (nt_dll_handle)
      {
-       if (found_sym)
 diff --git a/libsanitizer/config.h.in b/libsanitizer/config.h.in
 index a64b6a16a17..96dd8f990cf 100644
 --- a/libsanitizer/config.h.in
@@ -193,7 +173,7 @@ index 8161a892137..20d5ea10f3c 100644
  if test -n "${with_target_subdir}"; then
     case "${host}" in
 diff --git a/libsanitizer/libbacktrace/Makefile.am b/libsanitizer/libbacktrace/Makefile.am
-index 0cf8d2104c0..cff3243388c 100644
+index f9b70c39709..9673c0e2482 100644
 --- a/libsanitizer/libbacktrace/Makefile.am
 +++ b/libsanitizer/libbacktrace/Makefile.am
 @@ -58,6 +58,7 @@ libsanitizer_libbacktrace_la_SOURCES = \
@@ -205,7 +185,7 @@ index 0cf8d2104c0..cff3243388c 100644
  
  VIEW_FILES = \
 diff --git a/libsanitizer/libbacktrace/Makefile.in b/libsanitizer/libbacktrace/Makefile.in
-index 33faa78bb43..d6a5813631a 100644
+index b9d6e008f2b..ea64ea3e522 100644
 --- a/libsanitizer/libbacktrace/Makefile.in
 +++ b/libsanitizer/libbacktrace/Makefile.in
 @@ -407,6 +407,7 @@ libsanitizer_libbacktrace_la_SOURCES = \
@@ -239,5 +219,5 @@ index 33faa78bb43..d6a5813631a 100644
  @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT unknown.lo -MD -MP -MF $(DEPDIR)/unknown.Tpo -c -o unknown.lo `test -f '../../libbacktrace/unknown.c' || echo '$(srcdir)/'`../../libbacktrace/unknown.c
  @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/unknown.Tpo $(DEPDIR)/unknown.Plo
 -- 
-2.50.1
+2.46.2.windows.1
 

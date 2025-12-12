@@ -1,5 +1,5 @@
 
-MYPKG=ssbssa-2
+MYPKG=ssbssa-1
 BUILD_BITS=32
 
 SOURCE_DIR=src
@@ -27,7 +27,7 @@ else
 endif
 
 
-BINUTILS_VER=2.43.1
+BINUTILS_VER=2.45.1
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -40,7 +40,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --with-pkgversion=$(MYPKG)
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=12.0.0
+MINGW_W64_VER=13.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -64,7 +64,7 @@ MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 
-GCC_VER=14.3.0
+GCC_VER=15.2.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -76,7 +76,8 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --with-gnu-ld --disable-symvers --disable-werror --disable-shared \
 	 --disable-version-specific-runtime-libs \
 	 --enable-threads=mcf \
-	 --disable-win32-utf8-manifest \
+	 --enable-tls \
+	 --enable-win32-utf8-manifest \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
@@ -101,6 +102,7 @@ all:
 all: $(BUILD_DIR)/binutils-07-licenses.done
 all: $(BUILD_DIR)/mingw-w64-05-headers-make-install.done
 all: $(BUILD_DIR)/gcc-05-make-install-gcc.done
+all: $(BUILD_DIR)/mcfgthread-06-make-install.done
 all: $(BUILD_DIR)/mingw-w64-08-crt-make-install.done
 all: $(BUILD_DIR)/gcc-10-licenses.done
 
@@ -205,19 +207,11 @@ $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done: | $(SOURCE_DIR)/mingw-
 	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0008-add-strndup-wcsndup.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-crt-Preprocess-all-.def.in-files-with-DDEF_-ARCH.patch
+$(SOURCE_DIR)/mingw-w64-02-patch-09-missing-winspool-defines.done: | $(SOURCE_DIR)/mingw-w64-02-patch-08-strndup-wcsndup.done
+	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0009-Add-missing-winspool.h-defines.patch
 	@touch $@
 
-$(SOURCE_DIR)/mingw-w64-02-patch-10-missing-winspool-defines.done: | $(SOURCE_DIR)/mingw-w64-02-patch-09-def.in-symbols.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0010-Add-missing-winspool.h-defines.patch
-	@touch $@
-
-$(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done: | $(SOURCE_DIR)/mingw-w64-02-patch-10-missing-winspool-defines.done
-	patch -d $(SOURCE_DIR)/$(MINGW_W64_SRC_DIR) -p1 <patches/mingw-w64/0011-crt-Align-the-stack-on-dll-entry.patch
-	@touch $@
-
-$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done
+$(BUILD_DIR)/mingw-w64-03-headers-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(SOURCE_DIR)/mingw-w64-02-patch-09-missing-winspool-defines.done
 	@mkdir -p $(BUILD_DIR)/mingw-w64-headers
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/mingw-w64-headers && $(MINGW_W64_HEADERS_CONF)
 	@touch $@
@@ -313,115 +307,111 @@ $(SOURCE_DIR)/gcc-02-patch-14-redefined-macro-warning.done: | $(SOURCE_DIR)/gcc-
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0014-Create-switch-to-control-redefined-macro-warning-PR-.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-15-parameter-pack.done: | $(SOURCE_DIR)/gcc-02-patch-14-redefined-macro-warning.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Add-name-of-parameter-pack.patch
+$(SOURCE_DIR)/gcc-02-patch-15-tzdb-disabled.done: | $(SOURCE_DIR)/gcc-02-patch-14-redefined-macro-warning.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0015-Set-TZDB_DISABLED-if-_GLIBCXX_HAS_GTHREADS-is-not-av.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-16-tzdb-disabled.done: | $(SOURCE_DIR)/gcc-02-patch-15-parameter-pack.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-Set-TZDB_DISABLED-if-_GLIBCXX_HAS_GTHREADS-is-not-av.patch
+$(SOURCE_DIR)/gcc-02-patch-16-getthreadid-alternative.done: | $(SOURCE_DIR)/gcc-02-patch-15-tzdb-disabled.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0016-Add-GetThreadId-alternative-for-WinXP.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-17-getthreadid-alternative.done: | $(SOURCE_DIR)/gcc-02-patch-16-tzdb-disabled.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-Add-GetThreadId-alternative-for-WinXP.patch
+$(SOURCE_DIR)/gcc-02-patch-17-mcf-sjlj-infinite-recursion.done: | $(SOURCE_DIR)/gcc-02-patch-16-getthreadid-alternative.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0017-mcf-sjlj-avoid-infinite-recursion.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-18-mcf-sjlj-infinite-recursion.done: | $(SOURCE_DIR)/gcc-02-patch-17-getthreadid-alternative.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0018-mcf-sjlj-avoid-infinite-recursion.patch
+$(SOURCE_DIR)/gcc-02-patch-18-freport-bug.done: | $(SOURCE_DIR)/gcc-02-patch-17-mcf-sjlj-infinite-recursion.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0018-Fix-freport-bug-for-Windows.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-19-freport-bug.done: | $(SOURCE_DIR)/gcc-02-patch-18-mcf-sjlj-infinite-recursion.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0019-Fix-freport-bug-for-Windows.patch
+$(SOURCE_DIR)/gcc-02-patch-19-sanitizer-win64.done: | $(SOURCE_DIR)/gcc-02-patch-18-freport-bug.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0019-Enable-sanitizer-support-on-Windows-x86_64.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-20-sanitizer-win64.done: | $(SOURCE_DIR)/gcc-02-patch-19-freport-bug.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0020-Enable-sanitizer-support-on-Windows-x86_64.patch
+$(SOURCE_DIR)/gcc-02-patch-20-pecoff.done: | $(SOURCE_DIR)/gcc-02-patch-19-sanitizer-win64.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0020-Use-pecoff-format-on-Windows.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-21-pecoff.done: | $(SOURCE_DIR)/gcc-02-patch-20-sanitizer-win64.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0021-Use-pecoff-format-on-Windows.patch
+$(SOURCE_DIR)/gcc-02-patch-21-mmap-win.done: | $(SOURCE_DIR)/gcc-02-patch-20-pecoff.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0021-Enable-mmap-reader-for-libbacktrace-on-Windows.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-22-mmap-win.done: | $(SOURCE_DIR)/gcc-02-patch-21-pecoff.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0022-Enable-mmap-reader-for-libbacktrace-on-Windows.patch
+$(SOURCE_DIR)/gcc-02-patch-22-disable-interceptors.done: | $(SOURCE_DIR)/gcc-02-patch-21-mmap-win.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0022-Disable-some-interceptors-on-Windows-gcc-builds.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-23-disable-interceptors.done: | $(SOURCE_DIR)/gcc-02-patch-22-mmap-win.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0023-Disable-some-interceptors-on-Windows-gcc-builds.patch
+$(SOURCE_DIR)/gcc-02-patch-23-colored-output-win.done: | $(SOURCE_DIR)/gcc-02-patch-22-disable-interceptors.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0023-Enable-colored-output-on-Windows.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-24-colored-output-win.done: | $(SOURCE_DIR)/gcc-02-patch-23-disable-interceptors.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0024-Enable-colored-output-on-Windows.patch
+$(SOURCE_DIR)/gcc-02-patch-24-EnumProcessModules-win7.done: | $(SOURCE_DIR)/gcc-02-patch-23-colored-output-win.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0024-Fix-EnumProcessModules-for-Win7.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-25-dynamic-shadow-offset.done: | $(SOURCE_DIR)/gcc-02-patch-24-colored-output-win.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0025-Implement-dynamic-shadow-offset-for-address-sanitize.patch
+$(SOURCE_DIR)/gcc-02-patch-25-remove-futex-calls.done: | $(SOURCE_DIR)/gcc-02-patch-24-EnumProcessModules-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0025-Remove-futex-calls-not-available-on-Win7.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-26-EnumProcessModules-win7.done: | $(SOURCE_DIR)/gcc-02-patch-25-dynamic-shadow-offset.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0026-Fix-EnumProcessModules-for-Win7.patch
+$(SOURCE_DIR)/gcc-02-patch-26-colored-output-win7.done: | $(SOURCE_DIR)/gcc-02-patch-25-remove-futex-calls.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0026-Enable-colored-output-on-Windows-7.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-27-remove-futex-calls.done: | $(SOURCE_DIR)/gcc-02-patch-26-EnumProcessModules-win7.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0027-Remove-futex-calls-not-available-on-Win7.patch
+$(SOURCE_DIR)/gcc-02-patch-27-fix-unsupported-flags.done: | $(SOURCE_DIR)/gcc-02-patch-26-colored-output-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0027-Fix-checks-for-unsupported-flags.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-28-colored-output-win7.done: | $(SOURCE_DIR)/gcc-02-patch-27-remove-futex-calls.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0028-Enable-colored-output-on-Windows-7.patch
+$(SOURCE_DIR)/gcc-02-patch-28-psapi-win7.done: | $(SOURCE_DIR)/gcc-02-patch-27-fix-unsupported-flags.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0028-Use-psapi.dll-on-Win7.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-29-fix-unsupported-flags.done: | $(SOURCE_DIR)/gcc-02-patch-28-colored-output-win7.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0029-Fix-checks-for-unsupported-flags.patch
+$(SOURCE_DIR)/gcc-02-patch-29-sanitizer-win32.done: | $(SOURCE_DIR)/gcc-02-patch-28-psapi-win7.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0029-Enable-sanitizer-support-on-Windows-x86.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-30-psapi-win7.done: | $(SOURCE_DIR)/gcc-02-patch-29-fix-unsupported-flags.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0030-Use-psapi.dll-on-Win7.patch
+$(SOURCE_DIR)/gcc-02-patch-30-sanitizer-winxp.done: | $(SOURCE_DIR)/gcc-02-patch-29-sanitizer-win32.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0030-Fix-sanitizers-for-WinXP.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-31-sanitizer-win32.done: | $(SOURCE_DIR)/gcc-02-patch-30-psapi-win7.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0031-Enable-sanitizer-support-on-Windows-x86.patch
+$(SOURCE_DIR)/gcc-02-patch-31-libubsan-lstdcxx.done: | $(SOURCE_DIR)/gcc-02-patch-30-sanitizer-winxp.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0031-Add-lstdc-when-linking-libubsan.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-32-sanitizer-winxp.done: | $(SOURCE_DIR)/gcc-02-patch-31-sanitizer-win32.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0032-Fix-sanitizers-for-WinXP.patch
+$(SOURCE_DIR)/gcc-02-patch-32-gnu_debuglink.done: | $(SOURCE_DIR)/gcc-02-patch-31-libubsan-lstdcxx.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0032-Use-.gnu_debuglink-for-separate-debug-info-file.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-33-intercept-_strdup.done: | $(SOURCE_DIR)/gcc-02-patch-32-sanitizer-winxp.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0033-Intercept-_strdup-on-Windows-gcc-builds.patch
+$(SOURCE_DIR)/gcc-02-patch-33-__asan_set_stack_chain.done: | $(SOURCE_DIR)/gcc-02-patch-32-gnu_debuglink.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0033-Implement-__asan_set_stack_chain-for-chained-allocat.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-34-libubsan-lstdcxx.done: | $(SOURCE_DIR)/gcc-02-patch-33-intercept-_strdup.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0034-Add-lstdc-when-linking-libubsan.patch
+$(SOURCE_DIR)/gcc-02-patch-34-movxz-eax-byte-ptr-ds.done: | $(SOURCE_DIR)/gcc-02-patch-33-__asan_set_stack_chain.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0034-Recognize-movxz-eax-byte-ptr-ds-X.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-35-link-lasan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02-patch-34-libubsan-lstdcxx.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0035-Link-lasan_dll_thunk-instead-of-lasan-into-shared-ta.patch
+$(SOURCE_DIR)/gcc-02-patch-35-rva-as-module-offset.done: | $(SOURCE_DIR)/gcc-02-patch-34-movxz-eax-byte-ptr-ds.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0035-Use-RVA-as-module-offset.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done: | $(SOURCE_DIR)/gcc-02-patch-35-link-lasan_dll_thunk.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0036-Link-lubsan_dll_thunk-instead-of-lubsan-into-shared-.patch
+$(SOURCE_DIR)/gcc-02-patch-36-align-stack-on-new-threads.done: | $(SOURCE_DIR)/gcc-02-patch-35-rva-as-module-offset.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0036-Align-the-stack-on-new-threads.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-37-gnu_debuglink.done: | $(SOURCE_DIR)/gcc-02-patch-36-link-lubsan_dll_thunk.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0037-Use-.gnu_debuglink-for-separate-debug-info-file.patch
+$(SOURCE_DIR)/gcc-02-patch-37-add-mno-align-vector-insn.done: | $(SOURCE_DIR)/gcc-02-patch-36-align-stack-on-new-threads.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0037-add-m-no-align-vector-insn-option-for-i386.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-38-__asan_set_stack_chain.done: | $(SOURCE_DIR)/gcc-02-patch-37-gnu_debuglink.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0038-Implement-__asan_set_stack_chain-for-chained-allocat.patch
+$(SOURCE_DIR)/gcc-02-patch-38-windows-tls.done: | $(SOURCE_DIR)/gcc-02-patch-37-add-mno-align-vector-insn.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0038-Implement-Windows-TLS.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-39-movxz-eax-byte-ptr-ds.done: | $(SOURCE_DIR)/gcc-02-patch-38-__asan_set_stack_chain.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0039-Recognize-movxz-eax-byte-ptr-ds-X.patch
+$(SOURCE_DIR)/gcc-02-patch-39-thread-local-states-mcf.done: | $(SOURCE_DIR)/gcc-02-patch-38-windows-tls.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0039-libstdc-Avoid-thread-local-states-for-MCF-thread-mod.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-40-rva-as-module-offset.done: | $(SOURCE_DIR)/gcc-02-patch-39-movxz-eax-byte-ptr-ds.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0040-Use-RVA-as-module-offset.patch
+$(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done: | $(SOURCE_DIR)/gcc-02-patch-39-thread-local-states-mcf.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0040-mingw-Fix-Win32-UTF-8-manifest-conformance.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done: | $(SOURCE_DIR)/gcc-02-patch-40-rva-as-module-offset.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0041-Align-the-stack-on-new-threads.patch
-	@touch $@
-
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -560,8 +550,8 @@ extract-all: | \
 
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
-  $(SOURCE_DIR)/mingw-w64-02-patch-11-align-stack-on-dll-entry.done \
-  $(SOURCE_DIR)/gcc-02-patch-41-align-stack-on-new-threads.done \
+  $(SOURCE_DIR)/mingw-w64-02-patch-09-missing-winspool-defines.done \
+  $(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done \
   $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done \
 
 

@@ -1,14 +1,14 @@
-From c28718f77cb5d286c02ddfc477214e76db637ac2 Mon Sep 17 00:00:00 2001
+From b8e0e5d141a3157cde119c6d467be70e56bffe00 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:30:00 +0200
-Subject: [PATCH 02/11] fix _fpreset()
+Subject: [PATCH 2/9] fix _fpreset()
 
 ---
  mingw-w64-crt/crt/CRT_fp10.c | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/CRT_fp10.c b/mingw-w64-crt/crt/CRT_fp10.c
-index f39b5175f..94155b35d 100644
+index c8a8bfbee..985f6c0e4 100644
 --- a/mingw-w64-crt/crt/CRT_fp10.c
 +++ b/mingw-w64-crt/crt/CRT_fp10.c
 @@ -4,6 +4,10 @@
@@ -22,16 +22,16 @@ index f39b5175f..94155b35d 100644
  void _fpreset (void);
  
  void _fpreset (void)
-@@ -20,6 +24,9 @@ void _fpreset (void)
+@@ -13,6 +17,9 @@ void _fpreset (void)
  #else /* msvc: */
    __asm fninit;
  #endif
 +#ifndef _WIN64
 +  _control87( _PC_53,_MCW_PC );
 +#endif
- #endif
  }
  
+ #ifdef __GNUC__
 -- 
-2.50.1
+2.46.2.windows.1
 

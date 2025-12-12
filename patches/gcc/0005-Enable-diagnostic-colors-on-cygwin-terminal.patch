@@ -1,18 +1,18 @@
-From fcbe78dcbfd09d7299713c7c738dbce811ae5b80 Mon Sep 17 00:00:00 2001
+From ca25f84feeec8d37d823f79a37046a06d7b92aff Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:27:39 +0200
-Subject: [PATCH 05/41] Enable diagnostic colors on cygwin terminal
+Subject: [PATCH 05/40] Enable diagnostic colors on cygwin terminal
 
 ---
  gcc/diagnostic-color.cc | 66 ++++++++++++++++++++++++++++++++++++++++-
  1 file changed, 65 insertions(+), 1 deletion(-)
 
 diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
-index f01a0fc2e37..1e0924d01a0 100644
+index b3bd6f997c6..e89e607e938 100644
 --- a/gcc/diagnostic-color.cc
 +++ b/gcc/diagnostic-color.cc
-@@ -203,11 +203,71 @@ parse_gcc_colors (void)
-       return true;
+@@ -292,11 +292,71 @@ parse_gcc_colors ()
+   return g_color_dict->parse_envvar_value (getenv ("GCC_COLORS")); /* Plural! */
  }
  
 +#if defined(_WIN32)
@@ -84,8 +84,8 @@ index f01a0fc2e37..1e0924d01a0 100644
    /* For consistency reasons, one should check the handle returned by
       _get_osfhandle(_fileno(stderr)) because the function
       pp_write_text_to_stream() in pretty-print.cc calls fputs() on
-@@ -221,6 +281,10 @@ should_colorize (void)
- 	  && GetConsoleMode (h, &m);
+@@ -323,6 +383,10 @@ should_colorize (void)
+   return isconsole;
  #else
    char const *t = getenv ("TERM");
 +#ifdef __MINGW32__
@@ -96,5 +96,5 @@ index f01a0fc2e37..1e0924d01a0 100644
    return t && strcmp (t, "dumb") != 0 && isatty (STDERR_FILENO);
  #endif
 -- 
-2.50.1
+2.46.2.windows.1
 

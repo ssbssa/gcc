@@ -1,18 +1,18 @@
-From d4ba5c09ad92dcc97d46a03f0eb15af9a3419218 Mon Sep 17 00:00:00 2001
+From e707ce44b53429e0dd8cbf48619c87961bbc30c9 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/41] Relocatable mingw paths
+Subject: [PATCH 02/40] Relocatable mingw paths
 
 ---
- gcc/config/i386/mingw32.h | 9 ++-------
- gcc/incpath.cc            | 3 +--
+ gcc/config/mingw/mingw32.h | 9 ++-------
+ gcc/incpath.cc             | 3 +--
  2 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/gcc/config/i386/mingw32.h b/gcc/config/i386/mingw32.h
-index 7753affd36d..7f4706a1c86 100644
---- a/gcc/config/i386/mingw32.h
-+++ b/gcc/config/i386/mingw32.h
-@@ -84,7 +84,7 @@ along with GCC; see the file COPYING3.  If not see
+diff --git a/gcc/config/mingw/mingw32.h b/gcc/config/mingw/mingw32.h
+index 10bcd293527..49e436a899c 100644
+--- a/gcc/config/mingw/mingw32.h
++++ b/gcc/config/mingw/mingw32.h
+@@ -89,7 +89,7 @@ along with GCC; see the file COPYING3.  If not see
  #endif
  
  #undef NATIVE_SYSTEM_HEADER_COMPONENT
@@ -21,7 +21,7 @@ index 7753affd36d..7f4706a1c86 100644
  
  #undef CPP_SPEC
  #define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{mthreads:-D_MT} " \
-@@ -227,17 +227,12 @@ along with GCC; see the file COPYING3.  If not see
+@@ -232,17 +232,12 @@ along with GCC; see the file COPYING3.  If not see
  
  /* Override startfile prefix defaults.  */
  #ifndef STANDARD_STARTFILE_PREFIX_1
@@ -41,7 +41,7 @@ index 7753affd36d..7f4706a1c86 100644
     We canonicalize it to be in Unix format (backslashes are replaced
     forward slashes.  */
 diff --git a/gcc/incpath.cc b/gcc/incpath.cc
-index 64cdd2f4a1b..5cd099b9949 100644
+index c1bbfd3872a..d81db3c9de5 100644
 --- a/gcc/incpath.cc
 +++ b/gcc/incpath.cc
 @@ -189,8 +189,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
@@ -55,5 +55,5 @@ index 64cdd2f4a1b..5cd099b9949 100644
   	      static const char *relocated_prefix;
  	      char *ostr;
 -- 
-2.50.1
+2.46.2.windows.1
 

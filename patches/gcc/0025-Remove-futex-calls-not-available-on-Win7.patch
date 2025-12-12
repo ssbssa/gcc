@@ -1,7 +1,7 @@
-From df312b67440b2b3c01795eafff7bd0ab5ef9260e Mon Sep 17 00:00:00 2001
+From 0d60292587e339480f914b384ebb17b92c4e5026 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:31:25 +0200
-Subject: [PATCH 27/41] Remove futex calls not available on Win7
+Subject: [PATCH 25/40] Remove futex calls not available on Win7
 
 ---
  libsanitizer/configure                          |  2 +-
@@ -65,10 +65,10 @@ index 70a33574d7b..0b3eb0a8f2e 100644
 +@link_liblsan@
  
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index ff7ac16c998..741d661b2ac 100644
+index 529ca87c76d..90814bbaa5c 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -876,14 +876,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
+@@ -872,14 +872,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
  void internal_join_thread(void *th) { }
  
  void FutexWait(atomic_uint32_t *p, u32 cmp) {
@@ -85,5 +85,5 @@ index ff7ac16c998..741d661b2ac 100644
  
  uptr GetTlsSize() {
 -- 
-2.50.1
+2.46.2.windows.1
 

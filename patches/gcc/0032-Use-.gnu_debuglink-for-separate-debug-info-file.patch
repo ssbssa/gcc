@@ -1,17 +1,17 @@
-From 37286d45e53b726765378a16acf79491910b9b19 Mon Sep 17 00:00:00 2001
+From 29cc17a0015d815d83c32b2fa30f4af73471d4b3 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 19:37:49 +0200
-Subject: [PATCH 37/41] Use .gnu_debuglink for separate debug info file
+Subject: [PATCH 32/40] Use .gnu_debuglink for separate debug info file
 
 ---
- libbacktrace/pecoff.c | 119 +++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 112 insertions(+), 7 deletions(-)
+ libbacktrace/pecoff.c | 128 ++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 117 insertions(+), 11 deletions(-)
 
 diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
-index 3cce2a0cab6..2dcb2ce5bf3 100644
+index ae3155e9704..413cae62d14 100644
 --- a/libbacktrace/pecoff.c
 +++ b/libbacktrace/pecoff.c
-@@ -592,14 +592,44 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
+@@ -634,14 +634,44 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
      callback (data, addr, sym->name, sym->address, 0);
  }
  
@@ -53,14 +53,14 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
 +coff_add (struct backtrace_state *state, const char *filename, int descriptor,
  	  backtrace_error_callback error_callback, void *data,
  	  fileline *fileline_fn, int *found_sym, int *found_dwarf,
--	  uintptr_t module_handle)
-+	  uintptr_t module_handle, int debuginfo)
+-	  uintptr_t module_handle ATTRIBUTE_UNUSED)
++	  uintptr_t module_handle ATTRIBUTE_UNUSED, int debuginfo)
  {
    struct backtrace_view fhdr_view;
    off_t fhdr_off;
-@@ -631,6 +661,9 @@ coff_add (struct backtrace_state *state, int descriptor,
-   uintptr_t image_base;
-   uintptr_t base_address = 0;
+@@ -673,6 +703,9 @@ coff_add (struct backtrace_state *state, int descriptor,
+   struct libbacktrace_base_address image_base;
+   struct libbacktrace_base_address base_address;
    struct dwarf_sections dwarf_sections;
 +  struct backtrace_view debuglink_view;
 +  int debuglink_view_valid;
@@ -68,7 +68,7 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
  
    *found_sym = 0;
    *found_dwarf = 0;
-@@ -639,6 +672,8 @@ coff_add (struct backtrace_state *state, int descriptor,
+@@ -681,6 +714,8 @@ coff_add (struct backtrace_state *state, int descriptor,
    syms_view_valid = 0;
    str_view_valid = 0;
    debug_view_valid = 0;
@@ -77,7 +77,7 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
  
    /* Map the MS-DOS stub (if any) and extract file header offset.  */
    if (!backtrace_get_view (state, descriptor, 0, 0x40, error_callback,
-@@ -795,6 +830,21 @@ coff_add (struct backtrace_state *state, int descriptor,
+@@ -837,6 +872,21 @@ coff_add (struct backtrace_state *state, int descriptor,
  	      break;
  	    }
  	}
@@ -99,7 +99,7 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
      }
  
    if (syms_num != 0)
-@@ -829,6 +879,59 @@ coff_add (struct backtrace_state *state, int descriptor,
+@@ -871,6 +921,59 @@ coff_add (struct backtrace_state *state, int descriptor,
        syms_view_valid = 0;
      }
  
@@ -159,7 +159,7 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
    /* Read all the debug sections in a single view, since they are
       probably adjacent in the file.  We never release this view.  */
  
-@@ -901,6 +1004,8 @@ coff_add (struct backtrace_state *state, int descriptor,
+@@ -945,6 +1048,8 @@ coff_add (struct backtrace_state *state, int descriptor,
      backtrace_release_view (state, &debug_view, error_callback, data);
    if (descriptor != -1)
      backtrace_close (descriptor, error_callback, data);
@@ -168,7 +168,18 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
    return 0;
  }
  
-@@ -910,7 +1015,7 @@ coff_add (struct backtrace_state *state, int descriptor,
+@@ -990,8 +1095,8 @@ dll_notification (ULONG reason,
+   if (descriptor < 0)
+     return;
+ 
+-  coff_add (state, descriptor, error_callback, data, &fileline, &found_sym,
+-	    &found_dwarf, (uintptr_t) module_handle);
++  coff_add (state, module_name, descriptor, error_callback, data, &fileline,
++	    &found_sym, &found_dwarf, (uintptr_t) module_handle, 0);
+ }
+ #endif /* defined(HAVE_WINDOWS_H) */
+ 
+@@ -1001,7 +1106,7 @@ dll_notification (ULONG reason,
  
  int
  backtrace_initialize (struct backtrace_state *state,
@@ -177,19 +188,31 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
  		      backtrace_error_callback error_callback,
  		      void *data, fileline *fileline_fn)
  {
-@@ -924,9 +1029,9 @@ backtrace_initialize (struct backtrace_state *state,
+@@ -1022,8 +1127,9 @@ backtrace_initialize (struct backtrace_state *state,
    module_handle = (uintptr_t) GetModuleHandle (NULL);
  #endif
  
 -  ret = coff_add (state, descriptor, error_callback, data,
+-		  &coff_fileline_fn, &found_sym, &found_dwarf, module_handle);
 +  ret = coff_add (state, filename, descriptor, error_callback, data,
- 		  &coff_fileline_fn, &found_sym, &found_dwarf,
--		  module_handle);
-+		  module_handle, 0);
++		  &coff_fileline_fn, &found_sym, &found_dwarf, module_handle,
++		  0);
    if (!ret)
      return 0;
  
-@@ -974,9 +1079,9 @@ backtrace_initialize (struct backtrace_state *state,
+@@ -1055,9 +1161,9 @@ backtrace_initialize (struct backtrace_state *state,
+ 	  if (descriptor < 0)
+ 	    continue;
+ 
+-	  coff_add (state, descriptor, error_callback, data,
++	  coff_add (state, entry.szExePath, descriptor, error_callback, data,
+ 		    &module_fileline_fn, &module_found_sym, &found_dwarf,
+-		    module_handle);
++		    module_handle, 0);
+ 	  if (module_found_sym)
+ 	    found_sym = 1;
+ 	}
+@@ -1110,9 +1216,9 @@ backtrace_initialize (struct backtrace_state *state,
  	      if (descriptor < 0)
  		continue;
  
@@ -202,5 +225,5 @@ index 3cce2a0cab6..2dcb2ce5bf3 100644
  		  if (mod_found_dwarf)
  		    {
 -- 
-2.50.1
+2.46.2.windows.1
 

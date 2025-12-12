@@ -1,7 +1,7 @@
-From 99e792ebb318a3f6ff529b6f5f5a56bc1a4484b9 Mon Sep 17 00:00:00 2001
+From f5e94b2113cd3272545b4c4a50d1e6d75e90582b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 21:14:45 +0200
-Subject: [PATCH 38/41] Implement __asan_set_stack_chain for chained allocation
+Subject: [PATCH 33/40] Implement __asan_set_stack_chain for chained allocation
  stack traces
 
 ---
@@ -18,7 +18,7 @@ Subject: [PATCH 38/41] Implement __asan_set_stack_chain for chained allocation
  10 files changed, 96 insertions(+), 3 deletions(-)
 
 diff --git a/libsanitizer/asan/asan_allocator.cpp b/libsanitizer/asan/asan_allocator.cpp
-index 22dcf613270..7a906377a21 100644
+index 9e66f77217e..5e29e8dde12 100644
 --- a/libsanitizer/asan/asan_allocator.cpp
 +++ b/libsanitizer/asan/asan_allocator.cpp
 @@ -101,6 +101,7 @@ class ChunkHeader {
@@ -93,7 +93,7 @@ index 22dcf613270..7a906377a21 100644
  
      // Push into quarantine.
      if (t) {
-@@ -959,6 +977,16 @@ u32 AsanChunkView::GetFreeStackId() const {
+@@ -967,6 +985,16 @@ u32 AsanChunkView::GetFreeStackId() const {
    return stack;
  }
  
@@ -110,7 +110,7 @@ index 22dcf613270..7a906377a21 100644
  void InitializeAllocator(const AllocatorOptions &options) {
    instance.InitLinkerInitialized(options);
  }
-@@ -1265,3 +1293,13 @@ int __asan_update_allocation_context(void* addr) {
+@@ -1273,3 +1301,13 @@ int __asan_update_allocation_context(void* addr) {
    GET_STACK_TRACE_MALLOC;
    return instance.UpdateAllocationStack((uptr)addr, &stack);
  }
@@ -125,7 +125,7 @@ index 22dcf613270..7a906377a21 100644
 +  return prev_addr;
 +}
 diff --git a/libsanitizer/asan/asan_allocator.h b/libsanitizer/asan/asan_allocator.h
-index c3c4fae85b1..28a65608d51 100644
+index db8dc3bebfc..346358a635d 100644
 --- a/libsanitizer/asan/asan_allocator.h
 +++ b/libsanitizer/asan/asan_allocator.h
 @@ -64,6 +64,8 @@ class AsanChunkView {
@@ -138,10 +138,10 @@ index c3c4fae85b1..28a65608d51 100644
    bool AddrIsInside(uptr addr, uptr access_size, sptr *offset) const {
      if (addr >= Beg() && (addr + access_size) <= End()) {
 diff --git a/libsanitizer/asan/asan_descriptions.cpp b/libsanitizer/asan/asan_descriptions.cpp
-index ef6f3e0a096..c17a228b3b7 100644
+index caec79313e2..19d845fe3f8 100644
 --- a/libsanitizer/asan/asan_descriptions.cpp
 +++ b/libsanitizer/asan/asan_descriptions.cpp
-@@ -164,9 +164,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
+@@ -168,9 +168,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
    CHECK_NE(chunk.AllocTid(), kInvalidTid);
    descr->alloc_tid = chunk.AllocTid();
    descr->alloc_stack_id = chunk.GetAllocStackId();
@@ -155,7 +155,7 @@ index ef6f3e0a096..c17a228b3b7 100644
    return true;
  }
  
-@@ -177,6 +180,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
+@@ -181,6 +184,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
    return res;
  }
  
@@ -182,7 +182,7 @@ index ef6f3e0a096..c17a228b3b7 100644
  bool DescribeAddressIfHeap(uptr addr, uptr access_size) {
    HeapAddressDescription descr;
    if (!GetHeapAddressInformation(addr, access_size, &descr)) {
-@@ -424,6 +447,7 @@ void HeapAddressDescription::Print() const {
+@@ -428,6 +451,7 @@ void HeapAddressDescription::Print() const {
             AsanThreadIdAndName(free_thread).c_str(), d.Default());
      StackTrace free_stack = GetStackTraceFromId(free_stack_id);
      free_stack.Print();
@@ -190,7 +190,7 @@ index ef6f3e0a096..c17a228b3b7 100644
      Printf("%spreviously allocated by thread %s here:%s\n", d.Allocation(),
             AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
    } else {
-@@ -431,6 +455,7 @@ void HeapAddressDescription::Print() const {
+@@ -435,6 +459,7 @@ void HeapAddressDescription::Print() const {
             AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
    }
    alloc_stack.Print();
@@ -199,7 +199,7 @@ index ef6f3e0a096..c17a228b3b7 100644
    if (free_thread) DescribeThread(free_thread);
    DescribeThread(alloc_thread);
 diff --git a/libsanitizer/asan/asan_descriptions.h b/libsanitizer/asan/asan_descriptions.h
-index 650e2eb9173..e3971b35dff 100644
+index a614f47d461..4524d9a5a27 100644
 --- a/libsanitizer/asan/asan_descriptions.h
 +++ b/libsanitizer/asan/asan_descriptions.h
 @@ -25,6 +25,10 @@ void DescribeThread(AsanThreadContext *context);
@@ -213,7 +213,7 @@ index 650e2eb9173..e3971b35dff 100644
  
  class AsanThreadIdAndName {
   public:
-@@ -46,6 +50,7 @@ class Decorator : public __sanitizer::SanitizerCommonDecorator {
+@@ -44,6 +48,7 @@ class Decorator : public __sanitizer::SanitizerCommonDecorator {
    const char *Access() { return Blue(); }
    const char *Location() { return Green(); }
    const char *Allocation() { return Magenta(); }
@@ -221,7 +221,7 @@ index 650e2eb9173..e3971b35dff 100644
  
    const char *ShadowByte(u8 byte) {
      switch (byte) {
-@@ -123,6 +128,8 @@ struct HeapAddressDescription {
+@@ -121,6 +126,8 @@ struct HeapAddressDescription {
    uptr free_tid;
    u32 alloc_stack_id;
    u32 free_stack_id;
@@ -231,10 +231,10 @@ index 650e2eb9173..e3971b35dff 100644
  
    void Print() const;
 diff --git a/libsanitizer/asan/asan_errors.cpp b/libsanitizer/asan/asan_errors.cpp
-index 3f2d13e3146..085f6f0f688 100644
+index 4f112cc5d1b..b4cf82a77a6 100644
 --- a/libsanitizer/asan/asan_errors.cpp
 +++ b/libsanitizer/asan/asan_errors.cpp
-@@ -608,6 +608,8 @@ void ErrorGeneric::Print() {
+@@ -616,6 +616,8 @@ void ErrorGeneric::Print() {
    GET_STACK_TRACE_FATAL(pc, bp);
    stack.Print();
  
@@ -244,7 +244,7 @@ index 3f2d13e3146..085f6f0f688 100644
    // initialization-order-fiasco
    addr_description.Print(bug_descr);
 diff --git a/libsanitizer/asan/asan_interface.inc b/libsanitizer/asan/asan_interface.inc
-index d71eb768409..22f85c02539 100644
+index bfc44b46196..2e742a3ef7b 100644
 --- a/libsanitizer/asan/asan_interface.inc
 +++ b/libsanitizer/asan/asan_interface.inc
 @@ -184,6 +184,7 @@ INTERFACE_FUNCTION(__sanitizer_unaligned_store16)
@@ -269,10 +269,10 @@ index a9982637802..7f82f4de0ab 100644
  
  #endif  // ASAN_INTERFACE_INTERNAL_H
 diff --git a/libsanitizer/asan/asan_report.cpp b/libsanitizer/asan/asan_report.cpp
-index 7603e813115..72af20d1941 100644
+index 45aa607dcda..383238d5b08 100644
 --- a/libsanitizer/asan/asan_report.cpp
 +++ b/libsanitizer/asan/asan_report.cpp
-@@ -143,6 +143,8 @@ class ScopedInErrorReport {
+@@ -144,6 +144,8 @@ class ScopedInErrorReport {
      if (current_error_.IsValid()) current_error_.Print();
  
      // Make sure the current thread is announced.
@@ -282,10 +282,10 @@ index 7603e813115..72af20d1941 100644
      // We may want to grab this lock again when printing stats.
      asanThreadRegistry().Unlock();
 diff --git a/libsanitizer/asan/asan_thread.h b/libsanitizer/asan/asan_thread.h
-index 62f1b5337fe..c31edefa5d5 100644
+index ad9e03d68fe..3aff939f461 100644
 --- a/libsanitizer/asan/asan_thread.h
 +++ b/libsanitizer/asan/asan_thread.h
-@@ -149,6 +149,13 @@ class AsanThread {
+@@ -144,6 +144,13 @@ class AsanThread {
      GetStartData(&data, sizeof(data));
    }
  
@@ -299,7 +299,7 @@ index 62f1b5337fe..c31edefa5d5 100644
   private:
    // NOTE: There is no AsanThread constructor. It is allocated
    // via mmap() and *must* be valid in zero-initialized state.
-@@ -179,6 +186,8 @@ class AsanThread {
+@@ -174,6 +181,8 @@ class AsanThread {
    // true if switching is in progress
    atomic_uint8_t stack_switching_;
  
@@ -325,5 +325,5 @@ index 37b6d08f4db..0f35acd76f8 100644
  } // extern "C"
  #endif
 -- 
-2.50.1
+2.46.2.windows.1
 

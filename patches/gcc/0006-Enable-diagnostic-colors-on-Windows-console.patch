@@ -1,7 +1,7 @@
-From d81f06348282b1f617d37d94e5814d9ad197065a Mon Sep 17 00:00:00 2001
+From f07eb503d84143b50f1ac05d434c594d82c36eff Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
-Subject: [PATCH 06/41] Enable diagnostic colors on Windows console
+Subject: [PATCH 06/40] Enable diagnostic colors on Windows console
 
 ---
  gcc/diagnostic-color.cc | 17 +++++++-
@@ -9,10 +9,10 @@ Subject: [PATCH 06/41] Enable diagnostic colors on Windows console
  2 files changed, 105 insertions(+), 4 deletions(-)
 
 diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
-index 1e0924d01a0..91ed3057be0 100644
+index e89e607e938..aaf685fab7b 100644
 --- a/gcc/diagnostic-color.cc
 +++ b/gcc/diagnostic-color.cc
-@@ -212,6 +212,9 @@ parse_gcc_colors (void)
+@@ -301,6 +301,9 @@ parse_gcc_colors ()
  #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
  #endif
  
@@ -22,7 +22,7 @@ index 1e0924d01a0..91ed3057be0 100644
  static int
  w_isatty (int num)
  {
-@@ -221,8 +224,18 @@ w_isatty (int num)
+@@ -310,8 +313,18 @@ w_isatty (int num)
  
    DWORD flags;
    if (GetConsoleMode (fh, &flags))
@@ -44,10 +44,10 @@ index 1e0924d01a0..91ed3057be0 100644
    HMODULE ntdll = GetModuleHandle ("ntdll.dll");
    if (!ntdll)
 diff --git a/gcc/pretty-print.cc b/gcc/pretty-print.cc
-index eb59bf424b7..8c7ce048883 100644
+index abd6c0b528f..7ae51fb1d10 100644
 --- a/gcc/pretty-print.cc
 +++ b/gcc/pretty-print.cc
-@@ -33,7 +33,7 @@ along with GCC; see the file COPYING3.  If not see
+@@ -37,7 +37,7 @@ along with GCC; see the file COPYING3.  If not see
  #include <iconv.h>
  #endif
  
@@ -56,7 +56,7 @@ index eb59bf424b7..8c7ce048883 100644
  
  /* Replacement for fputs() that handles ANSI escape codes on Windows NT.
     Contributed by: Liu Hao (lh_mouse at 126 dot com)
-@@ -702,6 +702,13 @@ mingw_ansi_fputs (const char *str, FILE *fp)
+@@ -711,6 +711,13 @@ mingw_ansi_fputs (const char *str, FILE *fp)
  
  #endif /* __MINGW32__ */
  
@@ -70,18 +70,18 @@ index eb59bf424b7..8c7ce048883 100644
  static int
  decode_utf8_char (const unsigned char *, size_t len, unsigned int *);
  static void pp_quoted_string (pretty_printer *, const char *, size_t = -1);
-@@ -873,8 +880,89 @@ void
+@@ -987,8 +994,89 @@ void
  pp_write_text_to_stream (pretty_printer *pp)
  {
    const char *text = pp_formatted_text (pp);
 -#ifdef __MINGW32__
 +#if 0
-   mingw_ansi_fputs (text, pp_buffer (pp)->stream);
+   mingw_ansi_fputs (text, pp_buffer (pp)->m_stream);
 +#elif defined _WIN32
 +  HANDLE h;
 +  DWORD mode;
 +  if (console_escaping
-+      && (h = (HANDLE) _get_osfhandle (_fileno (pp_buffer (pp)->stream)))
++      && (h = (HANDLE) _get_osfhandle (_fileno (pp_buffer (pp)->m_stream)))
 +      != INVALID_HANDLE_VALUE
 +      && GetConsoleMode (h, &mode))
 +    {
@@ -157,10 +157,10 @@ index eb59bf424b7..8c7ce048883 100644
 +	}
 +    }
 +  else
-+    fputs (text, pp_buffer (pp)->stream);
++    fputs (text, pp_buffer (pp)->m_stream);
  #else
-   fputs (text, pp_buffer (pp)->stream);
+   fputs (text, pp_buffer (pp)->m_stream);
  #endif
 -- 
-2.50.1
+2.46.2.windows.1
 

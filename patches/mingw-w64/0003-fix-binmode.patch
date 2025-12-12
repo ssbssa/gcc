@@ -1,23 +1,20 @@
-From 562ccd758e2d9e508ecf23ef6dce60c69eab06a7 Mon Sep 17 00:00:00 2001
+From ee79a0827a330bea5cdfa334c7543901c0ce1017 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:31:46 +0200
-Subject: [PATCH 03/11] fix binmode
+Subject: [PATCH 3/9] fix binmode
 
 ---
- mingw-w64-crt/crt/binmode.c |  7 ++++---
+ mingw-w64-crt/crt/binmode.c |  5 ++++-
  mingw-w64-crt/crt/crtexe.c  | 12 ++++++++++++
- 2 files changed, 16 insertions(+), 3 deletions(-)
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/mingw-w64-crt/crt/binmode.c b/mingw-w64-crt/crt/binmode.c
-index f0473b086..2e46c2fdf 100644
+index 18b15d1ba..2e46c2fdf 100644
 --- a/mingw-w64-crt/crt/binmode.c
 +++ b/mingw-w64-crt/crt/binmode.c
-@@ -4,7 +4,8 @@
-  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
+@@ -5,4 +5,7 @@
   */
  
--#define SPECIAL_CRTEXE
--
  #include <fcntl.h>
 -#include <stdlib.h>
 +
@@ -25,35 +22,35 @@ index f0473b086..2e46c2fdf 100644
 +
 +int _fmode = _O_BINARY;
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index 9d5126878..08e30de55 100644
+index 94bad6aaf..7cbe78c42 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
-@@ -20,6 +20,8 @@
- #include <tchar.h>
- #include <sect_attribs.h>
+@@ -15,6 +15,8 @@
  #include <locale.h>
+ #include <float.h>
+ #include <corecrt_startup.h>
 +#include <stdio.h>
 +#include <fcntl.h>
  
  #if defined(__SEH__) && (!defined(__clang__) || __clang_major__ >= 7)
  #define SEH_INLINE_ASM
-@@ -111,6 +113,16 @@ pre_c_init (void)
-   else
-     __set_app_type (_CONSOLE_APP);
+@@ -182,6 +184,16 @@ __tmainCRTStartup (void)
+ 	else
+ 	  __set_app_type (_CONSOLE_APP);
  
-+  if (_fmode == _O_BINARY)
-+    {
-+      if (stdin)
-+	_setmode (stdin->_file,_O_BINARY);
-+      if (stdout)
-+	_setmode (stdout->_file,_O_BINARY);
-+      if (stderr)
-+	_setmode (stderr->_file,_O_BINARY);
-+    }
++	if (_fmode == _O_BINARY)
++	  {
++	    if (stdin)
++	      _setmode (stdin->_file,_O_BINARY);
++	    if (stdout)
++	      _setmode (stdout->_file,_O_BINARY);
++	    if (stderr)
++	      _setmode (stderr->_file,_O_BINARY);
++	  }
 +
-   * __p__fmode() = _fmode;
-   * __p__commode() = _commode;
+ 	*__p__fmode () = _fmode;
+ 	*__p__commode () = _commode;
  
 -- 
-2.50.1
+2.46.2.windows.1
 

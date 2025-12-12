@@ -1,7 +1,7 @@
-From f6a4c93e24a984b4accd3ae6120736d2fac091ac Mon Sep 17 00:00:00 2001
+From 153e85a5129924973bec67f83eea504b4eee916b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:46:01 +0200
-Subject: [PATCH 24/41] Enable colored output on Windows
+Subject: [PATCH 23/40] Enable colored output on Windows
 
 ---
  .../sanitizer_symbolizer_report.cpp               |  5 -----
@@ -9,10 +9,10 @@ Subject: [PATCH 24/41] Enable colored output on Windows
  2 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
-index 3e4417ae3f5..5f769198aea 100644
+index 80ae31e938a..862ea5cb4e2 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_report.cpp
-@@ -60,11 +60,6 @@ static inline bool ReportSupportsColors() { return true; }
+@@ -95,11 +95,6 @@ static inline bool ReportSupportsColors() { return true; }
  #endif  // !SANITIZER_FUCHSIA
  
  bool ColorizeReports() {
@@ -25,10 +25,10 @@ index 3e4417ae3f5..5f769198aea 100644
    return internal_strcmp(flag, "always") == 0 ||
           (internal_strcmp(flag, "auto") == 0 && ReportSupportsColors());
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index a628df58752..ff7ac16c998 100644
+index c6736788efa..529ca87c76d 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -794,7 +794,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
+@@ -790,7 +790,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
  }
  
  bool SupportsColoredOutput(fd_t fd) {
@@ -51,5 +51,5 @@ index a628df58752..ff7ac16c998 100644
  }
  
 -- 
-2.50.1
+2.46.2.windows.1
 

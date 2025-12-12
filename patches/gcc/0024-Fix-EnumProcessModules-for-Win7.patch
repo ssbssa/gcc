@@ -1,31 +1,36 @@
-From 8c95797c15994e405d811573c2e1260ac8008cba Mon Sep 17 00:00:00 2001
+From bd1f6bc3c2a06c5aa8910c079fa1642a9a7c36d4 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:27:04 +0200
-Subject: [PATCH 26/41] Fix EnumProcessModules for Win7
+Subject: [PATCH 24/40] Fix EnumProcessModules for Win7
 
 ---
  libbacktrace/pecoff.c | 25 ++++++++++++++++++++++---
  1 file changed, 22 insertions(+), 3 deletions(-)
 
 diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
-index 0ef81e39db3..3cce2a0cab6 100644
+index 99c2c6dea77..ae3155e9704 100644
 --- a/libbacktrace/pecoff.c
 +++ b/libbacktrace/pecoff.c
-@@ -48,9 +48,11 @@ POSSIBILITY OF SUCH DAMAGE.  */
+@@ -48,7 +48,6 @@ POSSIBILITY OF SUCH DAMAGE.  */
  #define NOMINMAX
  #endif
  
 -#define PSAPI_VERSION 2
  #include <windows.h>
  #include <psapi.h>
+ 
+@@ -91,6 +90,9 @@ typedef VOID (CALLBACK *LDR_DLL_NOTIFICATION)(ULONG,
+ typedef NTSTATUS (NTAPI *LDR_REGISTER_FUNCTION)(ULONG,
+ 						LDR_DLL_NOTIFICATION, PVOID,
+ 						PVOID*);
 +
 +typedef WINBOOL WINAPI func_EnumProcessModules(HANDLE, HMODULE *,
 +					       DWORD, LPDWORD);
  #endif
  
  /* Coff file header.  */
-@@ -929,10 +931,27 @@ backtrace_initialize (struct backtrace_state *state,
-     return 0;
+@@ -1065,10 +1067,27 @@ backtrace_initialize (struct backtrace_state *state,
+ #endif
  
  #ifdef HAVE_WINDOWS_H
 +  func_EnumProcessModules *fEnumProcessModules = NULL;
@@ -55,5 +60,5 @@ index 0ef81e39db3..3cce2a0cab6 100644
        DWORD i;
        char modname[MAX_PATH];
 -- 
-2.50.1
+2.46.2.windows.1
 

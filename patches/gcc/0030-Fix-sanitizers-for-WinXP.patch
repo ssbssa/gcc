@@ -1,7 +1,7 @@
-From d5b5f730b46d52fbfe7008b5087be2dcd461dd67 Mon Sep 17 00:00:00 2001
+From a16a1856479fc2a3d1af0f7f004df8e6f4b94928 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 16 Oct 2024 17:15:17 +0200
-Subject: [PATCH 32/41] Fix sanitizers for WinXP
+Subject: [PATCH 30/40] Fix sanitizers for WinXP
 
 ---
  .../sanitizer_common/sanitizer_symbolizer_win.cpp  | 14 +++++++++++---
@@ -9,21 +9,22 @@ Subject: [PATCH 32/41] Fix sanitizers for WinXP
  2 files changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
-index d42daf791a3..d2987a580f2 100644
+index 259198026b9..2c11e0ca2ce 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
-@@ -72,16 +72,21 @@ void InitializeDbgHelpIfNeeded() {
-         reinterpret_cast<decltype(::name) *>(GetProcAddress(dbghelp, #name)); \
-     CHECK(name != nullptr);                                                   \
-   } while (0)
-+#define DBGHELP_IMPORT_NOCHECK(name)                                          \
-+  do {                                                                        \
-+    name =                                                                    \
-+        reinterpret_cast<decltype(::name) *>(GetProcAddress(dbghelp, #name)); \
-+  } while (0)
+@@ -72,6 +72,11 @@ void InitializeDbgHelpIfNeeded() {
+           (void *)GetProcAddress(dbghelp, #name)); \
+       CHECK(name != nullptr);                      \
+     } while (0)
++#  define DBGHELP_IMPORT_NOCHECK(name)             \
++    do {                                           \
++      name = reinterpret_cast<decltype(::name) *>( \
++          (void *)GetProcAddress(dbghelp, #name)); \
++    } while (0)
+ 
    DBGHELP_IMPORT(StackWalk64);
    DBGHELP_IMPORT(SymCleanup);
-   DBGHELP_IMPORT(SymFromAddr);
+@@ -79,10 +84,10 @@ void InitializeDbgHelpIfNeeded() {
    DBGHELP_IMPORT(SymFunctionTableAccess64);
    DBGHELP_IMPORT(SymGetLineFromAddr64);
    DBGHELP_IMPORT(SymGetModuleBase64);
@@ -36,7 +37,7 @@ index d42daf791a3..d2987a580f2 100644
    DBGHELP_IMPORT(UnDecorateSymbolName);
  #undef DBGHELP_IMPORT
  
-@@ -103,6 +108,9 @@ void InitializeDbgHelpIfNeeded() {
+@@ -104,6 +109,9 @@ void InitializeDbgHelpIfNeeded() {
    }
    is_dbghelp_initialized = true;
  
@@ -46,7 +47,7 @@ index d42daf791a3..d2987a580f2 100644
    // When an executable is run from a location different from the one where it
    // was originally built, we may not see the nearby PDB files.
    // To work around this, let's append the directory of the main module
-@@ -115,7 +123,7 @@ void InitializeDbgHelpIfNeeded() {
+@@ -116,7 +124,7 @@ void InitializeDbgHelpIfNeeded() {
    }
    size_t sz = wcslen(path_buffer);
    if (sz) {
@@ -56,7 +57,7 @@ index d42daf791a3..d2987a580f2 100644
    }
    DWORD res = GetModuleFileNameW(NULL, path_buffer + sz, MAX_PATH);
 diff --git a/libsanitizer/ubsan/ubsan_diag.cpp b/libsanitizer/ubsan/ubsan_diag.cpp
-index aac27041531..1e7087309ea 100644
+index 2146ed3c272..44670299b28 100644
 --- a/libsanitizer/ubsan/ubsan_diag.cpp
 +++ b/libsanitizer/ubsan/ubsan_diag.cpp
 @@ -216,7 +216,7 @@ static void RenderText(InternalScopedString *Buffer, const char *Message,
@@ -69,5 +70,5 @@ index aac27041531..1e7087309ea 100644
        // In MinGW environments on x86, long doubles are 80 bit, but here,
        // we're calling an MS CRT provided printf function which considers
 -- 
-2.50.1
+2.46.2.windows.1
 

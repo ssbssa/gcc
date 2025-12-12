@@ -1,7 +1,7 @@
-From d037325bb8750f71f2688e24aec8da445f881c3b Mon Sep 17 00:00:00 2001
+From 251c62d4ca2b6155da07140b26f04baf2c2815d6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 2 May 2016 19:31:51 +0200
-Subject: [PATCH 07/11] fix printf out of bounds access
+Subject: [PATCH 7/9] fix printf out of bounds access
 
 If the precision is specified, no more than that many bytes are written.
 ---
@@ -9,11 +9,11 @@ If the precision is specified, no more than that many bytes are written.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mingw-w64-crt/stdio/mingw_pformat.c b/mingw-w64-crt/stdio/mingw_pformat.c
-index fd53ce1a8..619526d27 100644
+index d094e7ace..3bd96054d 100644
 --- a/mingw-w64-crt/stdio/mingw_pformat.c
 +++ b/mingw-w64-crt/stdio/mingw_pformat.c
-@@ -516,7 +516,7 @@ void __pformat_putchars( const char *s, int count, __pformat_t *stream )
-       memset(&ps, 0, sizeof(ps) );
+@@ -515,7 +515,7 @@ void __pformat_putchars( const char *s, int count, __pformat_t *stream )
+       mbstate_t ps = {0};
        --count;
        p = &w[0];
 -      l = mbrtowc (p, s, strlen (s), &ps);
@@ -22,5 +22,5 @@ index fd53ce1a8..619526d27 100644
          break;
        if ((ssize_t)l < 0)
 -- 
-2.50.1
+2.46.2.windows.1
 

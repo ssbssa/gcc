@@ -1,7 +1,7 @@
-From 51a5c671c9c502ddee35281fd206b013ad4d0029 Mon Sep 17 00:00:00 2001
+From 87406186a8f2e51134767cab09c2f15c80d2b844 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:37:46 +0200
-Subject: [PATCH 22/41] Enable mmap reader for libbacktrace on Windows
+Subject: [PATCH 21/40] Enable mmap reader for libbacktrace on Windows
 
 ---
  libbacktrace/mmap.c                           | 18 +++++
@@ -13,7 +13,7 @@ Subject: [PATCH 22/41] Enable mmap reader for libbacktrace on Windows
  6 files changed, 111 insertions(+), 1 deletion(-)
 
 diff --git a/libbacktrace/mmap.c b/libbacktrace/mmap.c
-index 322ed945669..e2c53ae1304 100644
+index 12824b1cb2f..42a56ace21b 100644
 --- a/libbacktrace/mmap.c
 +++ b/libbacktrace/mmap.c
 @@ -37,11 +37,15 @@ POSSIBILITY OF SUCH DAMAGE.  */
@@ -54,7 +54,7 @@ index 322ed945669..e2c53ae1304 100644
  
  struct backtrace_freelist_struct
 diff --git a/libbacktrace/mmapio.c b/libbacktrace/mmapio.c
-index b780c3d07df..b912b227b6f 100644
+index 0f4a6bdcd85..312d6f85c31 100644
 --- a/libbacktrace/mmapio.c
 +++ b/libbacktrace/mmapio.c
 @@ -34,12 +34,19 @@ POSSIBILITY OF SUCH DAMAGE.  */
@@ -211,7 +211,7 @@ index d78dab93487..3aeabbc6f3f 100644
  #  if SANITIZER_CP_DEMANGLE
  #   undef ARRAY_SIZE
 diff --git a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
-index aae3e76ea22..d42daf791a3 100644
+index 1ff8b8f1bab..259198026b9 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_symbolizer_win.cpp
 @@ -16,6 +16,7 @@
@@ -222,7 +222,7 @@ index aae3e76ea22..d42daf791a3 100644
  
  namespace __sanitizer {
  
-@@ -278,6 +279,12 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
+@@ -279,6 +280,12 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
      return;
    }
  
@@ -235,7 +235,7 @@ index aae3e76ea22..d42daf791a3 100644
    // Add llvm-symbolizer.
    const char *user_path = common_flags()->external_symbolizer_path;
  
-@@ -300,6 +307,7 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
+@@ -301,6 +308,7 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
    } else {
      VReport(2, "External symbolizer is not present.\n");
    }
@@ -244,5 +244,5 @@ index aae3e76ea22..d42daf791a3 100644
    // Add the dbghelp based symbolizer.
    list->push_back(new(*allocator) WinSymbolizerTool());
 -- 
-2.50.1
+2.46.2.windows.1
 
