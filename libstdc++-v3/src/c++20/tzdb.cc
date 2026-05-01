@@ -2195,6 +2195,14 @@ constinit tzdb_list::_Node::NumLeapSeconds tzdb_list::_Node::num_leap_seconds;
     string_view
     detect_windows_zone() noexcept
     {
+      typedef DWORD WINAPI func_GetDynamicTimeZoneInformation
+	(PDYNAMIC_TIME_ZONE_INFORMATION);
+      static func_GetDynamicTimeZoneInformation *GetDynamicTimeZoneInformation
+	= (func_GetDynamicTimeZoneInformation *) GetProcAddress
+	(GetModuleHandleA ("kernel32.dll"), "GetDynamicTimeZoneInformation");
+      if (!GetDynamicTimeZoneInformation)
+	return {};
+
       DYNAMIC_TIME_ZONE_INFORMATION information{};
       if (GetDynamicTimeZoneInformation(&information) == TIME_ZONE_ID_INVALID)
 	return {};
