@@ -27,7 +27,7 @@ else
 endif
 
 
-BINUTILS_VER=2.45.1
+BINUTILS_VER=2.46.0
 BINUTILS_SRC_DIR=binutils-$(BINUTILS_VER)
 BINUTILS_FILE=$(BINUTILS_SRC_DIR).tar.xz
 BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
@@ -40,7 +40,7 @@ BINUTILS_CONF=$(SOURCE_DIR_ABS)/$(BINUTILS_SRC_DIR)/configure \
 	      --with-pkgversion=$(MYPKG)
 BINUTILS_PATH=export PATH="$(BINUTILS_DIR)/bin:$(PATH)";
 
-MINGW_W64_VER=13.0.0
+MINGW_W64_VER=14.0.0
 MINGW_W64_SRC_DIR=mingw-w64-v$(MINGW_W64_VER)
 MINGW_W64_FILE=$(MINGW_W64_SRC_DIR).tar.bz2
 MINGW_W64_HEADERS_CONF=$(SOURCE_DIR_ABS)/$(MINGW_W64_SRC_DIR)/mingw-w64-headers/configure \
@@ -64,7 +64,7 @@ MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 
-GCC_VER=15.2.0
+GCC_VER=16.1.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -77,19 +77,18 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --disable-version-specific-runtime-libs \
 	 --enable-threads=mcf \
 	 --enable-tls \
-	 --enable-win32-utf8-manifest \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 
-GMP_VER=6.2.1
+GMP_VER=6.3.0
 GMP_SRC_DIR=gmp-$(GMP_VER)
 GMP_FILE=$(GMP_SRC_DIR).tar.xz
 
-MPFR_VER=4.1.0
+MPFR_VER=4.2.2
 MPFR_SRC_DIR=mpfr-$(MPFR_VER)
 MPFR_FILE=$(MPFR_SRC_DIR).tar.xz
 
-MPC_VER=1.2.1
+MPC_VER=1.3.1
 MPC_SRC_DIR=mpc-$(MPC_VER)
 MPC_FILE=$(MPC_SRC_DIR).tar.gz
 
@@ -399,19 +398,15 @@ $(SOURCE_DIR)/gcc-02-patch-37-add-mno-align-vector-insn.done: | $(SOURCE_DIR)/gc
 	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0037-add-m-no-align-vector-insn-option-for-i386.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-38-windows-tls.done: | $(SOURCE_DIR)/gcc-02-patch-37-add-mno-align-vector-insn.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0038-Implement-Windows-TLS.patch
+$(SOURCE_DIR)/gcc-02-patch-38-thread-local-states-mcf.done: | $(SOURCE_DIR)/gcc-02-patch-37-add-mno-align-vector-insn.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0038-libstdc-Avoid-thread-local-states-for-MCF-thread-mod.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-39-thread-local-states-mcf.done: | $(SOURCE_DIR)/gcc-02-patch-38-windows-tls.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0039-libstdc-Avoid-thread-local-states-for-MCF-thread-mod.patch
+$(SOURCE_DIR)/gcc-02-patch-39-GetDynamicTimeZoneInformation.done: | $(SOURCE_DIR)/gcc-02-patch-38-thread-local-states-mcf.done
+	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0039-Dynamically-load-GetDynamicTimeZoneInformation-funct.patch
 	@touch $@
 
-$(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done: | $(SOURCE_DIR)/gcc-02-patch-39-thread-local-states-mcf.done
-	patch -d $(SOURCE_DIR)/$(GCC_SRC_DIR) -p1 <patches/gcc/0040-mingw-Fix-Win32-UTF-8-manifest-conformance.patch
-	@touch $@
-
-$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done
+$(BUILD_DIR)/gcc-03-configure.done: | $(BUILD_DIR)/binutils-07-licenses.done $(BUILD_DIR)/mingw-w64-05-headers-make-install.done $(SOURCE_DIR)/gcc-02-patch-39-GetDynamicTimeZoneInformation.done
 	@mkdir -p $(BUILD_DIR)/gcc $(GCC_DIR)/mingw/include
 	$(BINUTILS_PATH) cd $(BUILD_DIR)/gcc && $(GCC_CONF)
 	@touch $@
@@ -551,7 +546,7 @@ extract-all: | \
 patch-all: | \
   $(SOURCE_DIR)/binutils-02-patch-04-objcopy-large-address-aware.done \
   $(SOURCE_DIR)/mingw-w64-02-patch-09-missing-winspool-defines.done \
-  $(SOURCE_DIR)/gcc-02-patch-40-utf8-manifest.done \
+  $(SOURCE_DIR)/gcc-02-patch-39-GetDynamicTimeZoneInformation.done \
   $(SOURCE_DIR)/mcfgthread-02-patch-06-last-error-TLS.done \
 
 

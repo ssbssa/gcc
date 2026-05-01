@@ -1,17 +1,17 @@
-From 6f811ae684d21822f5d88cbd1d3052a785b32f4f Mon Sep 17 00:00:00 2001
+From 7f7b68c656809fe279b2bc88d87b10b2d38abaa0 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:36:51 +0200
-Subject: [PATCH 26/40] Enable colored output on Windows 7
+Subject: [PATCH 26/39] Enable colored output on Windows 7
 
 ---
  .../sanitizer_common/sanitizer_win.cpp        | 95 ++++++++++++++++++-
  1 file changed, 92 insertions(+), 3 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index 90814bbaa5c..7ed31317a95 100644
+index 802094d36b4..46b8932d03f 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -789,6 +789,9 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
+@@ -804,6 +804,9 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
    return success;
  }
  
@@ -21,7 +21,7 @@ index 90814bbaa5c..7ed31317a95 100644
  bool SupportsColoredOutput(fd_t fd) {
    // Map the conventional Unix fds 1 and 2 to Windows handles. They might be
    // closed, in which case this will fail.
-@@ -800,11 +803,17 @@ bool SupportsColoredOutput(fd_t fd) {
+@@ -815,11 +818,17 @@ bool SupportsColoredOutput(fd_t fd) {
    }
  
    DWORD flags;
@@ -42,7 +42,7 @@ index 90814bbaa5c..7ed31317a95 100644
  }
  
  bool WriteToFile(fd_t fd, const void *buff, uptr buff_size, uptr *bytes_written,
-@@ -829,6 +838,86 @@ bool WriteToFile(fd_t fd, const void *buff, uptr buff_size, uptr *bytes_written,
+@@ -844,6 +853,86 @@ bool WriteToFile(fd_t fd, const void *buff, uptr buff_size, uptr *bytes_written,
        *error_p = ERROR_INVALID_HANDLE;
        return false;
      }
@@ -130,5 +130,5 @@ index 90814bbaa5c..7ed31317a95 100644
  
    DWORD bytes_written_32;
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,14 +1,14 @@
-From 3b8d99cd4e5ee8e61b23621b71321fa67039abe5 Mon Sep 17 00:00:00 2001
+From 9a683cf6b217d7a47ab0fd1c78a4aab2b3b762e7 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 19:07:55 +0200
-Subject: [PATCH 27/40] Fix checks for unsupported flags
+Subject: [PATCH 27/39] Fix checks for unsupported flags
 
 ---
  libsanitizer/asan/asan_malloc_win.cpp | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/libsanitizer/asan/asan_malloc_win.cpp b/libsanitizer/asan/asan_malloc_win.cpp
-index 5e478951585..6f13538d350 100644
+index b73b38800f5..9e8bee660a0 100644
 --- a/libsanitizer/asan/asan_malloc_win.cpp
 +++ b/libsanitizer/asan/asan_malloc_win.cpp
 @@ -232,7 +232,7 @@ INTERCEPTOR_WINAPI(LPVOID, HeapAlloc, HANDLE hHeap, DWORD dwFlags,
@@ -28,8 +28,8 @@ index 5e478951585..6f13538d350 100644
 +    CHECK((HEAP_FREE_UNSUPPORTED_FLAGS & dwFlags) == 0 && "unsupported flags");
    }
    GET_STACK_TRACE_FREE;
-   asan_free(lpMem, &stack, FROM_MALLOC);
-@@ -351,7 +351,7 @@ void *SharedReAlloc(ReAllocFunction reallocFunc, SizeFunction heapSizeFunc,
+   asan_free(lpMem, &stack);
+@@ -367,7 +367,7 @@ void *SharedReAlloc(ReAllocFunction reallocFunc, SizeFunction heapSizeFunc,
      // Pass through even when it's neither since this could be a null realloc or
      // UAF that ASAN needs to catch.
    } else {
@@ -39,5 +39,5 @@ index 5e478951585..6f13538d350 100644
    }
    // asan_realloc will never reallocate in place, so for now this flag is
 -- 
-2.46.2.windows.1
+2.53.0
 

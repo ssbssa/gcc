@@ -1,14 +1,14 @@
-From e55860099c65c132d93cad0e0874082f8c077f08 Mon Sep 17 00:00:00 2001
+From 306eba957448c74281f41ca8b6f95d76b9f72603 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 16:03:07 +0200
 Subject: [PATCH 5/9] free argv[]
 
 ---
- mingw-w64-crt/crt/crtexe.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ mingw-w64-crt/crt/crtexe.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/mingw-w64-crt/crt/crtexe.c b/mingw-w64-crt/crt/crtexe.c
-index e8b60cc6d..c978c6d81 100644
+index f4ad70cfe..97014aa79 100644
 --- a/mingw-w64-crt/crt/crtexe.c
 +++ b/mingw-w64-crt/crt/crtexe.c
 @@ -48,6 +48,7 @@ extern int __mingw_app_type;
@@ -19,19 +19,21 @@ index e8b60cc6d..c978c6d81 100644
  static _TCHAR **envp;
  
  static int managedapp;
-@@ -230,6 +231,8 @@ __tmainCRTStartup (void)
- 	  _amsg_exit (8); /* _RT_SPACEARG */
- 
+@@ -255,6 +256,9 @@ __tmainCRTStartup (void)
  	ret = duplicate_ppstrings (argc, &argv);
-+	argv_copy = (_TCHAR **) malloc (sizeof (_TCHAR *) * argc);
-+	memcpy (argv_copy, argv, sizeof (_TCHAR *) * argc);
  	if (ret != 0)
  	  _amsg_exit (8); /* _RT_SPACEARG */
++	argv_copy = (_TCHAR **) malloc (sizeof (_TCHAR *) * argc);
++	if (argv_copy != NULL)
++	  memcpy (argv_copy, argv, sizeof (_TCHAR *) * argc);
  
-@@ -252,6 +255,13 @@ __tmainCRTStartup (void)
+ 	_initterm (__xc_a, __xc_z);
+ 	__main (); /* C++ initialization. */
+@@ -275,6 +279,14 @@ __tmainCRTStartup (void)
      __initenv = envp;
  #endif
      ret = _tmain (argc, argv, envp);
++    if (argv_copy != NULL)
 +    {
 +      int i;
 +      for (i=0; i < argc; i++)
@@ -43,5 +45,5 @@ index e8b60cc6d..c978c6d81 100644
        exit (ret);
  
 -- 
-2.46.2.windows.1
+2.53.0
 

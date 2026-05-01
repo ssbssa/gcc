@@ -1,7 +1,7 @@
-From 0d60292587e339480f914b384ebb17b92c4e5026 Mon Sep 17 00:00:00 2001
+From 41f928c6b502aeb25bf22bb8056efb95a5abab69 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:31:25 +0200
-Subject: [PATCH 25/40] Remove futex calls not available on Win7
+Subject: [PATCH 25/39] Remove futex calls not available on Win7
 
 ---
  libsanitizer/configure                          |  2 +-
@@ -11,10 +11,10 @@ Subject: [PATCH 25/40] Remove futex calls not available on Win7
  4 files changed, 13 insertions(+), 12 deletions(-)
 
 diff --git a/libsanitizer/configure b/libsanitizer/configure
-index 45f6a7e9291..7e7a2a0672a 100755
+index 2a5cfe1cbd8..d01252f1df3 100755
 --- a/libsanitizer/configure
 +++ b/libsanitizer/configure
-@@ -16047,7 +16047,7 @@ done
+@@ -16436,7 +16436,7 @@ done
  link_sanitizer_common='-lpthread -lm'
  
  case "$target" in
@@ -65,10 +65,10 @@ index 70a33574d7b..0b3eb0a8f2e 100644
 +@link_liblsan@
  
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index 529ca87c76d..90814bbaa5c 100644
+index 0f5696a5404..802094d36b4 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -872,14 +872,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
+@@ -887,14 +887,10 @@ void *internal_start_thread(void *(*func)(void *arg), void *arg) { return 0; }
  void internal_join_thread(void *th) { }
  
  void FutexWait(atomic_uint32_t *p, u32 cmp) {
@@ -85,5 +85,5 @@ index 529ca87c76d..90814bbaa5c 100644
  
  uptr GetTlsSize() {
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,25 +1,25 @@
-From 82dfbd20ce9ae71f16b44bcf3088e53a1b70e6e1 Mon Sep 17 00:00:00 2001
+From f35ab388e02a09e86af97eef9c288d5f0cb4d32b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:34:17 +0200
-Subject: [PATCH 07/40] Disable #ident directive by default
+Subject: [PATCH 07/39] Disable #ident directive by default
 
 ---
  gcc/common.opt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index e3fa0dacec4..f67c3df1fc7 100644
+index 5d0e255a40d..36c6c710d48 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -1943,7 +1943,7 @@ Enum(hardcfr_check_noreturn_calls) String(always) Value(HCFRNR_ALWAYS)
- ; On SVR4 targets, it also controls whether or not to emit a
- ; string identifying the compiler.
+@@ -2007,7 +2007,7 @@ Enum(hardcfr_check_noreturn_calls) String(always) Value(HCFRNR_ALWAYS)
+ ; Nonzero means do not emit .ident assembler directives and ignore
+ ; `#ident' preprocessor directives.
  fident
 -Common Var(flag_no_ident,0)
 +Common Var(flag_no_ident,0) Init(1)
- Process #ident directives.
+ Emit .ident assembler directives.
  
  fif-conversion
 -- 
-2.46.2.windows.1
+2.53.0
 

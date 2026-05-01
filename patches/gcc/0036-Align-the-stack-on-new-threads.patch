@@ -1,14 +1,14 @@
-From a85a0c10ea1e3e3dec13f497385aa3841b3b0399 Mon Sep 17 00:00:00 2001
+From 634074b10923234823efd857312259aef2a9fd52 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 8 Sep 2025 15:55:08 +0200
-Subject: [PATCH 36/40] Align the stack on new threads
+Subject: [PATCH 36/39] Align the stack on new threads
 
 ---
  libsanitizer/asan/asan_win.cpp | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/libsanitizer/asan/asan_win.cpp b/libsanitizer/asan/asan_win.cpp
-index 9c0760c35f2..c53b00a43d8 100644
+index aae49fd5388..abd998f9eda 100644
 --- a/libsanitizer/asan/asan_win.cpp
 +++ b/libsanitizer/asan/asan_win.cpp
 @@ -138,6 +138,9 @@ struct ThreadStartParams {
@@ -22,5 +22,5 @@ index 9c0760c35f2..c53b00a43d8 100644
    AsanThread *t = (AsanThread *)arg;
    SetCurrentThread(t);
 -- 
-2.46.2.windows.1
+2.53.0
 

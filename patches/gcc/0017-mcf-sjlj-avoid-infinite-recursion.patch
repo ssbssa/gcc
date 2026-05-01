@@ -1,14 +1,14 @@
-From 2bf854f00bc49e8072d1db101edd6be6989c75a9 Mon Sep 17 00:00:00 2001
+From 8819455512bb372800b120a3ad373c4329f0dedf Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 24 Aug 2024 16:48:10 +0200
-Subject: [PATCH 17/40] mcf sjlj avoid infinite recursion
+Subject: [PATCH 17/39] mcf sjlj avoid infinite recursion
 
 ---
  libgcc/unwind-sjlj.c | 11 +++++++++++
  1 file changed, 11 insertions(+)
 
 diff --git a/libgcc/unwind-sjlj.c b/libgcc/unwind-sjlj.c
-index 8d7091e6c57..b4934353cc5 100644
+index 0184a5da424..6e69550ccc6 100644
 --- a/libgcc/unwind-sjlj.c
 +++ b/libgcc/unwind-sjlj.c
 @@ -111,8 +111,19 @@ static void
@@ -32,5 +32,5 @@ index 8d7091e6c57..b4934353cc5 100644
  #endif
  
 -- 
-2.46.2.windows.1
+2.53.0
 

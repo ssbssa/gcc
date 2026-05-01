@@ -1,4 +1,4 @@
-From 7fe84fd6277857cc0d97c6f6767bc58210b5e7c6 Mon Sep 17 00:00:00 2001
+From 840a63329ee32302ed4d6eda4ddde0f93d5df7ad Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 21:21:34 +0200
 Subject: [PATCH 9/9] Add missing winspool.h defines
@@ -59,5 +59,5 @@ index 0116d18f9..bed1ae6ea 100644
  
    typedef struct _ADDJOB_INFO_1A {
 -- 
-2.46.2.windows.1
+2.53.0
 

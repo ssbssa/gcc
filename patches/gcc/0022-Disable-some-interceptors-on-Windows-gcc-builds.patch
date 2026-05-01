@@ -1,18 +1,18 @@
-From a2260df71b7a3089732b08cddbbfd89f72d99be3 Mon Sep 17 00:00:00 2001
+From 58cd28a46a320ad7c46a18e2b693527ea83a0027 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:44:20 +0200
-Subject: [PATCH 22/40] Disable some interceptors on Windows-gcc builds
+Subject: [PATCH 22/39] Disable some interceptors on Windows-gcc builds
 
 ---
  .../sanitizer_common_interceptors.inc                | 12 +++++++++---
- .../sanitizer_platform_interceptors.h                | 11 +++++++++--
- 2 files changed, 18 insertions(+), 5 deletions(-)
+ .../sanitizer_platform_interceptors.h                | 12 +++++++++---
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
-index f2a9348217c..2f3453f9144 100644
+index b10ce7fa44a..e1a44dae2a2 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
 +++ b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
-@@ -7125,7 +7125,13 @@ INTERCEPTOR(SIZE_T, wcslen, const wchar_t *s) {
+@@ -7258,7 +7258,13 @@ INTERCEPTOR(SIZE_T, wcslen, const wchar_t *s) {
    COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * (res + 1));
    return res;
  }
@@ -26,7 +26,7 @@ index f2a9348217c..2f3453f9144 100644
  INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
    void *ctx;
    COMMON_INTERCEPTOR_ENTER(ctx, wcsnlen, s, n);
-@@ -7133,11 +7139,10 @@ INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
+@@ -7266,11 +7272,10 @@ INTERCEPTOR(SIZE_T, wcsnlen, const wchar_t *s, SIZE_T n) {
    COMMON_INTERCEPTOR_READ_RANGE(ctx, s, sizeof(wchar_t) * Min(res + 1, n));
    return res;
  }
@@ -40,7 +40,7 @@ index f2a9348217c..2f3453f9144 100644
  #endif
  
  #if SANITIZER_INTERCEPT_WCSCAT
-@@ -10435,6 +10440,7 @@ static void InitializeCommonInterceptors() {
+@@ -10637,6 +10642,7 @@ static void InitializeCommonInterceptors() {
    INIT_UTMPX;
    INIT_GETLOADAVG;
    INIT_WCSLEN;
@@ -49,10 +49,10 @@ index f2a9348217c..2f3453f9144 100644
    INIT_WCSDUP;
    INIT_WCSXFRM;
 diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
-index 3fd6b595ef1..94e50d4d643 100644
+index ed60671014d..3145ac48005 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
 +++ b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
-@@ -157,8 +157,14 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
+@@ -165,8 +165,14 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
  #define SI_LINUX_NOT_FREEBSD 0
  #endif
  
@@ -65,26 +65,27 @@ index 3fd6b595ef1..94e50d4d643 100644
  #define SANITIZER_INTERCEPT_STRLEN SI_NOT_FUCHSIA
 -#define SANITIZER_INTERCEPT_STRNLEN (SI_NOT_MAC && SI_NOT_FUCHSIA)
 +#define SANITIZER_INTERCEPT_STRNLEN (SI_NOT_MAC && SI_NOT_FUCHSIA && SI_NOT_WINGCC)
- #define SANITIZER_INTERCEPT_STRCMP SI_NOT_FUCHSIA
+ #define SANITIZER_INTERCEPT_STRCMP (SI_NOT_FUCHSIA && SI_NOT_AIX)
  #define SANITIZER_INTERCEPT_STRSTR SI_NOT_FUCHSIA
- #define SANITIZER_INTERCEPT_STRCASESTR SI_POSIX
-@@ -237,7 +243,7 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
- #define SANITIZER_INTERCEPT___PRINTF_CHK \
+ #define SANITIZER_INTERCEPT_STRCASESTR (SI_POSIX && SI_NOT_AIX)
+@@ -252,7 +258,7 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
    (SANITIZER_INTERCEPT_PRINTF && SI_GLIBC)
  
--#define SANITIZER_INTERCEPT_FREXP SI_NOT_FUCHSIA
-+#define SANITIZER_INTERCEPT_FREXP (SI_NOT_FUCHSIA && SI_NOT_WINGCC)
- #define SANITIZER_INTERCEPT_FREXPF_FREXPL SI_POSIX
+ // AIX libc does not export FREXP and FREXPF.
+-#define SANITIZER_INTERCEPT_FREXP (SI_NOT_FUCHSIA && SI_NOT_AIX)
++#define SANITIZER_INTERCEPT_FREXP (SI_NOT_FUCHSIA && SI_NOT_AIX && SI_NOT_WINGCC)
+ #define SANITIZER_INTERCEPT_FREXPF (SI_POSIX && SI_NOT_AIX)
+ #define SANITIZER_INTERCEPT_FREXPL SI_POSIX
  
- #define SANITIZER_INTERCEPT_GETPWNAM_AND_FRIENDS SI_POSIX
-@@ -524,6 +530,7 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
+@@ -551,7 +557,7 @@ SANITIZER_WEAK_IMPORT void *aligned_alloc(__sanitizer::usize __alignment,
  #define SANITIZER_INTERCEPT_MALLOC_USABLE_SIZE (!SI_MAC && !SI_NETBSD)
  #define SANITIZER_INTERCEPT_MCHECK_MPROBE SI_LINUX_NOT_ANDROID
  #define SANITIZER_INTERCEPT_WCSLEN 1
+-#define SANITIZER_INTERCEPT_WCSNLEN 1
 +#define SANITIZER_INTERCEPT_WCSNLEN SI_NOT_WINGCC
- #define SANITIZER_INTERCEPT_WCSCAT SI_POSIX
+ #define SANITIZER_INTERCEPT_WCSCAT (SI_POSIX || SI_WINDOWS)
  #define SANITIZER_INTERCEPT_WCSDUP SI_POSIX
  #define SANITIZER_INTERCEPT_SIGNAL_AND_SIGACTION (!SI_WINDOWS && SI_NOT_FUCHSIA)
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,7 +1,7 @@
-From b7c3453c898e295a945944a0990527bbc2bf2ccc Mon Sep 17 00:00:00 2001
+From 5c250f9c90af75bcab95afe03e783c6cfd180401 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 10 Aug 2021 17:35:52 +0200
-Subject: [PATCH 14/40] Create switch to control redefined macro warning (PR
+Subject: [PATCH 14/39] Create switch to control redefined macro warning (PR
  preprocessor/83773)
 
 ---
@@ -12,10 +12,10 @@ Subject: [PATCH 14/40] Create switch to control redefined macro warning (PR
  4 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
-index 75b6531860e..57446d83f4d 100644
+index 3d96a73ecee..85d4d374332 100644
 --- a/gcc/c-family/c.opt
 +++ b/gcc/c-family/c.opt
-@@ -976,6 +976,10 @@ Wlong-long
+@@ -1006,6 +1006,10 @@ Wlong-long
  C ObjC C++ ObjC++ CPP(cpp_warn_long_long) CppReason(CPP_W_LONG_LONG) Var(warn_long_long) Init(-1) Warning LangEnabledBy(C ObjC,Wc90-c99-compat)
  Do not warn about using \"long long\" when -pedantic.
  
@@ -27,10 +27,10 @@ index 75b6531860e..57446d83f4d 100644
  C ObjC C++ ObjC++ Var(warn_main) Init(-1) Warning LangEnabledBy(C ObjC,Wall, 2, 0)
  Warn about suspicious declarations of \"main\".
 diff --git a/libcpp/include/cpplib.h b/libcpp/include/cpplib.h
-index 3bf33ab4884..4b749df21b3 100644
+index bc0d7714e96..23dbb9f6c2a 100644
 --- a/libcpp/include/cpplib.h
 +++ b/libcpp/include/cpplib.h
-@@ -439,6 +439,9 @@ struct cpp_options
+@@ -446,6 +446,9 @@ struct cpp_options
       explicitly undefined.  */
    unsigned char warn_builtin_macro_redefined;
  
@@ -40,7 +40,7 @@ index 3bf33ab4884..4b749df21b3 100644
    /* Different -Wimplicit-fallthrough= levels.  */
    unsigned char cpp_warn_implicit_fallthrough;
  
-@@ -729,6 +732,7 @@ enum cpp_warning_reason {
+@@ -739,6 +742,7 @@ enum cpp_warning_reason {
    CPP_W_NUM_SIGN_CHANGE,
    CPP_W_VARIADIC_MACROS,
    CPP_W_BUILTIN_MACRO_REDEFINED,
@@ -49,22 +49,22 @@ index 3bf33ab4884..4b749df21b3 100644
    CPP_W_UNDEF,
    CPP_W_UNUSED_MACROS,
 diff --git a/libcpp/init.cc b/libcpp/init.cc
-index e9732afeb2c..09ffc9514de 100644
+index a480d1d4a26..9b84e168554 100644
 --- a/libcpp/init.cc
 +++ b/libcpp/init.cc
-@@ -247,6 +247,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
-   CPP_OPTION (pfile, warn_dollars) = 1;
+@@ -248,6 +248,7 @@ cpp_create_reader (enum c_lang lang, cpp_hash_table *table,
    CPP_OPTION (pfile, warn_variadic_macros) = 1;
+   CPP_OPTION (pfile, suppress_builtin_macro_warnings) = 0;
    CPP_OPTION (pfile, warn_builtin_macro_redefined) = 1;
 +  CPP_OPTION (pfile, warn_macro_redefined) = 1;
    CPP_OPTION (pfile, cpp_warn_implicit_fallthrough) = 0;
    CPP_OPTION (pfile, warn_header_guard) = 0;
    /* By default, track locations of tokens resulting from macro
 diff --git a/libcpp/macro.cc b/libcpp/macro.cc
-index be257103471..d26f488443a 100644
+index c29a34302b6..707391efb67 100644
 --- a/libcpp/macro.cc
 +++ b/libcpp/macro.cc
-@@ -3421,7 +3421,8 @@ warn_of_redefinition (cpp_reader *pfile, cpp_hashnode *node,
+@@ -3434,7 +3434,8 @@ warn_of_redefinition (cpp_reader *pfile, cpp_hashnode *node,
      return false;
  
    if (cpp_macro *macro1 = get_deferred_or_lazy_macro (pfile, node, macro2->line))
@@ -74,15 +74,15 @@ index be257103471..d26f488443a 100644
    return false;
  }
  
-@@ -3955,7 +3956,7 @@ _cpp_create_definition (cpp_reader *pfile, cpp_hashnode *node,
+@@ -3989,7 +3990,7 @@ _cpp_create_definition (cpp_reader *pfile, cpp_hashnode *node,
  	{
            const enum cpp_warning_reason reason
- 	    = (cpp_builtin_macro_p (node) && !(node->flags & NODE_WARN))
--	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_NONE;
-+	    ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_MACRO_REDEFINED;
+ 	    = (cpp_builtin_macro_p (node) && !(node->flags & NODE_WARN)
+-	       ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_NONE);
++	       ? CPP_W_BUILTIN_MACRO_REDEFINED : CPP_W_MACRO_REDEFINED);
  
  	  bool warned
- 	    =  cpp_pedwarning_with_line (pfile, reason, macro->line, 0,
+ 	    = cpp_pedwarning_with_line (pfile, reason, macro->line, 0,
 -- 
-2.46.2.windows.1
+2.53.0
 

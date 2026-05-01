@@ -1,7 +1,7 @@
-From 2551da7366f74850a52bf032544a4a9351f2bd13 Mon Sep 17 00:00:00 2001
+From cd320543edb154cca568f10e92cb2f7292670b9b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:18:05 +0200
-Subject: [PATCH 13/40] Fix source location of non-standard suffix (PR c/92826)
+Subject: [PATCH 13/39] Fix source location of non-standard suffix (PR c/92826)
 
 Before:
   $ gcc -c pr92826.c -Wpedantic
@@ -21,7 +21,7 @@ After:
  1 file changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/gcc/c-family/c-lex.cc b/gcc/c-family/c-lex.cc
-index e450c9a57f0..0b661811c2f 100644
+index 1750fbc3d06..1ced845e48b 100644
 --- a/gcc/c-family/c-lex.cc
 +++ b/gcc/c-family/c-lex.cc
 @@ -43,7 +43,7 @@ int c_header_level;	 /* depth in C headers - C++ only */
@@ -33,7 +33,7 @@ index e450c9a57f0..0b661811c2f 100644
  static tree interpret_fixed (const cpp_token *, unsigned int);
  static enum integer_type_kind narrowest_unsigned_type
  	(const widest_int &, unsigned int);
-@@ -609,7 +609,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
+@@ -614,7 +614,7 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags,
  	    break;
  
  	  case CPP_N_FLOATING:
@@ -42,7 +42,7 @@ index e450c9a57f0..0b661811c2f 100644
  	    break;
  
  	  default:
-@@ -1191,7 +1191,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
+@@ -1196,7 +1196,8 @@ interpret_integer (const cpp_token *token, unsigned int flags,
     by cpplib.  For C++11 SUFFIX may contain a user-defined literal suffix.  */
  static tree
  interpret_float (const cpp_token *token, unsigned int flags,
@@ -52,7 +52,7 @@ index e450c9a57f0..0b661811c2f 100644
  {
    tree type;
    tree const_type;
-@@ -1258,7 +1259,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -1263,7 +1264,8 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	else
@@ -62,7 +62,7 @@ index e450c9a57f0..0b661811c2f 100644
  
  	type = c_common_type_for_mode (mode, 0);
  	/* For Q suffix, prefer float128t_type_node (__float128) type
-@@ -1305,13 +1307,13 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -1310,13 +1312,13 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	else if (!extended)
  	  {
  	    if (cxx_dialect < cxx23 && pedantic)
@@ -78,7 +78,7 @@ index e450c9a57f0..0b661811c2f 100644
  		   "non-standard suffix on floating constant");
        }
      else if ((flags & CPP_N_BFLOAT16) != 0)
-@@ -1323,10 +1325,10 @@ interpret_float (const cpp_token *token, unsigned int flags,
+@@ -1328,10 +1330,10 @@ interpret_float (const cpp_token *token, unsigned int flags,
  	    return error_mark_node;
  	  }
  	if (!c_dialect_cxx ())
@@ -92,5 +92,5 @@ index e450c9a57f0..0b661811c2f 100644
  		   "available with %<-std=c++23%> or %<-std=gnu++23%>");
        }
 -- 
-2.46.2.windows.1
+2.53.0
 

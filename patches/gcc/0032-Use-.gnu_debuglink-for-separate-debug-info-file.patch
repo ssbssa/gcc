@@ -1,14 +1,14 @@
-From 29cc17a0015d815d83c32b2fa30f4af73471d4b3 Mon Sep 17 00:00:00 2001
+From 896f4a8505200c18ea55819d3df39f0abb5cbabb Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 19:37:49 +0200
-Subject: [PATCH 32/40] Use .gnu_debuglink for separate debug info file
+Subject: [PATCH 32/39] Use .gnu_debuglink for separate debug info file
 
 ---
  libbacktrace/pecoff.c | 128 ++++++++++++++++++++++++++++++++++++++----
  1 file changed, 117 insertions(+), 11 deletions(-)
 
 diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
-index ae3155e9704..413cae62d14 100644
+index 28d1767027c..b3907147c4d 100644
 --- a/libbacktrace/pecoff.c
 +++ b/libbacktrace/pecoff.c
 @@ -634,14 +634,44 @@ coff_syminfo (struct backtrace_state *state, uintptr_t addr,
@@ -225,5 +225,5 @@ index ae3155e9704..413cae62d14 100644
  		  if (mod_found_dwarf)
  		    {
 -- 
-2.46.2.windows.1
+2.53.0
 

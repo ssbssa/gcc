@@ -1,7 +1,7 @@
-From b3c3e7cbfd505e48eaa7f6d8ce2a5e4354ad8f55 Mon Sep 17 00:00:00 2001
+From c3e8642e83bead925d9ecfea0f45dd3286de361e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 15:13:14 +0200
-Subject: [PATCH 11/40] Warn when a non-trivial class instance is unused (PR
+Subject: [PATCH 11/39] Warn when a non-trivial class instance is unused (PR
  c++/60212)
 
 ---
@@ -11,10 +11,10 @@ Subject: [PATCH 11/40] Warn when a non-trivial class instance is unused (PR
  3 files changed, 7 insertions(+)
 
 diff --git a/gcc/common.opt b/gcc/common.opt
-index f67c3df1fc7..a417d505e2c 100644
+index 36c6c710d48..51d0acbb5a2 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
-@@ -868,6 +868,10 @@ Wunused-label
+@@ -883,6 +883,10 @@ Wunused-label
  Common Var(warn_unused_label) Warning EnabledBy(Wunused)
  Warn when a label is unused.
  
@@ -26,10 +26,10 @@ index f67c3df1fc7..a417d505e2c 100644
  Common Var(warn_unused_parameter) Warning EnabledBy(Wunused && Wextra)
  Warn when a function parameter is unused.
 diff --git a/gcc/cp/decl.cc b/gcc/cp/decl.cc
-index 9cf75936d7a..6f8b71098f9 100644
+index 679a8007ca6..eee7eaa7998 100644
 --- a/gcc/cp/decl.cc
 +++ b/gcc/cp/decl.cc
-@@ -721,6 +721,7 @@ poplevel (int keep, int reverse, int functionbody)
+@@ -839,6 +839,7 @@ poplevel (int keep, int reverse, int functionbody)
  	    && !name_independent_decl_p (decl)
  	    && type != error_mark_node
  	    && (!CLASS_TYPE_P (type)
@@ -37,7 +37,7 @@ index 9cf75936d7a..6f8b71098f9 100644
  		|| !TYPE_HAS_NONTRIVIAL_DESTRUCTOR (type)
  		|| lookup_attribute ("warn_unused",
  				     TYPE_ATTRIBUTES (TREE_TYPE (decl)))))
-@@ -19763,6 +19764,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
+@@ -21120,6 +21121,7 @@ cxx_maybe_build_cleanup (tree decl, tsubst_flags_t complain)
  
    if (cleanup
        && DECL_P (decl)
@@ -46,10 +46,10 @@ index 9cf75936d7a..6f8b71098f9 100644
        /* Treat objects with destructors as used; the destructor may do
  	 something substantive.  */
 diff --git a/gcc/cp/init.cc b/gcc/cp/init.cc
-index e589e45e891..8f4f375a769 100644
+index d0929c35bfc..2ce16277646 100644
 --- a/gcc/cp/init.cc
 +++ b/gcc/cp/init.cc
-@@ -2088,6 +2088,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
+@@ -2095,6 +2095,7 @@ build_aggr_init (tree exp, tree init, int flags, tsubst_flags_t complain)
  
    if ((VAR_P (exp) || TREE_CODE (exp) == PARM_DECL)
        && TREE_SIDE_EFFECTS (stmt_expr)
@@ -58,5 +58,5 @@ index e589e45e891..8f4f375a769 100644
      /* Just know that we've seen something for this node.  */
      TREE_USED (exp) = 1;
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,7 +1,7 @@
-From 74f1285145b0affe4d09519f183e5ebee5761320 Mon Sep 17 00:00:00 2001
+From 4f7f9529d09b69c9c76921b22aa6eb3d1b23094b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:03:05 +0200
-Subject: [PATCH 19/40] Enable sanitizer support on Windows x86_64
+Subject: [PATCH 19/39] Enable sanitizer support on Windows x86_64
 
 ---
  gcc/config/i386/cygming.h                     |  2 +
@@ -21,13 +21,13 @@ Subject: [PATCH 19/40] Enable sanitizer support on Windows x86_64
  14 files changed, 121 insertions(+), 23 deletions(-)
 
 diff --git a/gcc/config/i386/cygming.h b/gcc/config/i386/cygming.h
-index 3ddcbecb22f..091fbc8219b 100644
+index 00d11063c72..15033484ac5 100644
 --- a/gcc/config/i386/cygming.h
 +++ b/gcc/config/i386/cygming.h
-@@ -474,3 +474,5 @@ do {						\
-   (ix86_cmodel == CM_LARGE_PIC || ix86_cmodel == CM_MEDIUM_PIC)
- 
- #define HAVE_64BIT_POINTERS TARGET_64BIT_DEFAULT
+@@ -502,3 +502,5 @@ do {						\
+ /* For now, do not handle .res because some packages pass
+ COFF files named .res to gcc directly, expecting them to
+ be passed to the linker, not windres. See PR123504.  */
 +
 +#define TARGET_ASAN_DYNAMIC_SHADOW_OFFSET_P hook_bool_void_true
 diff --git a/libsanitizer/asan/Makefile.am b/libsanitizer/asan/Makefile.am
@@ -43,10 +43,10 @@ index 4eb9989af59..843d3dbe580 100644
  	asan_interceptors_memintrinsics.cpp \
  	asan_linux.cpp \
 diff --git a/libsanitizer/asan/Makefile.in b/libsanitizer/asan/Makefile.in
-index 54ee575bdf4..f68edc02aa1 100644
+index 36d34fb5ba8..ded4378a1cc 100644
 --- a/libsanitizer/asan/Makefile.in
 +++ b/libsanitizer/asan/Makefile.in
-@@ -153,11 +153,12 @@ libasan_la_DEPENDENCIES =  \
+@@ -155,11 +155,12 @@ libasan_la_DEPENDENCIES =  \
  	$(am__append_3) $(am__DEPENDENCIES_1)
  am__objects_1 = asan_activation.lo asan_allocator.lo asan_debugging.lo \
  	asan_descriptions.lo asan_errors.lo asan_fake_stack.lo \
@@ -64,7 +64,7 @@ index 54ee575bdf4..f68edc02aa1 100644
  	asan_shadow_setup.lo asan_stack.lo asan_stats.lo \
  	asan_suppressions.lo asan_thread.lo asan_win.lo \
  	asan_win_dynamic_runtime_thunk.lo asan_interceptors_vfork.lo
-@@ -436,6 +437,7 @@ asan_files = \
+@@ -439,6 +440,7 @@ asan_files = \
  	asan_fake_stack.cpp \
  	asan_flags.cpp \
  	asan_globals.cpp \
@@ -72,7 +72,7 @@ index 54ee575bdf4..f68edc02aa1 100644
  	asan_interceptors.cpp \
  	asan_interceptors_memintrinsics.cpp \
  	asan_linux.cpp \
-@@ -596,6 +598,7 @@ distclean-compile:
+@@ -599,6 +601,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_fake_stack.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_flags.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asan_globals.Plo@am__quote@
@@ -117,7 +117,7 @@ index 2b59595dcd3..8b2554f7ab0 100644
  
  } // namespace __asan
 diff --git a/libsanitizer/asan/asan_malloc_win.cpp b/libsanitizer/asan/asan_malloc_win.cpp
-index 3278f072198..5e478951585 100644
+index ea6f7dfaa08..b73b38800f5 100644
 --- a/libsanitizer/asan/asan_malloc_win.cpp
 +++ b/libsanitizer/asan/asan_malloc_win.cpp
 @@ -40,6 +40,14 @@ constexpr unsigned long HEAP_FREE_UNSUPPORTED_FLAGS =
@@ -136,10 +136,10 @@ index 3278f072198..5e478951585 100644
  extern "C" {
  LPVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, size_t dwBytes);
 diff --git a/libsanitizer/asan/asan_win.cpp b/libsanitizer/asan/asan_win.cpp
-index 09a13b11cff..727d6ddae28 100644
+index 845408ac38a..e59659c1ab3 100644
 --- a/libsanitizer/asan/asan_win.cpp
 +++ b/libsanitizer/asan/asan_win.cpp
-@@ -221,7 +221,24 @@ void FlushUnneededASanShadowMemory(uptr p, uptr size) {
+@@ -228,7 +228,24 @@ void FlushUnneededASanShadowMemory(uptr p, uptr size) {
  // ---------------------- TSD ---------------- {{{
  static bool tsd_key_inited = false;
  
@@ -164,7 +164,7 @@ index 09a13b11cff..727d6ddae28 100644
  
  // https://docs.microsoft.com/en-us/windows/desktop/api/winternl/ns-winternl-_teb
  // "[This structure may be altered in future versions of Windows. Applications
-@@ -254,7 +271,7 @@ void AsanTSDInit(void (*destructor)(void *tsd)) {
+@@ -261,7 +278,7 @@ void AsanTSDInit(void (*destructor)(void *tsd)) {
  
  void *AsanTSDGet() {
    CHECK(tsd_key_inited);
@@ -173,7 +173,7 @@ index 09a13b11cff..727d6ddae28 100644
  }
  
  void AsanTSDSet(void *tsd) {
-@@ -322,6 +339,11 @@ ShadowExceptionHandler(PEXCEPTION_POINTERS exception_pointers) {
+@@ -332,6 +349,11 @@ ShadowExceptionHandler(PEXCEPTION_POINTERS exception_pointers) {
  #endif
  
  void InitializePlatformExceptionHandlers() {
@@ -185,7 +185,7 @@ index 09a13b11cff..727d6ddae28 100644
  #if SANITIZER_WINDOWS64
    // On Win64, we map memory on demand with access violation handler.
    // Install our exception handler.
-@@ -330,7 +352,15 @@ void InitializePlatformExceptionHandlers() {
+@@ -340,7 +362,15 @@ void InitializePlatformExceptionHandlers() {
  }
  
  bool IsSystemHeapAddress(uptr addr) {
@@ -202,7 +202,7 @@ index 09a13b11cff..727d6ddae28 100644
  }
  
  // We want to install our own exception handler (EH) to print helpful reports
-@@ -375,7 +405,7 @@ bool HandleDlopenInit() {
+@@ -385,7 +415,7 @@ bool HandleDlopenInit() {
  // immediately after the CRT runs. This way, our exception filter is called
  // first and we can delegate to their filter if appropriate.
  #pragma section(".CRT$XCAB", long, read)
@@ -211,7 +211,7 @@ index 09a13b11cff..727d6ddae28 100644
      __asan_set_seh_filter;
  
  // Piggyback on the TLS initialization callback directory to initialize asan as
-@@ -388,7 +418,7 @@ static void NTAPI asan_thread_init(void *module, DWORD reason, void *reserved) {
+@@ -398,7 +428,7 @@ static void NTAPI asan_thread_init(void *module, DWORD reason, void *reserved) {
  }
  
  #pragma section(".CRT$XLAB", long, read)
@@ -220,7 +220,7 @@ index 09a13b11cff..727d6ddae28 100644
      void *, unsigned long, void *) = asan_thread_init;
  #endif
  
-@@ -402,7 +432,7 @@ static void NTAPI asan_thread_exit(void *module, DWORD reason, void *reserved) {
+@@ -412,7 +442,7 @@ static void NTAPI asan_thread_exit(void *module, DWORD reason, void *reserved) {
  }
  
  #pragma section(".CRT$XLY", long, read)
@@ -230,10 +230,10 @@ index 09a13b11cff..727d6ddae28 100644
  
  WIN_FORCE_LINK(__asan_dso_reg_hook)
 diff --git a/libsanitizer/configure b/libsanitizer/configure
-index 6bfd28916d2..a2103e5a16e 100755
+index c0e57bd4287..785b9eeb4bd 100755
 --- a/libsanitizer/configure
 +++ b/libsanitizer/configure
-@@ -16046,6 +16046,10 @@ done
+@@ -16435,6 +16435,10 @@ done
  # Common libraries that we need to link against for all sanitizer libs.
  link_sanitizer_common='-lpthread -lm'
  
@@ -260,7 +260,7 @@ index 8037c941774..8161a892137 100644
  # in if it still doesn't give us the function we want.  This
  # test is copied from libgomp.
 diff --git a/libsanitizer/configure.tgt b/libsanitizer/configure.tgt
-index 77a0e68222b..83c548be2f3 100644
+index 3161ab3ee91..4171a39c4ee 100644
 --- a/libsanitizer/configure.tgt
 +++ b/libsanitizer/configure.tgt
 @@ -85,6 +85,8 @@ case "${target}" in
@@ -273,10 +273,10 @@ index 77a0e68222b..83c548be2f3 100644
  	UNSUPPORTED=1
  	;;
 diff --git a/libsanitizer/interception/interception_win.cpp b/libsanitizer/interception/interception_win.cpp
-index 077a536dd2a..e098e6d2afc 100644
+index 85687242511..a3c2146435b 100644
 --- a/libsanitizer/interception/interception_win.cpp
 +++ b/libsanitizer/interception/interception_win.cpp
-@@ -925,6 +925,32 @@ bool OverrideFunctionWithDetour(
+@@ -1085,6 +1085,32 @@ bool OverrideFunctionWithDetour(
  
  bool OverrideFunctionWithRedirectJump(
      uptr old_func, uptr new_func, uptr *orig_old_func) {
@@ -310,7 +310,7 @@ index 077a536dd2a..e098e6d2afc 100644
    if (*(u8*)old_func != 0xE9)
      return false;
 diff --git a/libsanitizer/sanitizer_common/sanitizer_internal_defs.h b/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
-index fff60c96f63..45da5b8937c 100644
+index c719e2a8ef6..d727254184d 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
 +++ b/libsanitizer/sanitizer_common/sanitizer_internal_defs.h
 @@ -29,11 +29,11 @@
@@ -340,10 +340,10 @@ index fff60c96f63..45da5b8937c 100644
  # define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)                   \
    WIN_WEAK_EXPORT_DEF(ReturnType, Name, __VA_ARGS__)
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index ea513d5f263..c6736788efa 100644
+index ed4f60deeff..93564c55ef7 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -745,7 +745,7 @@ static int RunAtexit() {
+@@ -760,7 +760,7 @@ static int RunAtexit() {
  }
  
  #pragma section(".CRT$XID", long, read)
@@ -389,18 +389,18 @@ index bfe38a33236..6d08c83735f 100644
  
  // Go neither needs nor wants weak references.
 diff --git a/libsanitizer/ubsan/ubsan_handlers.cpp b/libsanitizer/ubsan/ubsan_handlers.cpp
-index ea332013a50..7f888d44a27 100644
+index be55ee5a311..d6acdeef514 100644
 --- a/libsanitizer/ubsan/ubsan_handlers.cpp
 +++ b/libsanitizer/ubsan/ubsan_handlers.cpp
-@@ -879,7 +879,7 @@ namespace __ubsan {
+@@ -899,7 +899,7 @@ static void handleCFIBadIcall(CFICheckFailData *Data, ValueHandle Function,
  
- #ifdef UBSAN_CAN_USE_CXXABI
+ namespace __ubsan {
  
 -#ifdef _WIN32
 +#if defined(_WIN32) && !defined(__GNUC__)
- 
  extern "C" void __ubsan_handle_cfi_bad_type_default(CFICheckFailData *Data,
                                                      ValueHandle Vtable,
+                                                     bool ValidVtable,
 -- 
-2.46.2.windows.1
+2.53.0
 

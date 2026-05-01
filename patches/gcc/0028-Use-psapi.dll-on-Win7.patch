@@ -1,17 +1,17 @@
-From 8ce57928e7c2ae358f32781864f3a79dc9200e34 Mon Sep 17 00:00:00 2001
+From 5396304009c074eddae604cb3e56e537f8d76c60 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 14 Oct 2024 15:48:34 +0200
-Subject: [PATCH 28/40] Use psapi.dll on Win7
+Subject: [PATCH 28/39] Use psapi.dll on Win7
 
 ---
  .../sanitizer_common/sanitizer_win.cpp        | 52 +++++++++++++++++--
  1 file changed, 48 insertions(+), 4 deletions(-)
 
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index 7ed31317a95..f3621c82044 100644
+index 46b8932d03f..fa412a58c74 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -647,10 +647,27 @@ static uptr GetPreferredBase(const char *modname, char *buf, size_t buf_size) {
+@@ -662,10 +662,27 @@ static uptr GetPreferredBase(const char *modname, char *buf, size_t buf_size) {
    return (uptr)pe_header->ImageBase;
  }
  
@@ -39,7 +39,7 @@ index 7ed31317a95..f3621c82044 100644
    // Query the list of modules.  Start by assuming there are no more than 256
    // modules and retry if that's not sufficient.
    HMODULE *hmodules = 0;
-@@ -658,7 +675,7 @@ void ListOfModules::init() {
+@@ -673,7 +690,7 @@ void ListOfModules::init() {
    DWORD bytes_required;
    while (!hmodules) {
      hmodules = (HMODULE *)MmapOrDie(modules_buffer_size, __FUNCTION__);
@@ -48,7 +48,7 @@ index 7ed31317a95..f3621c82044 100644
                               &bytes_required));
      if (bytes_required > modules_buffer_size) {
        // Either there turned out to be more than 256 hmodules, or new hmodules
-@@ -678,7 +695,7 @@ void ListOfModules::init() {
+@@ -693,7 +710,7 @@ void ListOfModules::init() {
    for (size_t i = 0; i < num_modules; ++i) {
      HMODULE handle = hmodules[i];
      MODULEINFO mi;
@@ -57,7 +57,7 @@ index 7ed31317a95..f3621c82044 100644
        continue;
  
      // Get the UTF-16 path and convert to UTF-8.
-@@ -951,8 +968,10 @@ uptr internal_ftruncate(fd_t fd, uptr size) {
+@@ -966,8 +983,10 @@ uptr internal_ftruncate(fd_t fd, uptr size) {
  }
  
  uptr GetRSS() {
@@ -69,7 +69,7 @@ index 7ed31317a95..f3621c82044 100644
      return 0;
    return counters.WorkingSetSize;
  }
-@@ -1261,7 +1280,32 @@ void CheckVMASize() {
+@@ -1279,7 +1298,32 @@ void CheckVMASize() {
  }
  
  void InitializePlatformEarly() {
@@ -104,5 +104,5 @@ index 7ed31317a95..f3621c82044 100644
  
  void CheckASLR() {
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,16 +1,16 @@
-From 1c1c9318df4fb48eaec50f575c749199d5f4d610 Mon Sep 17 00:00:00 2001
+From cb9b063029d7ad852e66fef246651be1c5624bb5 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
-Subject: [PATCH 10/40] Enable diagnostic URLs on cygwin terminal
+Subject: [PATCH 10/39] Enable diagnostic URLs on cygwin terminal
 
 ---
- gcc/diagnostic-color.cc | 8 +++++++-
+ gcc/diagnostics/color.cc | 8 +++++++-
  1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/gcc/diagnostic-color.cc b/gcc/diagnostic-color.cc
-index aaf685fab7b..7b15ac85adb 100644
---- a/gcc/diagnostic-color.cc
-+++ b/gcc/diagnostic-color.cc
+diff --git a/gcc/diagnostics/color.cc b/gcc/diagnostics/color.cc
+index bbdb4c2fc80..ead85497596 100644
+--- a/gcc/diagnostics/color.cc
++++ b/gcc/diagnostics/color.cc
 @@ -323,6 +323,8 @@ w_isatty (int num)
  	  GetConsoleScreenBufferInfo (fh, &csbi);
  	  console_color = csbi.wAttributes & 0xff;
@@ -48,5 +48,5 @@ index aaf685fab7b..7b15ac85adb 100644
  
  /* Determine if URLs should be enabled, based on RULE,
 -- 
-2.46.2.windows.1
+2.53.0
 

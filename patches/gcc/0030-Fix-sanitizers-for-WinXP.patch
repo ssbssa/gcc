@@ -1,7 +1,7 @@
-From a16a1856479fc2a3d1af0f7f004df8e6f4b94928 Mon Sep 17 00:00:00 2001
+From 35eb9d3d1d6173dfc33240facf4dd26f80a3d28a Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 16 Oct 2024 17:15:17 +0200
-Subject: [PATCH 30/40] Fix sanitizers for WinXP
+Subject: [PATCH 30/39] Fix sanitizers for WinXP
 
 ---
  .../sanitizer_common/sanitizer_symbolizer_win.cpp  | 14 +++++++++++---
@@ -70,5 +70,5 @@ index 2146ed3c272..44670299b28 100644
        // In MinGW environments on x86, long doubles are 80 bit, but here,
        // we're calling an MS CRT provided printf function which considers
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,7 +1,7 @@
-From e707ce44b53429e0dd8cbf48619c87961bbc30c9 Mon Sep 17 00:00:00 2001
+From 47a34922845ebf1a2daae6b34e55d5b5a17afb17 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
-Subject: [PATCH 02/40] Relocatable mingw paths
+Subject: [PATCH 02/39] Relocatable mingw paths
 
 ---
  gcc/config/mingw/mingw32.h | 9 ++-------
@@ -9,7 +9,7 @@ Subject: [PATCH 02/40] Relocatable mingw paths
  2 files changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/gcc/config/mingw/mingw32.h b/gcc/config/mingw/mingw32.h
-index 10bcd293527..49e436a899c 100644
+index 1d319b77bf8..d0090c4760a 100644
 --- a/gcc/config/mingw/mingw32.h
 +++ b/gcc/config/mingw/mingw32.h
 @@ -89,7 +89,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -41,7 +41,7 @@ index 10bcd293527..49e436a899c 100644
     We canonicalize it to be in Unix format (backslashes are replaced
     forward slashes.  */
 diff --git a/gcc/incpath.cc b/gcc/incpath.cc
-index c1bbfd3872a..d81db3c9de5 100644
+index 74ae8ba1918..bdc27e4289b 100644
 --- a/gcc/incpath.cc
 +++ b/gcc/incpath.cc
 @@ -189,8 +189,7 @@ add_standard_paths (const char *sysroot, const char *iprefix,
@@ -55,5 +55,5 @@ index c1bbfd3872a..d81db3c9de5 100644
   	      static const char *relocated_prefix;
  	      char *ostr;
 -- 
-2.46.2.windows.1
+2.53.0
 

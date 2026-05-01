@@ -1,7 +1,7 @@
-From 87406186a8f2e51134767cab09c2f15c80d2b844 Mon Sep 17 00:00:00 2001
+From 6485c6933d17c7c06bfced34b5653163307a5f14 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:37:46 +0200
-Subject: [PATCH 21/40] Enable mmap reader for libbacktrace on Windows
+Subject: [PATCH 21/39] Enable mmap reader for libbacktrace on Windows
 
 ---
  libbacktrace/mmap.c                           | 18 +++++
@@ -13,7 +13,7 @@ Subject: [PATCH 21/40] Enable mmap reader for libbacktrace on Windows
  6 files changed, 111 insertions(+), 1 deletion(-)
 
 diff --git a/libbacktrace/mmap.c b/libbacktrace/mmap.c
-index 12824b1cb2f..42a56ace21b 100644
+index d452427c51f..b65d648b5d5 100644
 --- a/libbacktrace/mmap.c
 +++ b/libbacktrace/mmap.c
 @@ -37,11 +37,15 @@ POSSIBILITY OF SUCH DAMAGE.  */
@@ -54,7 +54,7 @@ index 12824b1cb2f..42a56ace21b 100644
  
  struct backtrace_freelist_struct
 diff --git a/libbacktrace/mmapio.c b/libbacktrace/mmapio.c
-index 0f4a6bdcd85..312d6f85c31 100644
+index 775419a4279..ad8861af2aa 100644
 --- a/libbacktrace/mmapio.c
 +++ b/libbacktrace/mmapio.c
 @@ -34,12 +34,19 @@ POSSIBILITY OF SUCH DAMAGE.  */
@@ -146,10 +146,10 @@ index 0f4a6bdcd85..312d6f85c31 100644
     available.  */
  
 diff --git a/libsanitizer/configure b/libsanitizer/configure
-index 8a8c9a460a4..45f6a7e9291 100755
+index 033da383943..2a5cfe1cbd8 100755
 --- a/libsanitizer/configure
 +++ b/libsanitizer/configure
-@@ -16837,6 +16837,12 @@ ac_config_commands="$ac_config_commands gstdint.h"
+@@ -17226,6 +17226,12 @@ ac_config_commands="$ac_config_commands gstdint.h"
  
  
  
@@ -162,7 +162,7 @@ index 8a8c9a460a4..45f6a7e9291 100755
  for ac_header in sys/mman.h alloca.h
  do :
    as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
-@@ -16888,6 +16894,8 @@ else
+@@ -17277,6 +17283,8 @@ else
  fi
  rm -f conftest.err conftest.i conftest.$ac_ext
  fi
@@ -244,5 +244,5 @@ index 1ff8b8f1bab..259198026b9 100644
    // Add the dbghelp based symbolizer.
    list->push_back(new(*allocator) WinSymbolizerTool());
 -- 
-2.46.2.windows.1
+2.53.0
 

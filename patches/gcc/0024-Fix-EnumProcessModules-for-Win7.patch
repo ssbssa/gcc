@@ -1,14 +1,14 @@
-From bd1f6bc3c2a06c5aa8910c079fa1642a9a7c36d4 Mon Sep 17 00:00:00 2001
+From 3be4cc6465e2c4f482b70e32d4c3fc2304bf513d Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:27:04 +0200
-Subject: [PATCH 24/40] Fix EnumProcessModules for Win7
+Subject: [PATCH 24/39] Fix EnumProcessModules for Win7
 
 ---
  libbacktrace/pecoff.c | 25 ++++++++++++++++++++++---
  1 file changed, 22 insertions(+), 3 deletions(-)
 
 diff --git a/libbacktrace/pecoff.c b/libbacktrace/pecoff.c
-index 99c2c6dea77..ae3155e9704 100644
+index 95f28582d5c..28d1767027c 100644
 --- a/libbacktrace/pecoff.c
 +++ b/libbacktrace/pecoff.c
 @@ -48,7 +48,6 @@ POSSIBILITY OF SUCH DAMAGE.  */
@@ -60,5 +60,5 @@ index 99c2c6dea77..ae3155e9704 100644
        DWORD i;
        char modname[MAX_PATH];
 -- 
-2.46.2.windows.1
+2.53.0
 

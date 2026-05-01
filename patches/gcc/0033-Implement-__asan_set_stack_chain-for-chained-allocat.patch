@@ -1,7 +1,7 @@
-From f5e94b2113cd3272545b4c4a50d1e6d75e90582b Mon Sep 17 00:00:00 2001
+From 652433536b396d6016e6099c4e88e046dacc6ea9 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 21:14:45 +0200
-Subject: [PATCH 33/40] Implement __asan_set_stack_chain for chained allocation
+Subject: [PATCH 33/39] Implement __asan_set_stack_chain for chained allocation
  stack traces
 
 ---
@@ -18,10 +18,10 @@ Subject: [PATCH 33/40] Implement __asan_set_stack_chain for chained allocation
  10 files changed, 96 insertions(+), 3 deletions(-)
 
 diff --git a/libsanitizer/asan/asan_allocator.cpp b/libsanitizer/asan/asan_allocator.cpp
-index 9e66f77217e..5e29e8dde12 100644
+index 752ba9ab32c..5c2286e85e4 100644
 --- a/libsanitizer/asan/asan_allocator.cpp
 +++ b/libsanitizer/asan/asan_allocator.cpp
-@@ -101,6 +101,7 @@ class ChunkHeader {
+@@ -102,6 +102,7 @@ class ChunkHeader {
    u16 user_requested_size_hi;
    u32 user_requested_size_lo;
    atomic_uint64_t alloc_context_id;
@@ -29,7 +29,7 @@ index 9e66f77217e..5e29e8dde12 100644
  
   public:
    uptr UsedSize() const {
-@@ -125,10 +126,18 @@ class ChunkHeader {
+@@ -126,10 +127,18 @@ class ChunkHeader {
    void GetAllocContext(u32 &tid, u32 &stack) const {
      AtomicContextLoad(&alloc_context_id, tid, stack);
    }
@@ -48,7 +48,7 @@ index 9e66f77217e..5e29e8dde12 100644
  
   public:
    void SetFreeContext(u32 tid, u32 stack) {
-@@ -138,11 +147,18 @@ class ChunkBase : public ChunkHeader {
+@@ -139,11 +148,18 @@ class ChunkBase : public ChunkHeader {
    void GetFreeContext(u32 &tid, u32 &stack) const {
      AtomicContextLoad(&free_context_id, tid, stack);
    }
@@ -68,7 +68,7 @@ index 9e66f77217e..5e29e8dde12 100644
  COMPILER_CHECK(kChunkHeader2Size <= 16);
  
  enum {
-@@ -462,7 +478,7 @@ struct Allocator {
+@@ -468,7 +484,7 @@ struct Allocator {
                   : user_requested_size <= (1 << 15) - 512  ? 5
                   : user_requested_size <= (1 << 16) - 1024 ? 6
                                                             : 7;
@@ -77,7 +77,7 @@ index 9e66f77217e..5e29e8dde12 100644
      u32 min_log = RZSize2Log(atomic_load(&min_redzone, memory_order_acquire));
      u32 max_log = RZSize2Log(atomic_load(&max_redzone, memory_order_acquire));
      return Min(Max(rz_log, Max(min_log, hdr_log)), Max(max_log, hdr_log));
-@@ -607,6 +623,7 @@ struct Allocator {
+@@ -615,6 +631,7 @@ struct Allocator {
      m->user_requested_alignment_log = user_requested_alignment_log;
  
      m->SetAllocContext(t ? t->tid() : kMainTid, StackDepotPut(*stack));
@@ -85,7 +85,7 @@ index 9e66f77217e..5e29e8dde12 100644
  
      if (!from_primary || *(u8 *)MEM_TO_SHADOW((uptr)allocated) == 0) {
        // The allocator provides an unpoisoned chunk. This is possible for the
-@@ -685,6 +702,7 @@ struct Allocator {
+@@ -697,6 +714,7 @@ struct Allocator {
               CHUNK_QUARANTINE);
      AsanThread *t = GetCurrentThread();
      m->SetFreeContext(t ? t->tid() : 0, StackDepotPut(*stack));
@@ -93,7 +93,7 @@ index 9e66f77217e..5e29e8dde12 100644
  
      // Push into quarantine.
      if (t) {
-@@ -967,6 +985,16 @@ u32 AsanChunkView::GetFreeStackId() const {
+@@ -980,6 +998,16 @@ u32 AsanChunkView::GetFreeStackId() const {
    return stack;
  }
  
@@ -110,7 +110,7 @@ index 9e66f77217e..5e29e8dde12 100644
  void InitializeAllocator(const AllocatorOptions &options) {
    instance.InitLinkerInitialized(options);
  }
-@@ -1273,3 +1301,13 @@ int __asan_update_allocation_context(void* addr) {
+@@ -1378,3 +1406,13 @@ int __asan_update_allocation_context(void* addr) {
    GET_STACK_TRACE_MALLOC;
    return instance.UpdateAllocationStack((uptr)addr, &stack);
  }
@@ -125,10 +125,10 @@ index 9e66f77217e..5e29e8dde12 100644
 +  return prev_addr;
 +}
 diff --git a/libsanitizer/asan/asan_allocator.h b/libsanitizer/asan/asan_allocator.h
-index db8dc3bebfc..346358a635d 100644
+index fdf456473fb..f2b5a20d834 100644
 --- a/libsanitizer/asan/asan_allocator.h
 +++ b/libsanitizer/asan/asan_allocator.h
-@@ -64,6 +64,8 @@ class AsanChunkView {
+@@ -65,6 +65,8 @@ class AsanChunkView {
    bool Eq(const AsanChunkView &c) const { return chunk_ == c.chunk_; }
    u32 GetAllocStackId() const;
    u32 GetFreeStackId() const;
@@ -138,10 +138,10 @@ index db8dc3bebfc..346358a635d 100644
    bool AddrIsInside(uptr addr, uptr access_size, sptr *offset) const {
      if (addr >= Beg() && (addr + access_size) <= End()) {
 diff --git a/libsanitizer/asan/asan_descriptions.cpp b/libsanitizer/asan/asan_descriptions.cpp
-index caec79313e2..19d845fe3f8 100644
+index 18c2a6c571c..885a6bae805 100644
 --- a/libsanitizer/asan/asan_descriptions.cpp
 +++ b/libsanitizer/asan/asan_descriptions.cpp
-@@ -168,9 +168,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
+@@ -166,9 +166,12 @@ bool GetHeapAddressInformation(uptr addr, uptr access_size,
    CHECK_NE(chunk.AllocTid(), kInvalidTid);
    descr->alloc_tid = chunk.AllocTid();
    descr->alloc_stack_id = chunk.GetAllocStackId();
@@ -155,7 +155,7 @@ index caec79313e2..19d845fe3f8 100644
    return true;
  }
  
-@@ -181,6 +184,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
+@@ -179,6 +182,26 @@ static StackTrace GetStackTraceFromId(u32 id) {
    return res;
  }
  
@@ -182,7 +182,7 @@ index caec79313e2..19d845fe3f8 100644
  bool DescribeAddressIfHeap(uptr addr, uptr access_size) {
    HeapAddressDescription descr;
    if (!GetHeapAddressInformation(addr, access_size, &descr)) {
-@@ -428,6 +451,7 @@ void HeapAddressDescription::Print() const {
+@@ -426,6 +449,7 @@ void HeapAddressDescription::Print() const {
             AsanThreadIdAndName(free_thread).c_str(), d.Default());
      StackTrace free_stack = GetStackTraceFromId(free_stack_id);
      free_stack.Print();
@@ -190,7 +190,7 @@ index caec79313e2..19d845fe3f8 100644
      Printf("%spreviously allocated by thread %s here:%s\n", d.Allocation(),
             AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
    } else {
-@@ -435,6 +459,7 @@ void HeapAddressDescription::Print() const {
+@@ -433,6 +457,7 @@ void HeapAddressDescription::Print() const {
             AsanThreadIdAndName(alloc_thread).c_str(), d.Default());
    }
    alloc_stack.Print();
@@ -231,10 +231,10 @@ index a614f47d461..4524d9a5a27 100644
  
    void Print() const;
 diff --git a/libsanitizer/asan/asan_errors.cpp b/libsanitizer/asan/asan_errors.cpp
-index 4f112cc5d1b..b4cf82a77a6 100644
+index 2a207cd06cc..abd4ce819a5 100644
 --- a/libsanitizer/asan/asan_errors.cpp
 +++ b/libsanitizer/asan/asan_errors.cpp
-@@ -616,6 +616,8 @@ void ErrorGeneric::Print() {
+@@ -656,6 +656,8 @@ void ErrorGeneric::Print() {
    GET_STACK_TRACE_FATAL(pc, bp);
    stack.Print();
  
@@ -269,10 +269,10 @@ index a9982637802..7f82f4de0ab 100644
  
  #endif  // ASAN_INTERFACE_INTERNAL_H
 diff --git a/libsanitizer/asan/asan_report.cpp b/libsanitizer/asan/asan_report.cpp
-index 45aa607dcda..383238d5b08 100644
+index e049a21e4e1..046f0f40f66 100644
 --- a/libsanitizer/asan/asan_report.cpp
 +++ b/libsanitizer/asan/asan_report.cpp
-@@ -144,6 +144,8 @@ class ScopedInErrorReport {
+@@ -172,6 +172,8 @@ class ScopedInErrorReport {
      if (current_error_.IsValid()) current_error_.Print();
  
      // Make sure the current thread is announced.
@@ -282,7 +282,7 @@ index 45aa607dcda..383238d5b08 100644
      // We may want to grab this lock again when printing stats.
      asanThreadRegistry().Unlock();
 diff --git a/libsanitizer/asan/asan_thread.h b/libsanitizer/asan/asan_thread.h
-index ad9e03d68fe..3aff939f461 100644
+index 19b7f342e17..de869c1c459 100644
 --- a/libsanitizer/asan/asan_thread.h
 +++ b/libsanitizer/asan/asan_thread.h
 @@ -144,6 +144,13 @@ class AsanThread {
@@ -325,5 +325,5 @@ index 37b6d08f4db..0f35acd76f8 100644
  } // extern "C"
  #endif
 -- 
-2.46.2.windows.1
+2.53.0
 

@@ -1,7 +1,7 @@
-From 6d604909cc06c53dfa6fc680a63886b7b740268c Mon Sep 17 00:00:00 2001
+From a05267488b86044418807839adaf0be68196b6d7 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 20 Aug 2024 21:14:54 +0200
-Subject: [PATCH 16/40] Add GetThreadId alternative for WinXP
+Subject: [PATCH 16/39] Add GetThreadId alternative for WinXP
 
 ---
  libgcc/config/i386/gthr-win32-thread.c | 75 +++++++++++++++++++++++++-
@@ -9,7 +9,7 @@ Subject: [PATCH 16/40] Add GetThreadId alternative for WinXP
  2 files changed, 76 insertions(+), 2 deletions(-)
 
 diff --git a/libgcc/config/i386/gthr-win32-thread.c b/libgcc/config/i386/gthr-win32-thread.c
-index 9ec7c417a41..536c07806f1 100644
+index fe491aa415c..4a137bfbf2b 100644
 --- a/libgcc/config/i386/gthr-win32-thread.c
 +++ b/libgcc/config/i386/gthr-win32-thread.c
 @@ -116,7 +116,7 @@ __gthr_win32_join (__gthread_t thr, void **value_ptr)
@@ -102,10 +102,10 @@ index 9ec7c417a41..536c07806f1 100644
  
  __gthread_t
 diff --git a/libgcc/config/i386/gthr-win32.h b/libgcc/config/i386/gthr-win32.h
-index 34988d4c3df..274a37c4d66 100644
+index 2c7504ef265..d10a9b73552 100644
 --- a/libgcc/config/i386/gthr-win32.h
 +++ b/libgcc/config/i386/gthr-win32.h
-@@ -425,6 +425,7 @@ __gthread_active_p (void)
+@@ -416,6 +416,7 @@ __gthread_active_p (void)
  
  extern int __gthr_win32_create (__gthread_t *, void *(*) (void*), void *);
  extern int __gthr_win32_join (__gthread_t, void **);
@@ -113,7 +113,7 @@ index 34988d4c3df..274a37c4d66 100644
  extern __gthread_t __gthr_win32_self (void);
  extern int __gthr_win32_once (__gthread_once_t *, void (*) (void));
  extern int __gthr_win32_detach (__gthread_t);
-@@ -636,7 +637,7 @@ __gthread_detach (__gthread_t __thr)
+@@ -627,7 +628,7 @@ __gthread_detach (__gthread_t __thr)
  __GTHREAD_WIN32_INLINE int
  __gthread_equal (__gthread_t __t1, __gthread_t __t2)
  {
@@ -123,5 +123,5 @@ index 34988d4c3df..274a37c4d66 100644
  
  __GTHREAD_WIN32_INLINE int
 -- 
-2.46.2.windows.1
+2.53.0
 

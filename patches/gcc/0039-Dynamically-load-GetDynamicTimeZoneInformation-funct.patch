@@ -1,0 +1,31 @@
+From 4ae0039702d490d9b32869f632a94754ff1e86f8 Mon Sep 17 00:00:00 2001
+From: Hannes Domani <ssbssa@yahoo.de>
+Date: Fri, 1 May 2026 17:56:16 +0200
+Subject: [PATCH 39/39] Dynamically load GetDynamicTimeZoneInformation function
+
+---
+ libstdc++-v3/src/c++20/tzdb.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/libstdc++-v3/src/c++20/tzdb.cc b/libstdc++-v3/src/c++20/tzdb.cc
+index 5fb0b26ca50..6b17818f6aa 100644
+--- a/libstdc++-v3/src/c++20/tzdb.cc
++++ b/libstdc++-v3/src/c++20/tzdb.cc
+@@ -1787,6 +1787,14 @@ namespace std::chrono
+     string_view
+     detect_windows_zone() noexcept
+     {
++      typedef DWORD WINAPI func_GetDynamicTimeZoneInformation
++	(PDYNAMIC_TIME_ZONE_INFORMATION);
++      static func_GetDynamicTimeZoneInformation *GetDynamicTimeZoneInformation
++	= (func_GetDynamicTimeZoneInformation *) GetProcAddress
++	(GetModuleHandleA ("kernel32.dll"), "GetDynamicTimeZoneInformation");
++      if (!GetDynamicTimeZoneInformation)
++	return {};
++
+       DYNAMIC_TIME_ZONE_INFORMATION information{};
+       if (GetDynamicTimeZoneInformation(&information) == TIME_ZONE_ID_INVALID)
+ 	return {};
+-- 
+2.53.0
+

@@ -1,14 +1,14 @@
-From e89cf932970895943fc05c378645465af08f0969 Mon Sep 17 00:00:00 2001
+From 5897343fa176d86b716d07fdef3bf12003a352ea Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 6 Sep 2024 17:38:44 +0200
-Subject: [PATCH 18/40] Fix -freport-bug for Windows
+Subject: [PATCH 18/39] Fix -freport-bug for Windows
 
 ---
  libiberty/pex-win32.c | 5 ++---
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/libiberty/pex-win32.c b/libiberty/pex-win32.c
-index 3a12fd830a1..583b5133da8 100644
+index 2ba9b69b830..22ac7a59fff 100644
 --- a/libiberty/pex-win32.c
 +++ b/libiberty/pex-win32.c
 @@ -130,10 +130,9 @@ pex_win32_open_write (struct pex_obj *obj ATTRIBUTE_UNUSED, const char *name,
@@ -25,5 +25,5 @@ index 3a12fd830a1..583b5133da8 100644
  		_S_IREAD | _S_IWRITE);
  }
 -- 
-2.46.2.windows.1
+2.53.0
 

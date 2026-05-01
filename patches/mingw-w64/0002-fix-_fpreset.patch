@@ -1,4 +1,4 @@
-From b8e0e5d141a3157cde119c6d467be70e56bffe00 Mon Sep 17 00:00:00 2001
+From 6680422f41dd292d1315aad1e3f1fe5a5d3681b6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 29 Aug 2015 15:30:00 +0200
 Subject: [PATCH 2/9] fix _fpreset()
@@ -33,5 +33,5 @@ index c8a8bfbee..985f6c0e4 100644
  
  #ifdef __GNUC__
 -- 
-2.46.2.windows.1
+2.53.0
 

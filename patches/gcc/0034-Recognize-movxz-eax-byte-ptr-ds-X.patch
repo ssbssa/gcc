@@ -1,17 +1,17 @@
-From b0125bacfee39f9edf6dbcd5b077719cddf0aaca Mon Sep 17 00:00:00 2001
+From 8f6c10d46e0fc3081ac001634f8d507299bc2109 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 5 Sep 2025 19:17:56 +0200
-Subject: [PATCH 34/40] Recognize movxz eax, byte ptr ds:X
+Subject: [PATCH 34/39] Recognize movxz eax, byte ptr ds:X
 
 ---
  libsanitizer/interception/interception_win.cpp | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/libsanitizer/interception/interception_win.cpp b/libsanitizer/interception/interception_win.cpp
-index bcd5e73726b..9bd7a24ed4c 100644
+index 10f39623950..08928bdaac1 100644
 --- a/libsanitizer/interception/interception_win.cpp
 +++ b/libsanitizer/interception/interception_win.cpp
-@@ -820,6 +820,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
+@@ -970,6 +970,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
      case 0x24748B:  // 8B 74 24 XX : mov esi, dword ptr [esp + XX]
      case 0x247C8B:  // 8B 7C 24 XX : mov edi, dword ptr [esp + XX]
        return 4;
@@ -22,5 +22,5 @@ index bcd5e73726b..9bd7a24ed4c 100644
  
    switch (*(u32*)address) {
 -- 
-2.46.2.windows.1
+2.53.0
 

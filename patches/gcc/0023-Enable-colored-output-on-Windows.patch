@@ -1,7 +1,7 @@
-From 153e85a5129924973bec67f83eea504b4eee916b Mon Sep 17 00:00:00 2001
+From aafca2a1c7ee2824becbfc82d6f5e9c91dd31431 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:46:01 +0200
-Subject: [PATCH 23/40] Enable colored output on Windows
+Subject: [PATCH 23/39] Enable colored output on Windows
 
 ---
  .../sanitizer_symbolizer_report.cpp               |  5 -----
@@ -25,10 +25,10 @@ index 80ae31e938a..862ea5cb4e2 100644
    return internal_strcmp(flag, "always") == 0 ||
           (internal_strcmp(flag, "auto") == 0 && ReportSupportsColors());
 diff --git a/libsanitizer/sanitizer_common/sanitizer_win.cpp b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-index c6736788efa..529ca87c76d 100644
+index 93564c55ef7..0f5696a5404 100644
 --- a/libsanitizer/sanitizer_common/sanitizer_win.cpp
 +++ b/libsanitizer/sanitizer_common/sanitizer_win.cpp
-@@ -790,7 +790,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
+@@ -805,7 +805,20 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
  }
  
  bool SupportsColoredOutput(fd_t fd) {
@@ -51,5 +51,5 @@ index c6736788efa..529ca87c76d 100644
  }
  
 -- 
-2.46.2.windows.1
+2.53.0
 

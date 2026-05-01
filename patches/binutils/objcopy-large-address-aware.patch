@@ -29,7 +29,7 @@
       --subsystem <name>[:<version>]\n\
                                     Set PE subsystem to <name> [& <version>]\n\
 +     --large-address-aware         Enable virtual addresses greater than 2 gigabytes\n\
-      --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi|zstd}]\n\
+      --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi%s}]\n\
  				   Compress DWARF debug sections\n\
       --decompress-debug-sections   Decompress DWARF debug sections using zlib\n\
 @@ -2827,6 +2827,9 @@

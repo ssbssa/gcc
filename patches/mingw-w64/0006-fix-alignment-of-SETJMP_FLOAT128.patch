@@ -1,4 +1,4 @@
-From 292a0f3f05bca039060964d0d0569eaef50153e6 Mon Sep 17 00:00:00 2001
+From b857f92a9a524e950515e608f45d82e4a438af1e Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 21 Mar 2016 19:23:39 +0100
 Subject: [PATCH 6/9] fix alignment of SETJMP_FLOAT128
@@ -8,12 +8,12 @@ Subject: [PATCH 6/9] fix alignment of SETJMP_FLOAT128
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mingw-w64-headers/crt/setjmp.h b/mingw-w64-headers/crt/setjmp.h
-index 74e7c7ea4..5818fbf93 100644
+index 0d85d0e9f..c0dec734a 100644
 --- a/mingw-w64-headers/crt/setjmp.h
 +++ b/mingw-w64-headers/crt/setjmp.h
-@@ -109,7 +109,7 @@ extern "C" {
+@@ -110,7 +110,7 @@ extern "C" {
  
- #elif defined(__x86_64)
+ #elif defined(__x86_64__)
  
 -  typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
 +  typedef struct _CRT_ALIGN(16) _SETJMP_FLOAT128 {
@@ -21,5 +21,5 @@ index 74e7c7ea4..5818fbf93 100644
    } SETJMP_FLOAT128;
  
 -- 
-2.46.2.windows.1
+2.53.0
 

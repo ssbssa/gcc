@@ -1,7 +1,7 @@
-From 7c50e71f0ea9ac65f53521ed2343857342382853 Mon Sep 17 00:00:00 2001
+From 70cbe729eeeeb48de2ebc7e9266c9b5abc3f1578 Mon Sep 17 00:00:00 2001
 From: LIU Hao <lh_mouse@126.com>
 Date: Wed, 20 Nov 2024 19:39:54 +0800
-Subject: [PATCH 39/40] libstdc++: Avoid thread-local states for MCF thread
+Subject: [PATCH 38/39] libstdc++: Avoid thread-local states for MCF thread
  model
 
 The mcfgthread library provides once-initialization functions which can be
@@ -23,10 +23,10 @@ libstdc++-v3/ChangeLog:
  1 file changed, 41 insertions(+)
 
 diff --git a/libstdc++-v3/include/std/mutex b/libstdc++-v3/include/std/mutex
-index e575a81c138..2de17b6200e 100644
+index fb5b5073834..55cd9f26256 100644
 --- a/libstdc++-v3/include/std/mutex
 +++ b/libstdc++-v3/include/std/mutex
-@@ -827,6 +827,45 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -813,6 +813,45 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
        call_once(once_flag& __once, _Callable&& __f, _Args&&... __args);
    };
  
@@ -72,7 +72,7 @@ index e575a81c138..2de17b6200e 100644
    /// @cond undocumented
  # ifdef _GLIBCXX_HAVE_TLS
    // If TLS is available use thread-local state for the type-erased callable
-@@ -919,6 +958,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+@@ -924,6 +963,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
  	__throw_system_error(__e);
      }
  
@@ -82,5 +82,5 @@ index e575a81c138..2de17b6200e 100644
  
    /// Flag type used by std::call_once
 -- 
-2.46.2.windows.1
+2.53.0
 

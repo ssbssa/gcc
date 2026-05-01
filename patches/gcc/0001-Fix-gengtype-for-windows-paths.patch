@@ -1,17 +1,17 @@
-From 64ccd34d83fde962184958b4eb89ff27e5104e9c Mon Sep 17 00:00:00 2001
+From 2920d370eb1956f0845d6e5a485f36098f0ff770 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:00:25 +0200
-Subject: [PATCH 01/40] Fix gengtype for windows paths
+Subject: [PATCH 01/39] Fix gengtype for windows paths
 
 ---
  gcc/gengtype.cc | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/gcc/gengtype.cc b/gcc/gengtype.cc
-index 6a3621c96cd..872db894cf6 100644
+index 5860f9875ed..7fd7373554e 100644
 --- a/gcc/gengtype.cc
 +++ b/gcc/gengtype.cc
-@@ -5087,7 +5087,10 @@ parse_program_options (int argc, char **argv)
+@@ -5088,7 +5088,10 @@ parse_program_options (int argc, char **argv)
  	  break;
  	case 'S':		/* --srcdir */
  	  if (optarg)
@@ -23,5 +23,5 @@ index 6a3621c96cd..872db894cf6 100644
  	    fatal ("missing source directory");
  	  srcdir_len = strlen (srcdir);
 -- 
-2.46.2.windows.1
+2.53.0
 
