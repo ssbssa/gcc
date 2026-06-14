@@ -1,4 +1,4 @@
-From 29cc17a0015d815d83c32b2fa30f4af73471d4b3 Mon Sep 17 00:00:00 2001
+From 5a04fababc6dfb626c5e275a85d73fc9ca4ba3c9 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 19:37:49 +0200
 Subject: [PATCH 32/40] Use .gnu_debuglink for separate debug info file
@@ -225,5 +225,5 @@ index ae3155e9704..413cae62d14 100644
  		  if (mod_found_dwarf)
  		    {
 -- 
-2.46.2.windows.1
+2.54.0
 

@@ -1,4 +1,4 @@
-From 74f1285145b0affe4d09519f183e5ebee5761320 Mon Sep 17 00:00:00 2001
+From 218ae0de8b344b11919e79916491aeb104b537da Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:03:05 +0200
 Subject: [PATCH 19/40] Enable sanitizer support on Windows x86_64
@@ -402,5 +402,5 @@ index ea332013a50..7f888d44a27 100644
  extern "C" void __ubsan_handle_cfi_bad_type_default(CFICheckFailData *Data,
                                                      ValueHandle Vtable,
 -- 
-2.46.2.windows.1
+2.54.0
 

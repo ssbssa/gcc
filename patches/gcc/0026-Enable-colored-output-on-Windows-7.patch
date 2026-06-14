@@ -1,4 +1,4 @@
-From 6f811ae684d21822f5d88cbd1d3052a785b32f4f Mon Sep 17 00:00:00 2001
+From b3de5d5ff4aef04eee811266fef0c8cb98dbfe2f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:36:51 +0200
 Subject: [PATCH 26/40] Enable colored output on Windows 7
@@ -130,5 +130,5 @@ index 90814bbaa5c..7ed31317a95 100644
  
    DWORD bytes_written_32;
 -- 
-2.46.2.windows.1
+2.54.0
 

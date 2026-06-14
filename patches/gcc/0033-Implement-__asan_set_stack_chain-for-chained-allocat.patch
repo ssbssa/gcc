@@ -1,4 +1,4 @@
-From f5e94b2113cd3272545b4c4a50d1e6d75e90582b Mon Sep 17 00:00:00 2001
+From 6d5a970b25861e08633d8c3ecfadebc56b10dadd Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 3 Sep 2025 21:14:45 +0200
 Subject: [PATCH 33/40] Implement __asan_set_stack_chain for chained allocation
@@ -325,5 +325,5 @@ index 37b6d08f4db..0f35acd76f8 100644
  } // extern "C"
  #endif
 -- 
-2.46.2.windows.1
+2.54.0
 

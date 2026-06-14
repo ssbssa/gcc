@@ -1,4 +1,4 @@
-From 30b08a142c87f911e4cc69fb5d27fc1a3046f4c5 Mon Sep 17 00:00:00 2001
+From 6c8411c063f4e15dcc645fd128047dcd8002a82b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sat, 20 Jul 2024 20:14:09 +0200
 Subject: [PATCH 15/40] Set TZDB_DISABLED if _GLIBCXX_HAS_GTHREADS is not
@@ -9,10 +9,10 @@ Subject: [PATCH 15/40] Set TZDB_DISABLED if _GLIBCXX_HAS_GTHREADS is not
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/libstdc++-v3/src/c++20/tzdb.cc b/libstdc++-v3/src/c++20/tzdb.cc
-index 6e244dc656d..b021ee85ac4 100644
+index 169810349e8..f58565c5ed1 100644
 --- a/libstdc++-v3/src/c++20/tzdb.cc
 +++ b/libstdc++-v3/src/c++20/tzdb.cc
-@@ -88,7 +88,8 @@ namespace __gnu_cxx
+@@ -92,7 +92,8 @@ namespace __gnu_cxx
  #endif
  }
  
@@ -23,5 +23,5 @@ index 6e244dc656d..b021ee85ac4 100644
    [[noreturn]] void __throw_disabled()
    {
 -- 
-2.46.2.windows.1
+2.54.0
 

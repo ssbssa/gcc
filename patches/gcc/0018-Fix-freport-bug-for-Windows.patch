@@ -1,4 +1,4 @@
-From e89cf932970895943fc05c378645465af08f0969 Mon Sep 17 00:00:00 2001
+From 0bd0e374464208a8435eaeef335a8dd223a49bd8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 6 Sep 2024 17:38:44 +0200
 Subject: [PATCH 18/40] Fix -freport-bug for Windows
@@ -25,5 +25,5 @@ index 3a12fd830a1..583b5133da8 100644
  		_S_IREAD | _S_IWRITE);
  }
 -- 
-2.46.2.windows.1
+2.54.0
 

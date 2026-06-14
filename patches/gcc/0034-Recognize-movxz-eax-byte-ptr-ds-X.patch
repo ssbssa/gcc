@@ -1,4 +1,4 @@
-From b0125bacfee39f9edf6dbcd5b077719cddf0aaca Mon Sep 17 00:00:00 2001
+From 218e67a8f35f7350ba125864c9bb91ec003782f6 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Fri, 5 Sep 2025 19:17:56 +0200
 Subject: [PATCH 34/40] Recognize movxz eax, byte ptr ds:X
@@ -22,5 +22,5 @@ index bcd5e73726b..9bd7a24ed4c 100644
  
    switch (*(u32*)address) {
 -- 
-2.46.2.windows.1
+2.54.0
 

@@ -1,4 +1,4 @@
-From 3b8d99cd4e5ee8e61b23621b71321fa67039abe5 Mon Sep 17 00:00:00 2001
+From 35010811ebe640551e8a516f708ec0a86c8a665b Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 19:07:55 +0200
 Subject: [PATCH 27/40] Fix checks for unsupported flags
@@ -39,5 +39,5 @@ index 5e478951585..6f13538d350 100644
    }
    // asan_realloc will never reallocate in place, so for now this flag is
 -- 
-2.46.2.windows.1
+2.54.0
 

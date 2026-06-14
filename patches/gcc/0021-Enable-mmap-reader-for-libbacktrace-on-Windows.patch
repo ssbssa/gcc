@@ -1,4 +1,4 @@
-From 87406186a8f2e51134767cab09c2f15c80d2b844 Mon Sep 17 00:00:00 2001
+From 993e14656ad439c0df37dfddcc5d252f08e152ad Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:37:46 +0200
 Subject: [PATCH 21/40] Enable mmap reader for libbacktrace on Windows
@@ -244,5 +244,5 @@ index 1ff8b8f1bab..259198026b9 100644
    // Add the dbghelp based symbolizer.
    list->push_back(new(*allocator) WinSymbolizerTool());
 -- 
-2.46.2.windows.1
+2.54.0
 

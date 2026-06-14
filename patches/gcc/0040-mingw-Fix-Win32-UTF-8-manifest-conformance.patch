@@ -1,4 +1,4 @@
-From 4b26558b44652d47ea682f9cb2ec784c1813d601 Mon Sep 17 00:00:00 2001
+From eb5a6181cfa451338adebccb69091a77ee767a5f Mon Sep 17 00:00:00 2001
 From: ZENG Hao <c@cyano.cn>
 Date: Tue, 2 Dec 2025 06:56:35 +0800
 Subject: [PATCH 40/40] mingw: Fix Win32 UTF-8 manifest conformance
@@ -40,5 +40,5 @@ index dab929e1515..6869a3917f3 100644
 +  </asmv3:application>
  </assembly>
 -- 
-2.46.2.windows.1
+2.54.0
 

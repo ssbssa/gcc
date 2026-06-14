@@ -1,4 +1,4 @@
-From 2551da7366f74850a52bf032544a4a9351f2bd13 Mon Sep 17 00:00:00 2001
+From 84b000432651dc37c5a7152a727307e3eb92138d Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 16:18:05 +0200
 Subject: [PATCH 13/40] Fix source location of non-standard suffix (PR c/92826)
@@ -92,5 +92,5 @@ index e450c9a57f0..0b661811c2f 100644
  		   "available with %<-std=c++23%> or %<-std=gnu++23%>");
        }
 -- 
-2.46.2.windows.1
+2.54.0
 

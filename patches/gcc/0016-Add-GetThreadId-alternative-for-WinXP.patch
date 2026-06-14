@@ -1,4 +1,4 @@
-From 6d604909cc06c53dfa6fc680a63886b7b740268c Mon Sep 17 00:00:00 2001
+From 14cc3caf35379f82583c3b61b4b2a27239754405 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 20 Aug 2024 21:14:54 +0200
 Subject: [PATCH 16/40] Add GetThreadId alternative for WinXP
@@ -123,5 +123,5 @@ index 34988d4c3df..274a37c4d66 100644
  
  __GTHREAD_WIN32_INLINE int
 -- 
-2.46.2.windows.1
+2.54.0
 

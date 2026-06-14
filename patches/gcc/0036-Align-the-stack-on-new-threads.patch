@@ -1,4 +1,4 @@
-From a85a0c10ea1e3e3dec13f497385aa3841b3b0399 Mon Sep 17 00:00:00 2001
+From cc2e78c06fafcd8bc775696d7b8d336c30bf5215 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 8 Sep 2025 15:55:08 +0200
 Subject: [PATCH 36/40] Align the stack on new threads
@@ -22,5 +22,5 @@ index 9c0760c35f2..c53b00a43d8 100644
    AsanThread *t = (AsanThread *)arg;
    SetCurrentThread(t);
 -- 
-2.46.2.windows.1
+2.54.0
 

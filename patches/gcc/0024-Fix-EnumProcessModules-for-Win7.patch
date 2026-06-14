@@ -1,4 +1,4 @@
-From bd1f6bc3c2a06c5aa8910c079fa1642a9a7c36d4 Mon Sep 17 00:00:00 2001
+From 274e95d7af4e0d16f3de72a4f17aa5598444812f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:27:04 +0200
 Subject: [PATCH 24/40] Fix EnumProcessModules for Win7
@@ -60,5 +60,5 @@ index 99c2c6dea77..ae3155e9704 100644
        DWORD i;
        char modname[MAX_PATH];
 -- 
-2.46.2.windows.1
+2.54.0
 

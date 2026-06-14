@@ -1,4 +1,4 @@
-From f07eb503d84143b50f1ac05d434c594d82c36eff Mon Sep 17 00:00:00 2001
+From ba9820487c2d16d5129e30f7d03d125aa2a87c73 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:31:04 +0200
 Subject: [PATCH 06/40] Enable diagnostic colors on Windows console
@@ -162,5 +162,5 @@ index abd6c0b528f..7ae51fb1d10 100644
    fputs (text, pp_buffer (pp)->m_stream);
  #endif
 -- 
-2.46.2.windows.1
+2.54.0
 

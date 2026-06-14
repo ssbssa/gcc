@@ -1,4 +1,4 @@
-From ee3458c5b650927241b7da80900c637b8a227c70 Mon Sep 17 00:00:00 2001
+From cf1fc9ebb7b022f2dd002ce5ed80e2e0d88c6f09 Mon Sep 17 00:00:00 2001
 From: TheShermanTanker <tanksherman27@gmail.com>
 Date: Tue, 15 Oct 2024 20:56:22 +0800
 Subject: [PATCH 38/40] Implement Windows TLS
@@ -16,10 +16,10 @@ Subject: [PATCH 38/40] Implement Windows TLS
  9 files changed, 145 insertions(+), 1 deletion(-)
 
 diff --git a/gcc/config/i386/i386.cc b/gcc/config/i386/i386.cc
-index 08d0519ccd1..cd3096e6f29 100644
+index a19a9e5a468..b53ffb2eac4 100644
 --- a/gcc/config/i386/i386.cc
 +++ b/gcc/config/i386/i386.cc
-@@ -11183,6 +11183,9 @@ ix86_legitimate_constant_p (machine_mode mode, rtx x)
+@@ -11194,6 +11194,9 @@ ix86_legitimate_constant_p (machine_mode mode, rtx x)
  	    x = XVECEXP (x, 0, 0);
  	    return (GET_CODE (x) == SYMBOL_REF
  		    && SYMBOL_REF_TLS_MODEL (x) == TLS_MODEL_LOCAL_DYNAMIC);
@@ -29,7 +29,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  	  default:
  	    return false;
  	  }
-@@ -11319,6 +11322,9 @@ legitimate_pic_operand_p (rtx x)
+@@ -11330,6 +11333,9 @@ legitimate_pic_operand_p (rtx x)
  	    x = XVECEXP (inner, 0, 0);
  	    return (GET_CODE (x) == SYMBOL_REF
  		    && SYMBOL_REF_TLS_MODEL (x) == TLS_MODEL_LOCAL_EXEC);
@@ -39,7 +39,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  	  case UNSPEC_MACHOPIC_OFFSET:
  	    return legitimate_pic_address_disp_p (x);
  	  default:
-@@ -11499,6 +11505,9 @@ legitimate_pic_address_disp_p (rtx disp)
+@@ -11510,6 +11516,9 @@ legitimate_pic_address_disp_p (rtx disp)
        disp = XVECEXP (disp, 0, 0);
        return (GET_CODE (disp) == SYMBOL_REF
  	      && SYMBOL_REF_TLS_MODEL (disp) == TLS_MODEL_LOCAL_DYNAMIC);
@@ -49,7 +49,7 @@ index 08d0519ccd1..cd3096e6f29 100644
      }
  
    return false;
-@@ -11776,6 +11785,7 @@ ix86_legitimate_address_p (machine_mode, rtx addr, bool strict,
+@@ -11787,6 +11796,7 @@ ix86_legitimate_address_p (machine_mode, rtx addr, bool strict,
  	  case UNSPEC_INDNTPOFF:
  	  case UNSPEC_NTPOFF:
  	  case UNSPEC_DTPOFF:
@@ -57,7 +57,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  	    break;
  
  	  default:
-@@ -11801,7 +11811,8 @@ ix86_legitimate_address_p (machine_mode, rtx addr, bool strict,
+@@ -11812,7 +11822,8 @@ ix86_legitimate_address_p (machine_mode, rtx addr, bool strict,
  		  || GET_CODE (XEXP (XEXP (disp, 0), 0)) != UNSPEC
  		  || !CONST_INT_P (XEXP (XEXP (disp, 0), 1))
  		  || (XINT (XEXP (XEXP (disp, 0), 0), 1) != UNSPEC_DTPOFF
@@ -67,7 +67,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  		/* Non-constant pic memory reference.  */
  		return false;
  	    }
-@@ -12125,6 +12136,22 @@ get_thread_pointer (machine_mode tp_mode, bool to_reg)
+@@ -12136,6 +12147,22 @@ get_thread_pointer (machine_mode tp_mode, bool to_reg)
    return tp;
  }
  
@@ -90,7 +90,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  /* Construct the SYMBOL_REF for the tls_get_addr function.  */
  
  static GTY(()) rtx ix86_tls_symbol;
-@@ -12183,6 +12210,26 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+@@ -12216,6 +12243,26 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
    machine_mode tp_mode = Pmode;
    int type;
  
@@ -117,7 +117,7 @@ index 08d0519ccd1..cd3096e6f29 100644
    /* Fall back to global dynamic model if tool chain cannot support local
       dynamic.  */
    if (TARGET_SUN_TLS && !TARGET_64BIT
-@@ -12407,6 +12454,7 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+@@ -12440,6 +12487,7 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
      }
  
    return dest;
@@ -125,7 +125,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  }
  
  /* Return true if the TLS address requires insn using integer registers.
-@@ -12876,6 +12924,9 @@ output_pic_addr_const (FILE *file, rtx x, int code)
+@@ -12909,6 +12957,9 @@ output_pic_addr_const (FILE *file, rtx x, int code)
  	case UNSPEC_INDNTPOFF:
  	  fputs ("@indntpoff", file);
  	  break;
@@ -135,7 +135,7 @@ index 08d0519ccd1..cd3096e6f29 100644
  #if TARGET_MACHO
  	case UNSPEC_MACHOPIC_OFFSET:
  	  putc ('-', file);
-@@ -12901,7 +12952,11 @@ i386_output_dwarf_dtprel (FILE *file, int size, rtx x)
+@@ -12934,7 +12985,11 @@ i386_output_dwarf_dtprel (FILE *file, int size, rtx x)
  {
    fputs (ASM_LONG, file);
    output_addr_const (file, x);
@@ -147,7 +147,7 @@ index 08d0519ccd1..cd3096e6f29 100644
    switch (size)
      {
      case 4:
-@@ -14654,6 +14709,10 @@ i386_asm_output_addr_const_extra (FILE *file, rtx x)
+@@ -14687,6 +14742,10 @@ i386_asm_output_addr_const_extra (FILE *file, rtx x)
        output_addr_const (file, op);
        fputs ("@indntpoff", file);
        break;
@@ -159,7 +159,7 @@ index 08d0519ccd1..cd3096e6f29 100644
      case UNSPEC_MACHOPIC_OFFSET:
        output_addr_const (file, op);
 diff --git a/gcc/config/i386/i386.h b/gcc/config/i386/i386.h
-index e850b618b8f..c71cb33b36f 100644
+index a063500139b..8d8df2af247 100644
 --- a/gcc/config/i386/i386.h
 +++ b/gcc/config/i386/i386.h
 @@ -525,6 +525,7 @@ extern unsigned char ix86_prefetch_sse;
@@ -171,7 +171,7 @@ index e850b618b8f..c71cb33b36f 100644
  #ifndef TARGET_64BIT_DEFAULT
  #define TARGET_64BIT_DEFAULT 0
 diff --git a/gcc/config/i386/i386.md b/gcc/config/i386/i386.md
-index 8416c045b50..4ffb564e3b9 100644
+index fc86a9e682f..2698b8d8e6c 100644
 --- a/gcc/config/i386/i386.md
 +++ b/gcc/config/i386/i386.md
 @@ -79,6 +79,7 @@
@@ -346,5 +346,5 @@ index 9f67e62950a..68f191861a5 100644
    AC_DEFINE(HAVE_AS_TLS, 1,
  	    [Define if your assembler and linker support thread-local storage.])
 -- 
-2.46.2.windows.1
+2.54.0
 

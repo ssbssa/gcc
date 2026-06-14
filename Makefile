@@ -64,7 +64,7 @@ MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 
-GCC_VER=15.2.0
+GCC_VER=15.3.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
@@ -77,7 +77,7 @@ GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
 	 --disable-version-specific-runtime-libs \
 	 --enable-threads=mcf \
 	 --enable-tls \
-	 --enable-win32-utf8-manifest \
+	 --disable-win32-utf8-manifest \
 	 --with-pkgversion=$(MYPKG)
 GCC_PATH=export PATH="$(GCC_DIR)/mingw/bin:$(BINUTILS_DIR)/bin:$(PATH)";
 

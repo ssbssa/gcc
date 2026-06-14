@@ -1,4 +1,4 @@
-From e707ce44b53429e0dd8cbf48619c87961bbc30c9 Mon Sep 17 00:00:00 2001
+From 5e6ba4cfddf98e01788724c989313c5b724c14ee Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:18:03 +0200
 Subject: [PATCH 02/40] Relocatable mingw paths
@@ -55,5 +55,5 @@ index c1bbfd3872a..d81db3c9de5 100644
   	      static const char *relocated_prefix;
  	      char *ostr;
 -- 
-2.46.2.windows.1
+2.54.0
 

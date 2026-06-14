@@ -1,4 +1,4 @@
-From ac92500bc0a511162395004e59d2140034c1561d Mon Sep 17 00:00:00 2001
+From fec24a09f65e2c6b7a5538a721f1e42deee4ea06 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Tue, 22 Oct 2024 17:09:10 +0200
 Subject: [PATCH 31/40] Add -lstdc++ when linking libubsan
@@ -8,7 +8,7 @@ Subject: [PATCH 31/40] Add -lstdc++ when linking libubsan
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/gcc.cc b/gcc/gcc.cc
-index 4fd87f2c4a1..f6692fff9f8 100644
+index 3b0f946f04f..df1f8fe581c 100644
 --- a/gcc/gcc.cc
 +++ b/gcc/gcc.cc
 @@ -845,7 +845,7 @@ proper position among the other output files.  */
@@ -21,5 +21,5 @@ index 4fd87f2c4a1..f6692fff9f8 100644
  #else
  #define LIBUBSAN_SPEC "-lubsan" STATIC_LIBUBSAN_LIBS
 -- 
-2.46.2.windows.1
+2.54.0
 

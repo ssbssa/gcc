@@ -1,4 +1,4 @@
-From 1c1c9318df4fb48eaec50f575c749199d5f4d610 Mon Sep 17 00:00:00 2001
+From 1bdcc75fb4b21e1228ecedd5ee5fdc08875d5c18 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:40:33 +0200
 Subject: [PATCH 10/40] Enable diagnostic URLs on cygwin terminal
@@ -48,5 +48,5 @@ index aaf685fab7b..7b15ac85adb 100644
  
  /* Determine if URLs should be enabled, based on RULE,
 -- 
-2.46.2.windows.1
+2.54.0
 

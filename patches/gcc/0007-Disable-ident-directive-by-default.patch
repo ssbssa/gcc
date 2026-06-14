@@ -1,4 +1,4 @@
-From 82dfbd20ce9ae71f16b44bcf3088e53a1b70e6e1 Mon Sep 17 00:00:00 2001
+From 06a716b39e299df9d181d3d012a3c4ee6bbd03ab Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:34:17 +0200
 Subject: [PATCH 07/40] Disable #ident directive by default
@@ -21,5 +21,5 @@ index e3fa0dacec4..f67c3df1fc7 100644
  
  fif-conversion
 -- 
-2.46.2.windows.1
+2.54.0
 

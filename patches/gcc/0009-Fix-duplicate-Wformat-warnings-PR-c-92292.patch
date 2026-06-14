@@ -1,4 +1,4 @@
-From 05fb06a105257f3a4f88b4f4e2bbe81af8a52e98 Mon Sep 17 00:00:00 2001
+From 7b1aa73d363ddd6f0cdddc3d729fcf4068c5489a Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:37:19 +0200
 Subject: [PATCH 09/40] Fix duplicate Wformat warnings (PR c/92292)
@@ -21,5 +21,5 @@ index 211d20dd25b..79dd8be366e 100644
      }
  }
 -- 
-2.46.2.windows.1
+2.54.0
 

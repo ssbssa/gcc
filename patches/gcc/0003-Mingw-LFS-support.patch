@@ -1,4 +1,4 @@
-From fd08ea0e637259bca70a206c6646ebd070a1a08b Mon Sep 17 00:00:00 2001
+From 73f23d5a87807f024e07ec1458a2df2a7cf8e10f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:20:07 +0200
 Subject: [PATCH 03/40] Mingw LFS support
@@ -77,5 +77,5 @@ index f52bc9fe856..e2591e7fbd0 100644
  	  __ret = std::streampos(ftello64(_M_file));
  #else
 -- 
-2.46.2.windows.1
+2.54.0
 

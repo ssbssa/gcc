@@ -1,4 +1,4 @@
-From ca25f84feeec8d37d823f79a37046a06d7b92aff Mon Sep 17 00:00:00 2001
+From ff8f8f14fe13b3ee734adfdd5e8175fe103b2beb Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:27:39 +0200
 Subject: [PATCH 05/40] Enable diagnostic colors on cygwin terminal
@@ -96,5 +96,5 @@ index b3bd6f997c6..e89e607e938 100644
    return t && strcmp (t, "dumb") != 0 && isatty (STDERR_FILENO);
  #endif
 -- 
-2.46.2.windows.1
+2.54.0
 

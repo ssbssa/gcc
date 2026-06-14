@@ -1,4 +1,4 @@
-From 418ebd2517c9b24e94e508520a53f82f879df390 Mon Sep 17 00:00:00 2001
+From e388b2f64f10f0ad1d9b29183966118cec007d2f Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 17:31:12 +0200
 Subject: [PATCH 20/40] Use pecoff format on Windows
@@ -219,5 +219,5 @@ index b9d6e008f2b..ea64ea3e522 100644
  @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT unknown.lo -MD -MP -MF $(DEPDIR)/unknown.Tpo -c -o unknown.lo `test -f '../../libbacktrace/unknown.c' || echo '$(srcdir)/'`../../libbacktrace/unknown.c
  @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/unknown.Tpo $(DEPDIR)/unknown.Plo
 -- 
-2.46.2.windows.1
+2.54.0
 

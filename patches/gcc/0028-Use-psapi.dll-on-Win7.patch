@@ -1,4 +1,4 @@
-From 8ce57928e7c2ae358f32781864f3a79dc9200e34 Mon Sep 17 00:00:00 2001
+From f53fa310c3b0c27c1053c11f71f638e7327bfbd8 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Mon, 14 Oct 2024 15:48:34 +0200
 Subject: [PATCH 28/40] Use psapi.dll on Win7
@@ -104,5 +104,5 @@ index 7ed31317a95..f3621c82044 100644
  
  void CheckASLR() {
 -- 
-2.46.2.windows.1
+2.54.0
 

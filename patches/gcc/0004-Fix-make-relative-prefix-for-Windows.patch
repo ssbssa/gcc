@@ -1,4 +1,4 @@
-From ce860518ac0ca00df345ef8bd7eb9305d2b3d409 Mon Sep 17 00:00:00 2001
+From b8af02004832ce199d829be7ebd107f60c38e1d2 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 28 Mar 2021 14:22:37 +0200
 Subject: [PATCH 04/40] Fix make-relative-prefix for Windows
@@ -69,5 +69,5 @@ index 642eaeeb23b..e6d22dd82f3 100644
  #if defined (HAVE_SYS_STAT_H) && defined (S_ISREG)
  		      struct stat st;
 -- 
-2.46.2.windows.1
+2.54.0
 

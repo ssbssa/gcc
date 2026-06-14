@@ -1,4 +1,4 @@
-From 0d60292587e339480f914b384ebb17b92c4e5026 Mon Sep 17 00:00:00 2001
+From ac6b6594ada77668fe1d497a7f340937a2f0b025 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Sun, 13 Oct 2024 18:31:25 +0200
 Subject: [PATCH 25/40] Remove futex calls not available on Win7
@@ -85,5 +85,5 @@ index 529ca87c76d..90814bbaa5c 100644
  
  uptr GetTlsSize() {
 -- 
-2.46.2.windows.1
+2.54.0
 

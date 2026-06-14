@@ -1,4 +1,4 @@
-From df955d4eed2eac5c482805bd0fcd0726c7e07380 Mon Sep 17 00:00:00 2001
+From f127fc4817678d262d0440851ddce7ba33726838 Mon Sep 17 00:00:00 2001
 From: Hannes Domani <ssbssa@yahoo.de>
 Date: Wed, 16 Oct 2024 17:06:57 +0200
 Subject: [PATCH 29/40] Enable sanitizer support on Windows x86
@@ -227,5 +227,5 @@ index 345190eeb34..ba4fb13769f 100644
  	-std=gnu++17 $(EXTRA_CXXFLAGS)
  AM_CCASFLAGS = $(EXTRA_ASFLAGS)
 -- 
-2.46.2.windows.1
+2.54.0
 
