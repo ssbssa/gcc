@@ -1,5 +1,5 @@
 
-MYPKG=ssbssa-2
+MYPKG=ssbssa-1
 BUILD_BITS=32
 
 SOURCE_DIR=src
@@ -64,7 +64,7 @@ MCFGTHREAD_CONF=$(SOURCE_DIR_ABS)/$(MCFGTHREAD_SRC_DIR)/configure \
 		   --with-sysroot=$(GCC_DIR) \
 		   --prefix=$(GCC_DIR)/mingw/$(MYTARGET)
 
-GCC_VER=14.3.0
+GCC_VER=14.4.0
 GCC_SRC_DIR=gcc-$(GCC_VER)
 GCC_FILE=$(GCC_SRC_DIR).tar.xz
 GCC_CONF=$(SOURCE_DIR_ABS)/$(GCC_SRC_DIR)/configure \
