@@ -7,6 +7,6 @@ Custom Windows build of gcc with these features:
 
 Because the sanitizers on windows
 [no longer support static linking](https://github.com/llvm/llvm-project/commit/246234ac70faa1e3281a2bb83dfc4dd206a7d59c),
-the gcc-15 builds can't handle sanitized dlls (but linking everything into 1 executable still works).<br>
+the gcc-15/16 builds can't handle sanitized dlls (but linking everything into 1 executable still works).<br>
 That might change in the future if I get shared linking of sanitizers working, but until then I suggest using the
-[gcc-14.3](https://github.com/ssbssa/gcc/releases/tag/gcc-14.3-ssbssa-2) build if you need sanitized dlls.
+[gcc-14.4](https://github.com/ssbssa/gcc/releases/tag/gcc-14.4-ssbssa-1) build if you need sanitized dlls.
